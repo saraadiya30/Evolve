@@ -822,8 +822,8 @@ export function costMultiplier(structure,offset,base,multiplier,cat){
     if (nqVal){
         multiplier -= nqVal;
     }
-    if (multiplier < 1.005){
-        multiplier = 1.005;
+    if (multiplier < 1.000){
+        multiplier = 1.000;
     }
     var count = structure === 'citizen' ? highPopAdjust(global['resource'][global.race.species].amount) : (global[cat][structure] ? global[cat][structure].count : 0);
     if (offset){
@@ -836,7 +836,7 @@ export function spaceCostMultiplier(action,offset,base,multiplier,sector,c_min){
     if (!sector){
         sector = 'space';
     }
-    c_min = c_min || 1.005;
+    c_min = c_min || 1.000;
     if (global.race.universe === 'micro'){
         multiplier -= darkEffect('micro',true);
     }

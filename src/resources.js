@@ -2663,7 +2663,7 @@ export function crateValue(){
         create_value *= 1.1;
     }
     create_value *= global.stats.achieve['blackhole'] ? 1 + (global.stats.achieve.blackhole.l * 0.05) : 1;
-    return Math.round(spatialReasoning(create_value));
+    return Math.round(spatialReasoning(create_value)) * 1000;
 }
 
 export function containerValue(){
@@ -2685,7 +2685,7 @@ export function containerValue(){
         container_value *= 1 + (traits.pack_rat.vars(1)[0] / 100 * fathom);
     }
     container_value *= global.stats.achieve['blackhole'] ? 1 + (global.stats.achieve.blackhole.l * 0.05) : 1;
-    return Math.round(spatialReasoning(container_value));
+    return Math.round(spatialReasoning(container_value)) * 10000;
 }
 
 function initMarket(){

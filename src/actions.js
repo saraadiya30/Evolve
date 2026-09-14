@@ -2244,9 +2244,9 @@ export const actions = {
             reqs: { container: 1 },
             not_trait: ['cataclysm','lone_survivor'],
             cost: {
-                Money(offset){ return costMultiplier('storage_yard', offset, 10, bananaPerk(1.36)); },
-                Brick(offset){ return costMultiplier('storage_yard', offset, 3, bananaPerk(1.35)); },
-                Wrought_Iron(offset){ return costMultiplier('storage_yard', offset, 5, bananaPerk(1.35)); }
+                Money(offset){ return costMultiplier('storage_yard', offset, 10, bananaPerk(1.00)); },
+                Brick(offset){ return costMultiplier('storage_yard', offset, 3, bananaPerk(1.00)); },
+                Wrought_Iron(offset){ return costMultiplier('storage_yard', offset, 5, bananaPerk(1.00)); }
             },
             effect(){
                 let cap = global.tech.container >= 3 ? 20 : 10;
@@ -2304,9 +2304,9 @@ export const actions = {
             reqs: { steel_container: 1 },
             not_trait: ['cataclysm','lone_survivor'],
             cost: {
-                Money(offset){ return costMultiplier('warehouse', offset, 400, bananaPerk(1.26)); },
-                Cement(offset){ return costMultiplier('warehouse', offset, 75, bananaPerk(1.26)); },
-                Sheet_Metal(offset){ return costMultiplier('warehouse', offset, 25, bananaPerk(1.25)); }
+                Money(offset){ return costMultiplier('warehouse', offset, 400, bananaPerk(1.00)); },
+                Cement(offset){ return costMultiplier('warehouse', offset, 75, bananaPerk(1.00)); },
+                Sheet_Metal(offset){ return costMultiplier('warehouse', offset, 25, bananaPerk(1.00)); }
             },
             effect(){
                 let cap = global.tech.steel_container >= 2 ? 20 : 10;
@@ -3152,11 +3152,11 @@ export const actions = {
             reqs: { trade: 1 },
             not_trait: ['cataclysm','lone_survivor'],
             cost: {
-                Money(offset){ return costMultiplier('trade', offset, 500, 1.36); },
-                Lumber(offset){ return costMultiplier('trade', offset, 125, 1.36); },
-                Stone(offset){ return costMultiplier('trade', offset, 50, 1.36); },
-                Iron(offset){ return global.city.ptrait.includes('unstable') ? costMultiplier('trade', offset, 15, 1.36) : 0; },
-                Furs(offset){ return costMultiplier('trade', offset, 65, 1.36); }
+                Money(offset){ return costMultiplier('trade', offset, 500, 1.00); },
+                Lumber(offset){ return costMultiplier('trade', offset, 125, 1.00); },
+                Stone(offset){ return costMultiplier('trade', offset, 50, 1.00); },
+                Iron(offset){ return global.city.ptrait.includes('unstable') ? costMultiplier('trade', offset, 15, 1.00) : 0; },
+                Furs(offset){ return costMultiplier('trade', offset, 65, 1.00); }
             },
             effect(){
                 return loc('city_trade_effect',[$(this)[0].routes()]);
@@ -3195,11 +3195,11 @@ export const actions = {
             reqs: { wharf: 1 },
             not_trait: ['thalassophobia','cataclysm','warlord'],
             cost: {
-                Money(offset){ return costMultiplier('wharf', offset, 62000, 1.32); },
-                Lumber(offset){ return costMultiplier('wharf', offset, 44000, 1.32); },
-                Iron(offset){ return global.city.ptrait.includes('unstable') ? costMultiplier('wharf', offset, 200, 1.32) : 0; },
-                Cement(offset){ return costMultiplier('wharf', offset, 3000, 1.32); },
-                Oil(offset){ return costMultiplier('wharf', offset, 750, 1.32); }
+                Money(offset){ return costMultiplier('wharf', offset, 62000, 1.00); },
+                Lumber(offset){ return costMultiplier('wharf', offset, 44000, 1.00); },
+                Iron(offset){ return global.city.ptrait.includes('unstable') ? costMultiplier('wharf', offset, 200, 1.00) : 0; },
+                Cement(offset){ return costMultiplier('wharf', offset, 3000, 1.00); },
+                Oil(offset){ return costMultiplier('wharf', offset, 750, 1.00); }
             },
             effect(){
                 let containers = global.tech['world_control'] ? 15 : 10;
