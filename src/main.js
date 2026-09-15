@@ -9880,6 +9880,7 @@ function midLoop(){
             if (global.race['flier']){
                 routes += traits.flier.vars()[1];
             }
+            routes *= 100;
             global.city.market.mtrade += routes * global.city.trade.count;
             breakdown.t_route[loc('city_trade')] = routes * global.city.trade.count;
             if (global.tech['fanaticism'] && global.tech['fanaticism'] >= 3){
@@ -9889,17 +9890,17 @@ function midLoop(){
             }
         }
         if (global.city['wharf']){
-            let r_count = global.city.wharf.count * 2;
+            let r_count = global.city.wharf.count * 2 * 100;
             global.city.market.mtrade += r_count;
             breakdown.t_route[loc('city_wharf')] = r_count;
         }
         if (global.space['gps'] && global.space.gps.count >= 4){
-            let r_count = global.space.gps.count * 2;
-            global.city.market.mtrade += global.space.gps.count * 2;
+            let r_count = global.space.gps.count * 2 * 100;
+            global.city.market.mtrade += global.space.gps.count * 2 * 100;
             breakdown.t_route[loc('space_home_gps_title')] = r_count;
         }
         if (global.city['storage_yard'] && global.tech['trade'] && global.tech['trade'] >= 3){
-            let r_count = global.city.storage_yard.count;
+            let r_count = global.city.storage_yard.count * 100;
             global.city.market.mtrade += r_count;
             breakdown.t_route[loc('city_storage_yard')] = r_count;
         }

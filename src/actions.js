@@ -2260,7 +2260,7 @@ export const actions = {
                     cap *= 2;
                 }
                 if (global.tech['trade'] && global.tech['trade'] >= 3){
-                    return `<div>${loc('plus_max_resource',[cap,global.resource.Crates.name])}</div><div>${loc('city_trade_effect',[1])}</div>`;
+                    return `<div>${loc('plus_max_resource',[cap,global.resource.Crates.name])}</div><div>${loc('city_trade_effect',[100])}</div>`;
                 }
                 else {
                     return loc('plus_max_resource',[cap,global.resource.Crates.name]);
@@ -3169,7 +3169,7 @@ export const actions = {
                 if (global.race['flier']){
                     routes += traits.flier.vars()[1];
                 }
-                return routes;
+                return routes * 100;
             },
             action(args){
                 if (payCosts($(this)[0])){
@@ -3206,12 +3206,12 @@ export const actions = {
                 if (global.tech['particles'] && global.tech['particles'] >= 2){
                     containers *= 2;
                 }
-                return `<div>${loc('city_trade_effect',[2])}</div><div>${loc('city_wharf_effect')}</div><div>${loc('plus_max_crates',[containers])}</div><div>${loc('plus_max_containers',[containers])}</div>`;
+                return `<div>${loc('city_trade_effect',[200])}</div><div>${loc('city_wharf_effect')}</div><div>${loc('plus_max_crates',[containers])}</div><div>${loc('plus_max_containers',[containers])}</div>`;
             },
             action(args){
                 if (payCosts($(this)[0])){
                     incrementStruct('wharf','city');
-                    global.city.market.mtrade += 2;
+                    global.city.market.mtrade += 200;
                     let vol = global.tech['world_control'] ? 15 : 10;
                     if (global.tech['particles'] && global.tech['particles'] >= 2){
                         vol *= 2;

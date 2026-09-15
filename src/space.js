@@ -118,7 +118,7 @@ const spaceProjects = {
                     return loc('space_home_gps_effect_req');
                 }
                 else {
-                    return `<div>${loc('space_home_gps_effect')}</div><div>${loc('space_home_gps_effect2',[2])}</div>`;
+                    return `<div>${loc('space_home_gps_effect')}</div><div>${loc('space_home_gps_effect2',[200])}</div>`;
                 }
             },
             action(args){
