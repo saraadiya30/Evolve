@@ -11,6 +11,7 @@ import { highPopAdjust, production, teamster } from './prod.js';
 import { loc } from './locale.js';
 
 export const resource_values = {
+    Aether: 1000000,
     Food: 5,
     Lumber: 5,
     Chrysotile: 5,
@@ -55,37 +56,38 @@ export const resource_values = {
 };
 
 export const tradeRatio = {
-    Food: 2,
-    Lumber: 2,
-    Chrysotile: 1,
-    Stone: 2,
-    Crystal: 0.4,
-    Furs: 1,
-    Copper: 1,
-    Iron: 1,
-    Aluminium: 1,
-    Cement: 1,
-    Coal: 1,
-    Oil: 0.5,
-    Uranium: 0.12,
-    Steel: 0.5,
-    Titanium: 0.25,
-    Alloy: 0.2,
-    Polymer: 0.2,
-    Iridium: 0.1,
-    Helium_3: 0.1,
-    Deuterium: 0.1,
-    Elerium: 0.02,
-    Water: 2,
-    Neutronium: 0.05,
-    Adamantite: 0.05,
-    Infernite: 0.01,
-    Nano_Tube: 0.1,
-    Graphene: 0.1,
-    Stanene: 0.1,
-    Bolognium: 0.12,
-    Vitreloy: 0.12,
-    Orichalcum: 0.05
+    Aether: 0.01,
+    Food: 20,
+    Lumber: 20,
+    Chrysotile: 10,
+    Stone: 20,
+    Crystal: 4,
+    Furs: 10,
+    Copper: 10,
+    Iron: 10,
+    Aluminium: 10,
+    Cement: 10,
+    Coal: 10,
+    Oil: 5,
+    Uranium: 1.2,
+    Steel: 5,
+    Titanium: 2.5,
+    Alloy: 2,
+    Polymer: 2,
+    Iridium: 1,
+    Helium_3: 1,
+    Deuterium: 1,
+    Elerium: 0.2,
+    Water: 20,
+    Neutronium: 0.5,
+    Adamantite: 0.5,
+    Infernite: 0.1,
+    Nano_Tube: 1,
+    Graphene: 1,
+    Stanene: 1,
+    Bolognium: 1.2,
+    Vitreloy: 1.2,
+    Orichalcum: 0.5
 }
 
 export const atomic_mass = {
@@ -759,6 +761,8 @@ export function defineResources(wiki){
     loadSpecialResource('Dark');
     loadSpecialResource('Harmony');
     loadSpecialResource('AICore');
+    loadResource('Aether',wiki,-2,0,true,false,'special');
+    global.resource.Aether.display = true;
 }
 
 export function tradeSummery(){
@@ -1492,8 +1496,8 @@ export function marketItem(mount,market_item,name,color,full){
                     if (fathom > 0){
                         value *= 1 - (traits.conniving.vars(1)[0] / 100 * fathom);
                     }
-                    let amount = Math.floor(Math.min(qty, global.resource.Money.amount / value,
-                      global.resource[res].max - global.resource[res].amount));
+                    let capRoom = global.resource[res].max < 0 ? qty : (global.resource[res].max - global.resource[res].amount);
+                    let amount = Math.floor(Math.min(qty, global.resource.Money.amount / value, capRoom));
                     if (amount > 0){
                         global.resource[res].amount += amount;
                         global.resource.Money.amount -= Math.round(value * amount);

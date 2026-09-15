@@ -6482,6 +6482,7 @@
   "resource_Knockoff_plural_name": "Plásmíds",
   "resource_Plasmid_name": "Plasmid",
   "resource_Plasmid_plural_name": "Plasmids",
+  "resource_Aether_name": "Aether",
   "resource_Plasmid_desc": "%0 active Plasmids are providing a global production boost of %1%.",
   "resource_Plasmid_desc2": "They also grant a spatial reasoning bonus to your storage of %0%.",
   "resource_AntiPlasmid_name": "Anti-Plasmid",

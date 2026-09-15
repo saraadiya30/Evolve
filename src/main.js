@@ -880,6 +880,14 @@ resourceAlt();
 var firstRun = true;
 var gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? global.arpa.sequence.on : 0;
 function fastLoop(){
+    if (global.resource.Aether){
+        let plasmid = global.prestige.Plasmid.count || 1;
+        let phage = global.prestige.Phage.count || 1;
+        global.resource.Aether.rate = plasmid * phage;
+        global.resource.Aether.diff = global.resource.Aether.rate;
+        global.resource.Aether.amount += global.resource.Aether.rate;
+    }
+    
     if (!global.race['no_craft']){
         $('.craft').each(function(e){
             if (typeof $(this).data('val') === 'number'){
@@ -1200,7 +1208,7 @@ function fastLoop(){
         'Water','Deuterium','Neutronium','Adamantite','Infernite','Elerium','Nano_Tube','Graphene','Stanene',
         'Bolognium','Vitreloy','Orichalcum','Asphodel_Powder','Elysanite','Unobtainium','Quantium',
         'Plywood','Brick','Wrought_Iron','Sheet_Metal','Mythril','Aerogel','Nanoweave','Scarletite',
-        'Cipher','Nanite','Mana','Authority'
+        'Cipher','Nanite','Mana','Authority','Aether'
     ];
 
     breakdown.p['consume'] = {};
