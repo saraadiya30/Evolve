@@ -5815,7 +5815,7 @@ export function storageMultipler(scale = 1, wiki = false){
         multiplier *= 1 + (traits.pack_rat.vars(1)[1] / 100 * fathom);
     }
     if (global.tech['storage'] >= 6){
-        multiplier *= 1 + (global.tech['supercollider'] / 20);
+        multiplier *= 1 + (global.tech['supercollider'] / 1);
     }
     if (global.tech['tp_depot']){
         multiplier *= 1 + (global.tech['tp_depot'] / 20);

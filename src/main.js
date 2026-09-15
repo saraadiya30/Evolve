@@ -9922,6 +9922,7 @@ function midLoop(){
             if (global.stats.achieve['banana'] && global.stats.achieve.banana.l >= 2){
                 routes++;
             }
+            routes *= 10000;
             global.city.market.mtrade += global.tech['railway'] * routes;
             breakdown.t_route[loc('arpa_projects_railway_title')] = global.tech['railway'] * routes;
         }

@@ -47,7 +47,7 @@ export const arpaProjects = {
             let sc = global.tech['tp_particles'] || (global.tech['particles'] && global.tech['particles'] >= 3) ? (global.race['cataclysm'] ? 20 : 8) : (global.race['cataclysm'] ? 10 : 4);
             if (global.tech['storage'] >= 6){
                 if (global.race['warlord']){
-                    return loc('arpa_projects_lhc_warlord2',[loc('portal_twisted_lab_title'),sc,5]);
+                    return loc('arpa_projects_lhc_warlord2',[loc('portal_twisted_lab_title'),sc,100]);
                 }
                 else if (global.tech['particles'] && global.tech['particles'] >= 4){
                     return global.race['cataclysm'] ? loc('arpa_projects_lhc_cataclysm3',[sc]) : loc('arpa_projects_lhc_effect3',[sc,global.race['orbit_decayed'] ? loc('space_home_satellite_title') : wardenLabel()]);
@@ -197,14 +197,17 @@ export const arpaProjects = {
             let desc = '';
             if (global.race['cataclysm'] || global.race['orbit_decayed']){
                 routes += global.space['gps'] ? Math.floor(global.space.gps.count / 3) : 0;
+                routes *= 10000;
                 desc = loc('arpa_projects_railway_cataclysm1',[routes,profit,3,1]);
             }
             else if (global.race['warlord']){
                 routes += 5;
+                routes *= 10000;
                 desc = loc('arpa_projects_railway_warlord1',[routes,profit]);
             }
             else {
                 routes += global.city['storage_yard'] ? Math.floor(global.city.storage_yard.count / 6) : 0;
+                routes *= 10000;
                 desc = loc('arpa_projects_railway_effect1',[routes,profit,6,1]);
             }
             if (global.tech['hell_lake'] && global.tech.hell_lake >= 7){
