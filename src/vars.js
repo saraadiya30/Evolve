@@ -1276,7 +1276,7 @@ delete global['beta'];
 if (!global.hasOwnProperty('prestige')){
     global.prestige = {};
 }
-['Plasmid','AntiPlasmid','Phage','Dark','Harmony','AICore','Artifact','Blood_Stone','Supercoiled'].forEach(function (res){
+['Plasmid','AntiPlasmid','Phage','Dark','Harmony','AICore','Artifact','Blood_Stone','Supercoiled','Aether'].forEach(function (res){
     if (!global.prestige.hasOwnProperty(res)){
         global.prestige[res] = { count: 0 };
     }
@@ -2289,7 +2289,8 @@ function setRegionStates(reset){
             'showCiv','showCity','showIndustry','showPowerGrid','showMechLab','showShipYard',
             'showResearch','showCivic','showMil','showResources','showMarket','showStorage',
             'showGenetics','showSpace','showDeep','showGalactic','showPortal','showEden','showOuter',
-            'showTau','showEjector','showCargo','showAlchemy','showGovernor','arpa','showPsychic','showWish'
+            'showTau','showEjector','showCargo','showAlchemy','showGovernor','arpa','showPsychic','showWish','showAether',
+            'showAether'
         ],
         space: [
             'moon','red','hell','sun','gas','gas_moon','belt','dwarf','alpha','proxima',

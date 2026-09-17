@@ -396,6 +396,12 @@ export function loadTab(tab){
                             <span aria-hidden="true">{{ 'tab_eden' | label }}</span>
                         </template>
                     </b-tab-item>
+                    <b-tab-item id="aether" :visible="s.showAether">
+                        <template slot="header">
+                            <h2 class="is-sr-only">{{ 'tab_aether' | label }}</h2>
+                            <span aria-hidden="true">{{ 'tab_aether' | label }}</span>
+                        </template>
+                    </b-tab-item>
                 </b-tabs>`);
                 vBind({
                     el: `#mTabCivil`,
@@ -413,6 +419,7 @@ export function loadTab(tab){
                                 clearElement($(`#outerSol`));
                                 clearElement($(`#tauCeti`));
                                 clearElement($(`#eden`));
+                                clearElement($(`#aether`));
                                 switch (tab){
                                     case 0:
                                         drawCity();
@@ -431,6 +438,9 @@ export function loadTab(tab){
                                         break;
                                     case 7:
                                         renderEdenic();
+                                        break;
+                                    case 8:
+                                        drawAether();
                                         break;
                                 }
                             }
@@ -473,6 +483,11 @@ export function loadTab(tab){
                     tagEvent('page_view',{ page_title: `Evolve - Civics` });
                 }
                 $(`#mTabCivic`).append(`<b-tabs class="resTabs" v-model="s.govTabs" :animated="s.animated" @input="swapTab">
+                    <b-tab-item id="aether" :visible="s.showAether">
+                        <template slot="header">
+                            {{ 'tab_aether' | label }}
+                        </template>
+                    </b-tab-item>
                     <b-tab-item id="civic">
                         <template slot="header">
                             <h2 class="is-sr-only">{{ 'tab_gov' | label }}</h2>

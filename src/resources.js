@@ -11,7 +11,6 @@ import { highPopAdjust, production, teamster } from './prod.js';
 import { loc } from './locale.js';
 
 export const resource_values = {
-    Aether: 1000000,
     Food: 5,
     Lumber: 5,
     Chrysotile: 5,
@@ -56,7 +55,6 @@ export const resource_values = {
 };
 
 export const tradeRatio = {
-    Aether: 0.01,
     Food: 20,
     Lumber: 20,
     Chrysotile: 10,
@@ -761,8 +759,7 @@ export function defineResources(wiki){
     loadSpecialResource('Dark');
     loadSpecialResource('Harmony');
     loadSpecialResource('AICore');
-    loadResource('Aether',wiki,-2,0,true,false,'special');
-    global.resource.Aether.display = true;
+    loadSpecialResource('Aether');
 }
 
 export function tradeSummery(){
@@ -3021,6 +3018,159 @@ export function loadAlchemy(name,color,basic){
             elm: `#alchemy${name} h3`
         });
     }
+}
+
+export function initAether(){
+    clearElement($('#aether'));
+
+    if (!global.prestige.hasOwnProperty('Aether')){
+        return;
+    }
+
+    if (typeof global.settings.aetherMoneyQty === 'undefined'){
+        global.settings.aetherMoneyQty = 1;
+    }
+
+    let wrap = $(`<div id="aetherExchange"></div>`);
+    $('#aether').append(wrap);
+
+    wrap.append($(`<h3 class="has-text-info">${loc('resource_Aether_name')}: <span>{{ p.Aether.count | round }}</span></h3>`));
+
+    let plasmidRow = $(`<div id="aetherPlasmid" class="market-item"><h3 class="res has-text-info">${loc('resource_Plasmid_name')}</h3></div>`);
+    wrap.append(plasmidRow);
+    plasmidRow.append($(`<span role="button" aria-label="exchange aether for plasmid" class="add has-text-success" :class="{ off: p.Aether.count < 1 }" @click="buyPlasmid()"><span>${loc('aether_exchange_button',[1,loc('resource_Aether_name'),1000,loc('resource_Plasmid_name')])}</span></span>`));
+    plasmidRow.append($(`<b-field class="market">${loc('aether_exchange_route')}<span class="button has-text-danger" role="button" @click="lessPlasmidRate">-</span><b-numberinput :input="plasmidRateVal()" min="0" v-model="s.aetherPlasmidRate" :controls="false"></b-numberinput><span class="button has-text-success" role="button" @click="morePlasmidRate">+</span></b-field>`));
+
+    let phageRow = $(`<div id="aetherPhage" class="market-item"><h3 class="res has-text-info">${loc('resource_Phage_name')}</h3></div>`);
+    wrap.append(phageRow);
+    phageRow.append($(`<span role="button" aria-label="exchange aether for phage" class="add has-text-success" :class="{ off: p.Aether.count < 1 }" @click="buyPhage()"><span>${loc('aether_exchange_button',[1,loc('resource_Aether_name'),100,loc('resource_Phage_name')])}</span></span>`));
+    phageRow.append($(`<b-field class="market">${loc('aether_exchange_route')}<span class="button has-text-danger" role="button" @click="lessPhageRate">-</span><b-numberinput :input="phageRateVal()" min="0" v-model="s.aetherPhageRate" :controls="false"></b-numberinput><span class="button has-text-success" role="button" @click="morePhageRate">+</span></b-field>`));
+
+    let moneyRow = $(`<div id="aetherMoney" class="market-item"><h3 class="res has-text-info">${loc('resource_Money_name')}</h3></div>`);
+    wrap.append(moneyRow);
+    moneyRow.append($(`<b-field class="market"><span class="button has-text-danger" role="button" @click="lessMoney">-</span><b-numberinput :input="moneyVal()" min="1" v-model="s.aetherMoneyQty" :controls="false"></b-numberinput><span class="button has-text-success" role="button" @click="moreMoney">+</span></b-field>`));
+    moneyRow.append($(`<span role="button" aria-label="exchange aether for money" class="add has-text-success" :class="{ off: p.Aether.count < s.aetherMoneyQty }" @click="buyMoney()"><span>{{ 'aether_exchange_money' | label([s.aetherMoneyQty, s.aetherMoneyQty * 100000000000000]) }}</span></span>`));
+    moneyRow.append($(`<b-field class="market">${loc('aether_exchange_route')}<span class="button has-text-danger" role="button" @click="lessMoneyRate">-</span><b-numberinput :input="moneyRateVal()" min="0" v-model="s.aetherMoneyRate" :controls="false"></b-numberinput><span class="button has-text-success" role="button" @click="moreMoneyRate">+</span></b-field>`));
+
+    let powerRow = $(`<div id="aetherPower" class="market-item"><h3 class="res has-text-info">${loc('aether_power_label')}</h3></div>`);
+    wrap.append(powerRow);
+    powerRow.append($(`<b-field class="market"><span class="button has-text-danger" role="button" @click="lessPower">-</span><b-numberinput :input="powerVal()" min="0" step="0.00001" v-model="s.aetherPower" :controls="false"></b-numberinput><span class="button has-text-success" role="button" @click="morePower">+</span></b-field>`));
+    powerRow.append($(`<span class="current infoOnly">{{ 'aether_exchange_power' | label([s.aetherPower * 100000000]) }}</span>`));
+
+    let storageRow = $(`<div id="aetherStorage" class="market-item"><h3 class="res has-text-info">${loc('tab_storage')}</h3></div>`);
+    wrap.append(storageRow);
+    storageRow.append($(`<b-field class="market"><span class="button has-text-danger" role="button" @click="lessStorage">-</span><b-numberinput :input="storageVal()" min="0" step="0.00000000001" v-model="s.aetherStorage" :controls="false"></b-numberinput><span class="button has-text-success" role="button" @click="moreStorage">+</span></b-field>`));
+    storageRow.append($(`<span class="current infoOnly">{{ 'aether_exchange_storage' | label([(s.aetherStorage / 0.00000000001) * 100]) }}</span>`));
+
+    let speedRow = $(`<div id="aetherSpeed" class="market-item"><h3 class="res has-text-info">${loc('aether_speed_label')}</h3></div>`);
+    wrap.append(speedRow);
+    speedRow.append($(`<b-field class="market"><span class="button has-text-danger" role="button" @click="lessSpeed">-</span><b-numberinput :input="speedVal()" min="0" v-model="s.aetherSpeed" :controls="false"></b-numberinput><span class="button has-text-success" role="button" @click="moreSpeed">+</span></b-field>`));
+    speedRow.append($(`<span class="current infoOnly">{{ 'aether_exchange_speed' | label([s.aetherSpeed + 1]) }}</span>`));
+
+    vBind({
+        el: `#aetherExchange`,
+        data: {
+            p: global.prestige,
+            s: global.settings
+        },
+        filters: {
+            round(n){ return n ? sizeApproximation(n, 3, false, true) : n; },
+            label(key,args){
+                let str = loc(key);
+                args.forEach(function(a,i){ str = str.replace(`%${i}`, sizeApproximation(a,3,false,true)); });
+                return str;
+            }
+        },
+        methods: {
+            buyPlasmid(){
+                let keyMult = keyMultiplier();
+                let convert = Math.min(keyMult, Math.floor(global.prestige.Aether.count));
+                if (convert > 0){
+                    global.prestige.Aether.count -= convert;
+                    global.prestige.Plasmid.count += convert * 1000;
+                }
+            },
+            buyPhage(){
+                let keyMult = keyMultiplier();
+                let convert = Math.min(keyMult, Math.floor(global.prestige.Aether.count));
+                if (convert > 0){
+                    global.prestige.Aether.count -= convert;
+                    global.prestige.Phage.count += convert * 100;
+                }
+            },
+            buyMoney(){
+                let convert = Math.min(global.settings.aetherMoneyQty, global.prestige.Aether.count);
+                if (convert > 0){
+                    global.prestige.Aether.count -= convert;
+                    global.resource.Money.amount += convert * 100000000000000;
+                }
+            },
+            moneyVal(){
+                if (!global.settings.aetherMoneyQty || global.settings.aetherMoneyQty < 1){
+                    global.settings.aetherMoneyQty = 1;
+                }
+                return global.settings.aetherMoneyQty;
+            },
+            moreMoney(){ global.settings.aetherMoneyQty += keyMultiplier(); },
+            lessMoney(){ global.settings.aetherMoneyQty = Math.max(1, global.settings.aetherMoneyQty - keyMultiplier()); },
+            powerVal(){
+                if (!global.settings.aetherPower || global.settings.aetherPower < 0){
+                    global.settings.aetherPower = 0;
+                }
+                return global.settings.aetherPower;
+            },
+            morePower(){
+                global.settings.aetherPower = +(global.settings.aetherPower + (0.00001 * keyMultiplier())).toFixed(10);
+            },
+            lessPower(){
+                global.settings.aetherPower = Math.max(0, +(global.settings.aetherPower - (0.00001 * keyMultiplier())).toFixed(10));
+            },
+            storageVal(){
+                if (!global.settings.aetherStorage || global.settings.aetherStorage < 0){
+                    global.settings.aetherStorage = 0;
+                }
+                return global.settings.aetherStorage;
+            },
+            moreStorage(){
+                global.settings.aetherStorage = +(global.settings.aetherStorage + (0.00000000001 * keyMultiplier())).toFixed(15);
+            },
+            lessStorage(){
+                global.settings.aetherStorage = Math.max(0, +(global.settings.aetherStorage - (0.00000000001 * keyMultiplier())).toFixed(15));
+            },
+            plasmidRateVal(){
+                if (!global.settings.aetherPlasmidRate || global.settings.aetherPlasmidRate < 0){
+                    global.settings.aetherPlasmidRate = 0;
+                }
+                return global.settings.aetherPlasmidRate;
+            },
+            morePlasmidRate(){ global.settings.aetherPlasmidRate += keyMultiplier(); },
+            lessPlasmidRate(){ global.settings.aetherPlasmidRate = Math.max(0, global.settings.aetherPlasmidRate - keyMultiplier()); },
+            phageRateVal(){
+                if (!global.settings.aetherPhageRate || global.settings.aetherPhageRate < 0){
+                    global.settings.aetherPhageRate = 0;
+                }
+                return global.settings.aetherPhageRate;
+            },
+            morePhageRate(){ global.settings.aetherPhageRate += keyMultiplier(); },
+            lessPhageRate(){ global.settings.aetherPhageRate = Math.max(0, global.settings.aetherPhageRate - keyMultiplier()); },
+            moneyRateVal(){
+                if (!global.settings.aetherMoneyRate || global.settings.aetherMoneyRate < 0){
+                    global.settings.aetherMoneyRate = 0;
+                }
+                return global.settings.aetherMoneyRate;
+            },
+            moreMoneyRate(){ global.settings.aetherMoneyRate += keyMultiplier(); },
+            lessMoneyRate(){ global.settings.aetherMoneyRate = Math.max(0, global.settings.aetherMoneyRate - keyMultiplier()); },
+            speedVal(){
+                if (!global.settings.aetherSpeed || global.settings.aetherSpeed < 0){
+                    global.settings.aetherSpeed = 0;
+                }
+                return global.settings.aetherSpeed;
+            },
+            moreSpeed(){ global.settings.aetherSpeed += keyMultiplier(); },
+            lessSpeed(){ global.settings.aetherSpeed = Math.max(0, global.settings.aetherSpeed - keyMultiplier()); }
+        }
+    });
 }
 
 export const spatialReasoning = (function(){

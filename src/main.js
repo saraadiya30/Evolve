@@ -868,7 +868,15 @@ if (window.Worker){
         const data = e.data;
         switch (data.loop) {
             case 'main':
-                execGameLoops(data.periods);
+                let speedMult = 1;
+                if (global.prestige.hasOwnProperty('Aether') && global.settings.aetherSpeed > 0){
+                    let draw = Math.min(global.settings.aetherSpeed, Math.floor(global.prestige.Aether.count));
+                    if (draw > 0){
+                        global.prestige.Aether.count -= draw;
+                        speedMult = 1 + draw;
+                    }
+                }
+                execGameLoops(data.periods * speedMult);
                 break;
         }
     }, false);
@@ -880,12 +888,32 @@ resourceAlt();
 var firstRun = true;
 var gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? global.arpa.sequence.on : 0;
 function fastLoop(){
-    if (global.resource.Aether){
+    if (global.prestige.hasOwnProperty('Aether')){
         let plasmid = global.prestige.Plasmid.count || 1;
         let phage = global.prestige.Phage.count || 1;
-        global.resource.Aether.rate = plasmid * phage;
-        global.resource.Aether.diff = global.resource.Aether.rate;
-        global.resource.Aether.amount += global.resource.Aether.rate;
+        let aetherRate = plasmid * phage;
+        global.prestige.Aether.count += aetherRate;
+        if (global.settings.aetherPlasmidRate > 0){
+            let convert = Math.min(global.settings.aetherPlasmidRate, Math.floor(global.prestige.Aether.count));
+            if (convert > 0){
+                global.prestige.Aether.count -= convert;
+                global.prestige.Plasmid.count += convert * 1000;
+            }
+        }
+        if (global.settings.aetherPhageRate > 0){
+            let convert = Math.min(global.settings.aetherPhageRate, Math.floor(global.prestige.Aether.count));
+            if (convert > 0){
+                global.prestige.Aether.count -= convert;
+                global.prestige.Phage.count += convert * 100;
+            }
+        }
+        if (global.settings.aetherMoneyRate > 0){
+            let convert = Math.min(global.settings.aetherMoneyRate, Math.floor(global.prestige.Aether.count));
+            if (convert > 0){
+                global.prestige.Aether.count -= convert;
+                global.resource.Money.amount += convert * 100000000000000;
+            }
+        }
     }
     
     if (!global.race['no_craft']){
@@ -1208,7 +1236,7 @@ function fastLoop(){
         'Water','Deuterium','Neutronium','Adamantite','Infernite','Elerium','Nano_Tube','Graphene','Stanene',
         'Bolognium','Vitreloy','Orichalcum','Asphodel_Powder','Elysanite','Unobtainium','Quantium',
         'Plywood','Brick','Wrought_Iron','Sheet_Metal','Mythril','Aerogel','Nanoweave','Scarletite',
-        'Cipher','Nanite','Mana','Authority','Aether'
+        'Cipher','Nanite','Mana','Authority'
     ];
 
     breakdown.p['consume'] = {};
@@ -2033,6 +2061,17 @@ function fastLoop(){
             max_power -= power;
             power_grid += power;
             power_generated[loc('trait_elemental_name')] = power;
+        }
+
+        if (global.prestige.hasOwnProperty('Aether') && global.settings.aetherPower > 0){
+            let draw = Math.min(global.settings.aetherPower, global.prestige.Aether.count);
+            if (draw > 0){
+                global.prestige.Aether.count -= draw;
+                let power = draw * 100000000; // 0.00001 Aether = 1000 watts
+                max_power -= power;
+                power_grid += power;
+                power_generated[loc('resource_Aether_name')] = power;
+            }
         }
 
         if (global.race['powered']){
@@ -10356,11 +10395,22 @@ function midLoop(){
 
         let create_value = crateValue();
         let container_value = containerValue();
+
+        let aetherStorageMult = 1;
+        if (global.prestige.hasOwnProperty('Aether') && global.settings.aetherStorage > 0){
+            let draw = Math.min(global.settings.aetherStorage, global.prestige.Aether.count);
+            if (draw > 0){
+                global.prestige.Aether.count -= draw;
+                aetherStorageMult = 1 + (draw / 0.00000000001);
+            }
+        }
+
         Object.keys(caps).forEach(function (res){
             let crate = global.resource[res].crates * create_value;
             caps[res] += crate;
             let container = global.resource[res].containers * container_value;
             caps[res] += container;
+            caps[res] *= aetherStorageMult;
             if (breakdown.c[res]){
                 breakdown.c[res][loc('resource_Crates_plural')] = crate+'v';
                 breakdown.c[res][loc('resource_Containers_plural')] = container+'v';
