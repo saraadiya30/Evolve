@@ -3030,6 +3030,7 @@ function aetherLetterCode(n){
 }
 
 function aetherFormat(value){
+    if (value === Infinity || value === -Infinity){ return value > 0 ? '∞' : '-∞'; }
     if (!value || !isFinite(value)){ return '0'; }
     let sign = value < 0 ? '-' : '';
     let abs = Math.abs(value);
@@ -3066,19 +3067,33 @@ export function initAether(){
         return;
     }
 
-    if (typeof global.settings.aetherMoneyQty === 'undefined' || global.settings.aetherMoneyQty >= 1){
-        global.settings.aetherMoneyQty = 0.00000000001;
+    if (typeof global.settings.aetherMoneyQtyCoef === 'undefined'){
+        global.settings.aetherMoneyQtyCoef = 1;
+        global.settings.aetherMoneyQtyExp = -12;
     }
-    ['aetherPlasmidRate','aetherPhageRate','aetherMoneyRate','aetherPower','aetherStorage','aetherSpeed','aetherMorale','aetherProd'].forEach(function(k){
+    if (typeof global.settings.aetherMoneyRateCoef === 'undefined'){
+        global.settings.aetherMoneyRateCoef = 0;
+        global.settings.aetherMoneyRateExp = -12;
+    }
+    ['aetherPlasmidRate','aetherPhageRate','aetherPower','aetherStorage','aetherSpeed','aetherMorale','aetherProd'].forEach(function(k){
         if (typeof global.settings[k] === 'undefined'){
             global.settings[k] = 0;
         }
     });
+    if (typeof global.settings.aetherCustomRate === 'undefined'){
+        global.settings.aetherCustomRate = 1000;
+    }
 
     let wrap = $(`<div id="aetherExchange"></div>`);
     $('#aether').append(wrap);
 
     wrap.append($(`<h3 class="has-text-info">${loc('resource_Aether_name')}: <span>{{ p.Aether.count | round }}</span></h3>`));
+
+    let genRow = $(`<div id="aetherGen" class="market-item"><h3 class="res has-text-info">${loc('aether_gen_label')}</h3></div>`);
+    wrap.append(genRow);
+    genRow.append($(`<label class="checkbox"><input type="checkbox" v-model="s.aetherCustomRateOn"> ${loc('aether_gen_custom')}</label>`));
+    genRow.append($(`<input type="number" min="0" step="1" v-model.number="s.aetherCustomRate" style="width:8rem;margin-left:.5rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    genRow.append($(`<span class="current infoOnly" style="margin-left:.5rem">{{ genLabel() }}</span>`));
 
     let plasmidRow = $(`<div id="aetherPlasmid" class="market-item"><h3 class="res has-text-info">${loc('resource_Plasmid_name')}</h3></div>`);
     wrap.append(plasmidRow);
@@ -3095,9 +3110,32 @@ export function initAether(){
     let moneyRow = $(`<div id="aetherMoney" class="market-item"><h3 class="res has-text-info">${loc('resource_Money_name')}</h3></div>`);
     wrap.append(moneyRow);
     moneyRow.append($(`<span class="buy"><span class="has-text-success">${loc('resource_market_buy')}</span></span>`));
-    moneyRow.append($(`<span class="trade" style="margin-left:0"><b-tooltip :label="stepInfo(0.00000000001)" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="decrease money qty" class="sub has-text-danger" @click="lessMoney"><span>-</span></span></b-tooltip><span class="current">{{ s.aetherMoneyQty | round }}</span><b-tooltip :label="stepInfo(0.00000000001)" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="increase money qty" class="add has-text-success" @click="moreMoney"><span>+</span></span></b-tooltip></span>`));
-    moneyRow.append($(`<b-tooltip :label="moneyLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: p.Aether.count < s.aetherMoneyQty }" @click="buyMoney()">$</span></b-tooltip>`));
-    moneyRow.append($(`<span class="trade"><span class="has-text-warning">${loc('aether_exchange_route')}</span><b-tooltip :label="stepInfo(0.00000000001)" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="decrease money rate" class="sub has-text-danger" @click="lessMoneyRate"><span>-</span></span></b-tooltip><span class="current">{{ s.aetherMoneyRate | round }}</span><b-tooltip :label="stepInfo(0.00000000001)" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="increase money rate" class="add has-text-success" @click="moreMoneyRate"><span>+</span></span></b-tooltip></span>`));
+    moneyRow.append($(`<input type="number" step="any" v-model.number="s.aetherMoneyQtyCoef" style="width:4rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    moneyRow.append($(`<select v-model.number="s.aetherMoneyQtyExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">
+        <option value="-3">${loc('aether_unit_milli')}</option>
+        <option value="-6">${loc('aether_unit_micro')}</option>
+        <option value="-9">${loc('aether_unit_nano')}</option>
+        <option value="-12">${loc('aether_unit_pico')}</option>
+        <option value="-15">${loc('aether_unit_femto')}</option>
+        <option value="-18">${loc('aether_unit_atto')}</option>
+        <option value="-21">${loc('aether_unit_zepto')}</option>
+        <option value="-24">${loc('aether_unit_yocto')}</option>
+    </select>`));
+    moneyRow.append($(`<b-tooltip :label="moneyLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: p.Aether.count < moneyQty() }" @click="buyMoney()">$</span></b-tooltip>`));
+    moneyRow.append($(`<span class="trade"><span class="has-text-warning">${loc('aether_exchange_route')}</span></span>`));
+    moneyRow.append($(`<input type="number" step="any" v-model.number="s.aetherMoneyRateCoef" style="width:4rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    moneyRow.append($(`<select v-model.number="s.aetherMoneyRateExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;">
+        <option value="-3">${loc('aether_unit_milli')}</option>
+        <option value="-6">${loc('aether_unit_micro')}</option>
+        <option value="-9">${loc('aether_unit_nano')}</option>
+        <option value="-12">${loc('aether_unit_pico')}</option>
+        <option value="-15">${loc('aether_unit_femto')}</option>
+        <option value="-18">${loc('aether_unit_atto')}</option>
+        <option value="-21">${loc('aether_unit_zepto')}</option>
+        <option value="-24">${loc('aether_unit_yocto')}</option>
+        <option value="0">${loc('aether_unit_none')}</option>
+    </select>`));
+    moneyRow.append($(`<span class="current infoOnly" style="margin-left:.5rem">{{ moneyRateLabel() }}</span>`));
 
     let powerRow = $(`<div id="aetherPower" class="market-item"><h3 class="res has-text-info">${loc('aether_power_label')}</h3></div>`);
     wrap.append(powerRow);
@@ -3155,22 +3193,41 @@ export function initAether(){
                     global.prestige.Phage.count += convert * 100;
                 }
             },
+            moneyQty(){
+                return global.settings.aetherMoneyQtyCoef * (10 ** global.settings.aetherMoneyQtyExp);
+            },
             buyMoney(){
-                let convert = Math.min(global.settings.aetherMoneyQty, global.prestige.Aether.count);
+                let qty = global.settings.aetherMoneyQtyCoef * (10 ** global.settings.aetherMoneyQtyExp);
+                let convert = Math.min(qty, global.prestige.Aether.count);
                 if (convert > 0){
                     global.prestige.Aether.count -= convert;
-                    global.resource.Money.amount += convert * 100000000000000;
-                    global.resource.Money.delta += convert * 100000000000000;
+                    global.resource.Money.amount += convert * 1000000000000000;
+                    global.resource.Money.delta += convert * 1000000000000000;
                 }
             },
             moneyLabel(){
-                return loc('aether_exchange_money',[aetherFormat(global.settings.aetherMoneyQty), aetherFormat(global.settings.aetherMoneyQty * 100000000000000)]);
+                let qty = global.settings.aetherMoneyQtyCoef * (10 ** global.settings.aetherMoneyQtyExp);
+                return loc('aether_exchange_money',[aetherFormat(qty), aetherFormat(qty * 1000000000000000)]);
+            },
+            moneyRateLabel(){
+                let rate = global.settings.aetherMoneyRateCoef * (10 ** global.settings.aetherMoneyRateExp);
+                return loc('aether_money_rate',[aetherFormat(rate * 1000000000000000)]);
             },
             stepInfo(base){
                 return loc('aether_step_info',[aetherFormat(base * keyMultiplier()), loc('resource_Aether_name')]);
             },
-            moreMoney(){ global.settings.aetherMoneyQty = +(global.settings.aetherMoneyQty + (0.00000000001 * keyMultiplier())).toFixed(15); },
-            lessMoney(){ global.settings.aetherMoneyQty = Math.max(0.00000000001, +(global.settings.aetherMoneyQty - (0.00000000001 * keyMultiplier())).toFixed(15)); },
+            genLabel(){
+                let rate;
+                if (global.settings.aetherCustomRateOn){
+                    rate = global.settings.aetherCustomRate || 0;
+                }
+                else {
+                    let plasmid = global.prestige.Plasmid.count || 1;
+                    let phage = global.prestige.Phage.count || 1;
+                    rate = plasmid * phage;
+                }
+                return loc('aether_gen_rate',[aetherFormat(rate)]);
+            },
             morePower(){
                 global.settings.aetherPower = +(global.settings.aetherPower + (0.00001 * keyMultiplier())).toFixed(10);
             },
@@ -3187,8 +3244,6 @@ export function initAether(){
             lessPlasmidRate(){ global.settings.aetherPlasmidRate = Math.max(0, global.settings.aetherPlasmidRate - keyMultiplier()); },
             morePhageRate(){ global.settings.aetherPhageRate += keyMultiplier(); },
             lessPhageRate(){ global.settings.aetherPhageRate = Math.max(0, global.settings.aetherPhageRate - keyMultiplier()); },
-            moreMoneyRate(){ global.settings.aetherMoneyRate = +(global.settings.aetherMoneyRate + (0.00000000001 * keyMultiplier())).toFixed(15); },
-            lessMoneyRate(){ global.settings.aetherMoneyRate = Math.max(0, +(global.settings.aetherMoneyRate - (0.00000000001 * keyMultiplier())).toFixed(15)); },
             moreSpeed(){ global.settings.aetherSpeed += keyMultiplier(); },
             lessSpeed(){ global.settings.aetherSpeed = Math.max(0, global.settings.aetherSpeed - keyMultiplier()); },
             moreMorale(){
