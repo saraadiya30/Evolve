@@ -6498,6 +6498,7 @@
   "aether_step_mul_info": "×10 / ÷10 per click",
   "aether_gen_label": "Generation",
   "aether_gen_custom": "Use custom rate (ignores Plasmid/Phage)",
+  "aether_gen_custom_short": "Custom",
   "aether_gen_rate": "%0 Aether/tick",
   "aether_money_rate": "%0 Money/tick",
   "aether_unit_milli": "milli (10⁻³)",
