@@ -2,7 +2,7 @@ import { global, tmp_vars, save, message_logs, message_filters, webWorker } from
 import { loc, locales } from './locale.js';
 import { setupStats, alevel } from './achieve.js';
 import { vBind, initMessageQueue, clearElement, flib, tagEvent, gameLoop, popover, clearPopper, powerGrid, easterEgg, trickOrTreat, drawIcon } from './functions.js';
-import { tradeRatio, atomic_mass, supplyValue, marketItem, containerItem, loadEjector, loadSupply, loadAlchemy, initResourceTabs, drawResourceTab, tradeSummery } from './resources.js';
+import { tradeRatio, atomic_mass, supplyValue, marketItem, containerItem, loadEjector, loadSupply, loadAlchemy, initResourceTabs, drawResourceTab, tradeSummery, initAether } from './resources.js';
 import { defineJobs, } from './jobs.js';
 import { clearSpyopDrag } from './governor.js';
 import { defineIndustry, setPowerGrid, gridDefs, clearGrids } from './industry.js';
@@ -27,6 +27,9 @@ export function mainVue(){
                     loadTab(tab);
                 }
                 return tab;
+            },
+            showAetherTab(){
+                return global.race.species !== 'protoplasm';
             },
             saveImport(){
                 if ($('#importExport').val().length > 0){
@@ -413,6 +416,7 @@ export function loadTab(tab){
                                 clearElement($(`#outerSol`));
                                 clearElement($(`#tauCeti`));
                                 clearElement($(`#eden`));
+                                clearElement($(`#aether`));
                                 switch (tab){
                                     case 0:
                                         drawCity();
@@ -431,6 +435,9 @@ export function loadTab(tab){
                                         break;
                                     case 7:
                                         renderEdenic();
+                                        break;
+                                    case 8:
+                                        drawAether();
                                         break;
                                 }
                             }
@@ -834,6 +841,12 @@ export function loadTab(tab){
             }
             break;
         case 6:
+            if (!global.settings.tabLoad){
+                tagEvent('page_view',{ page_title: `Evolve - Aether` });
+            }
+            initAether();
+            break;
+        case 7:
         case 'mTabStats':
             {
                 if (!global.settings.tabLoad){
@@ -870,7 +883,7 @@ export function loadTab(tab){
                 setupStats();
             }
             break;
-        case 7:
+        case 8:
             if (!global.settings.tabLoad){
                 tagEvent('page_view',{ page_title: `Evolve - Settings` });
             }
@@ -1217,6 +1230,15 @@ export function index(){
         <div id="mTabArpa"></div>
     </b-tab-item>`);
     tabs.append(arpa);
+
+    // Aether Tab
+    let aether = $(`<b-tab-item :visible="showAetherTab()">
+        <template slot="header">
+            {{ 'tab_aether' | label }}
+        </template>
+        <div id="aether"></div>
+    </b-tab-item>`);
+    tabs.append(aether);
 
     // Stats Tab
     let stats = $(`<b-tab-item :visible="s.showAchieve">
