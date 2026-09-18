@@ -3060,6 +3060,26 @@ function aetherFormat(value){
     return sign + (+scaled.toFixed(3)) + suffix;
 }
 
+function aetherMoneyUnitOptions(){
+    let labels = {
+        '-12': loc('aether_unit_pico_short'),
+        '-9': loc('aether_unit_nano_short'),
+        '-6': loc('aether_unit_micro_short'),
+        '-3': loc('aether_unit_milli_short'),
+        '0': loc('aether_unit_none'),
+        '3': 'K',
+        '6': 'M',
+        '9': 'B',
+        '12': 'T',
+        '15': 'q'
+    };
+    let opts = '';
+    Object.keys(labels).forEach(function(exp){
+        opts += `<option value="${exp}">${labels[exp]}</option>`;
+    });
+    return opts;
+}
+
 export function initAether(){
     clearElement($('#aether'));
 
@@ -3107,35 +3127,18 @@ export function initAether(){
     phageRow.append($(`<b-tooltip label="${loc('aether_exchange_button',[1,loc('resource_Aether_name'),100,loc('resource_Phage_name')])}" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: p.Aether.count < 1 }" @click="buyPhage()">100</span></b-tooltip>`));
     phageRow.append($(`<span class="trade"><span class="has-text-warning">${loc('aether_exchange_route')}</span><b-tooltip :label="stepInfo(1)" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="decrease phage rate" class="sub has-text-danger" @click="lessPhageRate"><span>-</span></span></b-tooltip><span class="current">{{ s.aetherPhageRate }}</span><b-tooltip :label="stepInfo(1)" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="increase phage rate" class="add has-text-success" @click="morePhageRate"><span>+</span></span></b-tooltip></span>`));
 
-    let moneyRow = $(`<div id="aetherMoney" class="market-item"><h3 class="res has-text-info">${loc('resource_Money_name')}</h3></div>`);
-    wrap.append(moneyRow);
-    moneyRow.append($(`<span class="buy"><span class="has-text-success">${loc('resource_market_buy')}</span></span>`));
-    moneyRow.append($(`<input type="number" step="any" v-model.number="s.aetherMoneyQtyCoef" style="width:4rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
-    moneyRow.append($(`<select v-model.number="s.aetherMoneyQtyExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">
-        <option value="-3">${loc('aether_unit_milli')}</option>
-        <option value="-6">${loc('aether_unit_micro')}</option>
-        <option value="-9">${loc('aether_unit_nano')}</option>
-        <option value="-12">${loc('aether_unit_pico')}</option>
-        <option value="-15">${loc('aether_unit_femto')}</option>
-        <option value="-18">${loc('aether_unit_atto')}</option>
-        <option value="-21">${loc('aether_unit_zepto')}</option>
-        <option value="-24">${loc('aether_unit_yocto')}</option>
-    </select>`));
-    moneyRow.append($(`<b-tooltip :label="moneyLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: p.Aether.count < moneyQty() }" @click="buyMoney()">$</span></b-tooltip>`));
-    moneyRow.append($(`<span class="trade"><span class="has-text-warning">${loc('aether_exchange_route')}</span></span>`));
-    moneyRow.append($(`<input type="number" step="any" v-model.number="s.aetherMoneyRateCoef" style="width:4rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
-    moneyRow.append($(`<select v-model.number="s.aetherMoneyRateExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;">
-        <option value="-3">${loc('aether_unit_milli')}</option>
-        <option value="-6">${loc('aether_unit_micro')}</option>
-        <option value="-9">${loc('aether_unit_nano')}</option>
-        <option value="-12">${loc('aether_unit_pico')}</option>
-        <option value="-15">${loc('aether_unit_femto')}</option>
-        <option value="-18">${loc('aether_unit_atto')}</option>
-        <option value="-21">${loc('aether_unit_zepto')}</option>
-        <option value="-24">${loc('aether_unit_yocto')}</option>
-        <option value="0">${loc('aether_unit_none')}</option>
-    </select>`));
-    moneyRow.append($(`<span class="current infoOnly" style="margin-left:.5rem">{{ moneyRateLabel() }}</span>`));
+    let moneyBuyRow = $(`<div id="aetherMoneyBuy" class="market-item"><h3 class="res has-text-info">${loc('resource_Money_name')}</h3></div>`);
+    wrap.append(moneyBuyRow);
+    moneyBuyRow.append($(`<span class="buy"><span class="has-text-success">${loc('resource_market_buy')}</span></span>`));
+    moneyBuyRow.append($(`<input type="number" step="any" v-model.number="s.aetherMoneyQtyCoef" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    moneyBuyRow.append($(`<select v-model.number="s.aetherMoneyQtyExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">${aetherMoneyUnitOptions()}</select>`));
+    moneyBuyRow.append($(`<b-tooltip :label="moneyLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: p.Aether.count < moneyQty() }" @click="buyMoney()">$</span></b-tooltip>`));
+
+    let moneyRateRow = $(`<div id="aetherMoneyRate" class="market-item"><h3 class="res has-text-info">${loc('aether_exchange_route')}</h3></div>`);
+    wrap.append(moneyRateRow);
+    moneyRateRow.append($(`<input type="number" step="any" v-model.number="s.aetherMoneyRateCoef" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    moneyRateRow.append($(`<select v-model.number="s.aetherMoneyRateExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">${aetherMoneyUnitOptions()}</select>`));
+    moneyRateRow.append($(`<span class="current infoOnly">{{ moneyRateLabel() }}</span>`));
 
     let powerRow = $(`<div id="aetherPower" class="market-item"><h3 class="res has-text-info">${loc('aether_power_label')}</h3></div>`);
     wrap.append(powerRow);
