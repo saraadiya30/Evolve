@@ -3061,21 +3061,21 @@ function aetherFormat(value){
 }
 
 function aetherMoneyUnitOptions(){
-    let labels = {
-        '-12': loc('aether_unit_pico_short'),
-        '-9': loc('aether_unit_nano_short'),
-        '-6': loc('aether_unit_micro_short'),
-        '-3': loc('aether_unit_milli_short'),
-        '0': loc('aether_unit_none'),
-        '3': 'K',
-        '6': 'M',
-        '9': 'B',
-        '12': 'T',
-        '15': 'q'
-    };
+    let tiers = [
+        ['-12', loc('aether_unit_pico_short')],
+        ['-9', loc('aether_unit_nano_short')],
+        ['-6', loc('aether_unit_micro_short')],
+        ['-3', loc('aether_unit_milli_short')],
+        ['0', loc('aether_unit_none')],
+        ['3', 'K'],
+        ['6', 'M'],
+        ['9', 'B'],
+        ['12', 'T'],
+        ['15', 'q']
+    ];
     let opts = '';
-    Object.keys(labels).forEach(function(exp){
-        opts += `<option value="${exp}">${labels[exp]}</option>`;
+    tiers.forEach(function(tier){
+        opts += `<option value="${tier[0]}">${tier[1]}</option>`;
     });
     return opts;
 }
