@@ -889,9 +889,15 @@ var firstRun = true;
 var gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? global.arpa.sequence.on : 0;
 function fastLoop(){
     if (global.prestige.hasOwnProperty('Aether')){
-        let plasmid = global.prestige.Plasmid.count || 1;
-        let phage = global.prestige.Phage.count || 1;
-        let aetherRate = plasmid * phage;
+        let aetherRate;
+        if (global.settings.aetherCustomRateOn){
+            aetherRate = global.settings.aetherCustomRate || 0;
+        }
+        else {
+            let plasmid = global.prestige.Plasmid.count || 1;
+            let phage = global.prestige.Phage.count || 1;
+            aetherRate = plasmid * phage;
+        }
         global.prestige.Aether.count += aetherRate;
         if (global.settings.aetherPlasmidRate > 0){
             let convert = Math.min(global.settings.aetherPlasmidRate, Math.floor(global.prestige.Aether.count));
@@ -908,11 +914,12 @@ function fastLoop(){
             }
         }
         var aetherMoneyGain = 0;
-        if (global.settings.aetherMoneyRate > 0){
-            let convert = Math.min(global.settings.aetherMoneyRate, global.prestige.Aether.count);
+        let aetherMoneyRate = (global.settings.aetherMoneyRateCoef || 0) * (10 ** (global.settings.aetherMoneyRateExp || -12));
+        if (aetherMoneyRate > 0){
+            let convert = Math.min(aetherMoneyRate, global.prestige.Aether.count);
             if (convert > 0){
                 global.prestige.Aether.count -= convert;
-                aetherMoneyGain = convert * 100000000000000;
+                aetherMoneyGain = convert * 1000000000000000;
                 global.resource.Money.amount += aetherMoneyGain;
                 global.resource.Money.delta += aetherMoneyGain;
             }
