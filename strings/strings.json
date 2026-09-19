@@ -6487,6 +6487,7 @@
   "aether_exchange_button": "Exchange %0 %1 for %2 %3",
   "aether_exchange_auto": "Auto",
   "aether_exchange_route": "Rate/tick: ",
+  "aether_money_rate_label": "Money rate/tick",
   "aether_speed_label": "Time Speed",
   "aether_exchange_speed": "Speed: %0x",
   "aether_info_label": "Info",
