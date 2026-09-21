@@ -5,7 +5,7 @@
 export const OCOIN_RATE = 1000;     // 1 Ocoin = 1000 Money (both directions)
 export const OCOIN_BUY_FEE = 0.05;  // fee on Money -> Ocoin only. Ocoin -> Money is free.
 export const LOT_BONUS = 0.001;     // each lot owned adds +0.1% production to that stock's resource (additive, no cap)
-export const HIST_LEN = 24;         // how many past prices are kept for the sparkline
+export const HIST_LEN = 240;        // how many past prices (one per tick) are kept for the price chart
 
 // --- Order book ---------------------------------------------------------------------------------------------------
 // Every stock has an ask side (sellers) and a bid side (buyers). Each side is a ladder of price levels, LEVEL_STEP apart.
@@ -143,6 +143,16 @@ export function startEvent(st, type, rand = Math.random, strength = 1){
         let drop = randBetween(CRASH_DROP, rand) * strength;
         st.ev = { type: 'crash', left: dur, drift: Math.log(1 - drop) / dur };
     }
+}
+
+// Runs a stock through some ticks without any player involvement, so a new stock starts with a believable price history
+// (used for the chart) instead of a single point.
+export function warmUp(st, ticks = 150, rand = Math.random){
+    for (let i = 0; i < ticks; i++){
+        stepStock(st, rand);
+    }
+    st.prev = st.hist.length > 1 ? st.hist[st.hist.length - 2] : st.price;
+    return st;
 }
 
 // Advance one stock by one tick (one game day).
