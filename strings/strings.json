@@ -6618,6 +6618,7 @@
   "aether_unit_yocto_short": "yocto",
   "aether_power_label": "Power",
   "aether_exchange_money": "Exchange %0 Aether for %1 Money",
+  "aether_exchange_ocoin": "Exchange %0 Aether for %1 Ocoin",
   "aether_exchange_power": "Generates %0 W",
   "aether_exchange_storage": "Storage +%0%",
   "resource_Plasmid_desc": "%0 active Plasmids are providing a global production boost of %1%.",

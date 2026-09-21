@@ -4,6 +4,8 @@
 // --- Tunable constants ---------------------------------------------------------------------------------------------
 export const OCOIN_RATE = 1000;     // 1 Ocoin = 1000 Money (both directions)
 export const OCOIN_BUY_FEE = 0.05;  // fee on Money -> Ocoin only. Ocoin -> Money is free.
+export const AETHER_OCOIN_RATE = 1e12; // Ocoin you get for 1 Aether (the Aether tab). Same value as 1 Aether = 1e15 Money at the 1000:1
+                                        // exchange, without the 5% fee.
 export const LOT_BONUS = 0.001;     // each lot owned adds +0.1% production to that stock's resource (additive, no cap)
 export const HIST_LEN = 240;        // how many past prices (one per tick) are kept for the price chart
 

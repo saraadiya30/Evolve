@@ -9,6 +9,7 @@ import { govActive, defineGovernor } from './governor.js';
 import { govEffect } from './civics.js';
 import { highPopAdjust, production, teamster } from './prod.js';
 import { loc } from './locale.js';
+import { AETHER_OCOIN_RATE } from './stocks_core.js';
 
 export const resource_values = {
     Food: 5,
@@ -3095,6 +3096,10 @@ export function initAether(){
         global.settings.aetherMoneyRateCoef = 0;
         global.settings.aetherMoneyRateExp = -12;
     }
+    if (typeof global.settings.aetherOcoinQtyCoef === 'undefined'){
+        global.settings.aetherOcoinQtyCoef = 1;
+        global.settings.aetherOcoinQtyExp = -12;
+    }
     ['aetherPlasmidRate','aetherPhageRate','aetherPower','aetherStorage','aetherSpeed','aetherMorale','aetherProd'].forEach(function(k){
         if (typeof global.settings[k] === 'undefined'){
             global.settings[k] = 0;
@@ -3138,6 +3143,13 @@ export function initAether(){
     moneyRateRow.append($(`<input type="number" min="0" step="any" v-model.number="s.aetherMoneyRateCoef" @change="clampNonNeg('aetherMoneyRateCoef')" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
     moneyRateRow.append($(`<select v-model.number="s.aetherMoneyRateExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">${aetherMoneyUnitOptions()}</select>`));
     moneyRateRow.append($(`<span class="current infoOnly">{{ moneyRateLabel() }}</span>`));
+
+    // Ocoin (stock market currency): a one-off purchase, there is no rate/tick for it
+    let ocoinBuyRow = $(`<div id="aetherOcoinBuy" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('resource_Ocoin_name')}</h3></div>`);
+    wrap.append(ocoinBuyRow);
+    ocoinBuyRow.append($(`<input type="number" min="0" step="any" v-model.number="s.aetherOcoinQtyCoef" @change="clampNonNeg('aetherOcoinQtyCoef')" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    ocoinBuyRow.append($(`<select v-model.number="s.aetherOcoinQtyExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">${aetherMoneyUnitOptions()}</select>`));
+    ocoinBuyRow.append($(`<b-tooltip :label="ocoinLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: p.Aether.count < ocoinQty() }" @click="buyOcoin()">${loc('resource_market_buy')}</span></b-tooltip>`));
 
     let powerRow = $(`<div id="aetherPower" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('aether_power_label')}</h3></div>`);
     wrap.append(powerRow);
@@ -3210,6 +3222,25 @@ export function initAether(){
             moneyLabel(){
                 let qty = global.settings.aetherMoneyQtyCoef * (10 ** global.settings.aetherMoneyQtyExp);
                 return loc('aether_exchange_money',[aetherFormat(qty), aetherFormat(qty * 1000000000000000)]);
+            },
+            ocoinQty(){
+                return global.settings.aetherOcoinQtyCoef * (10 ** global.settings.aetherOcoinQtyExp);
+            },
+            buyOcoin(){
+                let convert = Math.min(this.ocoinQty(), global.prestige.Aether.count);
+                if (convert > 0){
+                    global.prestige.Aether.count -= convert;
+                    // The stock state normally exists already; if the stock tab was never opened, start it with just the balance
+                    // (initStocks fills in the rest later).
+                    if (!global.stocks || typeof global.stocks.ocoin !== 'number'){
+                        global['stocks'] = Object.assign({}, global.stocks, { ocoin: 0 });
+                    }
+                    global.stocks.ocoin += convert * AETHER_OCOIN_RATE;
+                }
+            },
+            ocoinLabel(){
+                let qty = this.ocoinQty();
+                return loc('aether_exchange_ocoin',[aetherFormat(qty), aetherFormat(qty * AETHER_OCOIN_RATE)]);
             },
             moneyRateLabel(){
                 let rate = global.settings.aetherMoneyRateCoef * (10 ** global.settings.aetherMoneyRateExp);
