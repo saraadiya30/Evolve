@@ -14,6 +14,7 @@ import { renderFortress, buildFortress, drawMechLab, clearMechDrag, drawHellObse
 import { renderEdenic } from './edenic.js';
 import { drawShipYard, clearShipDrag, renderTauCeti } from './truepath.js';
 import { arpa, clearGeneticsDrag } from './arpa.js';
+import { drawStocks } from './stocks.js';
 
 export function mainVue(){
     vBind({
@@ -28,7 +29,7 @@ export function mainVue(){
                 }
                 return tab;
             },
-            showAetherTab(){
+            showMiscTab(){
                 return global.race.species !== 'protoplasm';
             },
             saveImport(){
@@ -310,6 +311,7 @@ export function initTabs(){
         loadTab(`mTabResearch`);
         loadTab(`mTabResource`);
         loadTab(`mTabArpa`);
+        loadTab(`mTabMisc`);
         loadTab(`mTabStats`);
         loadTab(`mTabObserve`);
     }
@@ -331,6 +333,7 @@ export function loadTab(tab){
         clearElement($(`#mTabResearch`));
         clearElement($(`#mTabResource`));
         clearElement($(`#mTabArpa`));
+        clearElement($(`#mTabMisc`));
         clearElement($(`#mTabStats`));
         clearElement($(`#mTabObserve`));
     }
@@ -416,7 +419,6 @@ export function loadTab(tab){
                                 clearElement($(`#outerSol`));
                                 clearElement($(`#tauCeti`));
                                 clearElement($(`#eden`));
-                                clearElement($(`#aether`));
                                 switch (tab){
                                     case 0:
                                         drawCity();
@@ -435,9 +437,6 @@ export function loadTab(tab){
                                         break;
                                     case 7:
                                         renderEdenic();
-                                        break;
-                                    case 8:
-                                        drawAether();
                                         break;
                                 }
                             }
@@ -841,10 +840,67 @@ export function loadTab(tab){
             }
             break;
         case 6:
-            if (!global.settings.tabLoad){
-                tagEvent('page_view',{ page_title: `Evolve - Aether` });
+        case 'mTabMisc':
+            {
+                if (!global.settings.tabLoad){
+                    tagEvent('page_view',{ page_title: `Evolve - Misc` });
+                }
+                $(`#mTabMisc`).append(`<b-tabs class="resTabs" v-model="s.miscTabs" :animated="s.animated" @input="swapTab">
+                    <b-tab-item id="aether">
+                        <template slot="header">
+                            <h2 class="is-sr-only">{{ 'tab_aether' | label }}</h2>
+                            <span aria-hidden="true">{{ 'tab_aether' | label }}</span>
+                        </template>
+                    </b-tab-item>
+                    <b-tab-item id="miscNew">
+                        <template slot="header">
+                            <h2 class="is-sr-only">{{ 'tab_misc_new' | label }}</h2>
+                            <span aria-hidden="true">{{ 'tab_misc_new' | label }}</span>
+                        </template>
+                    </b-tab-item>
+                </b-tabs>`);
+
+                const drawMiscTab = function(idx){
+                    switch (idx){
+                        case 0:
+                            initAether();
+                            break;
+                        case 1:
+                            drawStocks();
+                            break;
+                    }
+                };
+
+                vBind({
+                    el: `#mTabMisc`,
+                    data: {
+                        s: global.settings
+                    },
+                    methods: {
+                        swapTab(tab){
+                            if (!global.settings.tabLoad){
+                                clearElement($(`#aether`));
+                                clearElement($(`#miscNew`));
+                                drawMiscTab(tab);
+                            }
+                            return tab;
+                        }
+                    },
+                    filters: {
+                        label(lbl){
+                            return tabLabel(lbl);
+                        }
+                    }
+                });
+
+                if (global.settings.tabLoad){
+                    drawMiscTab(0);
+                    drawMiscTab(1);
+                }
+                else {
+                    drawMiscTab(global.settings.miscTabs);
+                }
             }
-            initAether();
             break;
         case 7:
         case 'mTabStats':
@@ -1231,14 +1287,14 @@ export function index(){
     </b-tab-item>`);
     tabs.append(arpa);
 
-    // Aether Tab
-    let aether = $(`<b-tab-item :visible="showAetherTab()">
+    // Misc Tab
+    let misc = $(`<b-tab-item :visible="showMiscTab()">
         <template slot="header">
-            {{ 'tab_aether' | label }}
+            {{ 'tab_misc' | label }}
         </template>
-        <div id="aether"></div>
+        <div id="mTabMisc"></div>
     </b-tab-item>`);
-    tabs.append(aether);
+    tabs.append(misc);
 
     // Stats Tab
     let stats = $(`<b-tab-item :visible="s.showAchieve">

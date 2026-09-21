@@ -22,6 +22,8 @@ import { index, mainVue, initTabs, loadTab } from './index.js';
 import { setWeather, seasonDesc, astrologySign, astroVal } from './seasons.js';
 import { getTopChange } from './wiki/change.js';
 import { enableDebug, updateDebugData } from './debug.js';
+import { stockFlags } from './stocks_core.js';
+import { stockTick, applyStockBreakdown, stockAutoTrade } from './stocks.js';
 
 {
     $(document).ready(function() {
@@ -61,8 +63,9 @@ var quickMap = {
     showResearch: 3,
     showResources: 4,
     showGenetics: 5,
-    showAchieve: 6,
-    settings: 7
+    // 6 is the Misc tab (no shortcut)
+    showAchieve: 7,
+    settings: 8
 };
 
 $(document).keydown(function(e){
@@ -887,7 +890,27 @@ resourceAlt();
 
 var firstRun = true;
 var gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? global.arpa.sequence.on : 0;
+// Money delta of the last fast tick and how many seconds that tick lasted, captured by diffCalc() just before it resets
+// the delta. Used by the stock auto-balance to see the Money income of a tick.
+var moneyTick = null;
+
+// Wrapper: the stock portfolio production bonus (modRes) is only active while the production loop runs.
 function fastLoop(){
+    moneyTick = null;
+    stockFlags.prod = true;
+    try {
+        fastLoopCore();
+    }
+    finally {
+        stockFlags.prod = false;
+    }
+    applyStockBreakdown();
+    if (moneyTick !== null){
+        stockAutoTrade(moneyTick.delta, moneyTick.seconds);
+    }
+}
+
+function fastLoopCore(){
     if (global.prestige.hasOwnProperty('Aether')){
         let aetherRate;
         if (global.settings.aetherCustomRateOn){
@@ -11631,6 +11654,7 @@ var kplv = 60;
 function longLoop(){
     const date = new Date();
     const astroSign = astrologySign();
+    stockTick();
     if (global.race.species !== 'protoplasm'){
 
         if (global.settings.tabLoad || (global.settings.civTabs === 2 && global.settings.govTabs === 2)){
@@ -12973,6 +12997,9 @@ function diffCalc(res,period){
         sec = Math.floor(sec * fast);
     }
 
+    if (res === 'Money'){
+        moneyTick = { delta: global.resource[res].delta, seconds: period / sec };
+    }
     global.resource[res].diff = +(global.resource[res].delta / (period / sec)).toFixed(2);
     global.resource[res].delta = 0;
 

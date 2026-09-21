@@ -1,5 +1,6 @@
 import { global, save, message_logs, message_filters, webWorker, keyMultiplier, intervals, resizeGame, atrack, p_on, quantum_level, tmp_vars } from './vars.js';
 import { loc } from './locale.js';
+import { stockFlags, lotBonus } from './stocks_core.js';
 import { races, traits, genus_def, traitSkin, fathomCheck } from './races.js';
 import { actions, actionDesc } from './actions.js';
 import { jobScale } from './jobs.js';
@@ -681,6 +682,10 @@ export function modRes(res,val,notrack){
     if(res === 'Food' && global.race['fasting']){
         global.resource[res].amount = 0;
         return false;
+    }
+    // Stock portfolio bonus: only boosts income produced during the production loop (see fastLoop wrapper in main.js)
+    if (val > 0 && !notrack && stockFlags.prod && global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
+        val *= lotBonus(global.stocks.market[res].lots);
     }
     let count = global.resource[res].amount + val;
     let success = true;
