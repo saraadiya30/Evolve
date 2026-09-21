@@ -220,10 +220,12 @@ export function drawStocks(){
         #stockExchange .stk-note{margin:.125rem 0 0 1rem;font-size:.8125rem;opacity:.85}
         #stockExchange .market-item.stk-flow{flex-wrap:wrap;align-items:center}
         #stockExchange .stk-flow>*{margin-bottom:.125rem}
-        #stockExchange .stk-layout{display:flex;flex-wrap:wrap;margin:.5rem 0 0 1rem}
+        #stockExchange .stk-layout{display:flex;flex-wrap:wrap;align-items:stretch;margin:.5rem 0 0 1rem}
         #stockExchange .stk-main{flex:1 1 24rem;min-width:0}
-        #stockExchange .stk-list{flex:0 0 14rem;margin-left:1rem;border-left:.0625rem solid rgba(128,128,128,.4)}
-        #stockExchange .stk-listhead{padding:.125rem .5rem;font-size:.8125rem;opacity:.75}
+        #stockExchange .stk-list{flex:0 0 14rem;margin-left:1rem;border-left:.0625rem solid rgba(128,128,128,.4);display:flex;flex-direction:column;min-height:12rem}
+        #stockExchange .stk-listwrap{flex:1 1 0;position:relative;min-height:0}
+        #stockExchange .stk-listscroll{position:absolute;top:0;right:0;bottom:0;left:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+        #stockExchange .stk-listhead{flex:none;padding:.125rem .5rem;font-size:.8125rem;opacity:.75}
         #stockExchange .stk-item{padding:.25rem .5rem;cursor:pointer;border-left:.1875rem solid transparent;margin-left:-.0625rem}
         #stockExchange .stk-item:hover{background:rgba(128,128,128,.12)}
         #stockExchange .stk-item.on{background:rgba(128,128,128,.22);border-left-color:currentColor}
@@ -329,9 +331,9 @@ export function drawStocks(){
     main.append($(`<div v-for="o in orders" :key="o.id" class="market-item stk-orderline"><span>{{ o.text }}</span><span role="button" class="order has-text-danger" @click="cancel(o.id)">${loc('stock_order_cancel')}</span></div>`));
 
     // Watchlist
-    let listCol = $(`<div class="stk-list"><div class="stk-listhead">${loc('stock_watchlist')}</div></div>`);
+    let listCol = $(`<div class="stk-list"><div class="stk-listhead">${loc('stock_watchlist')}</div><div class="stk-listwrap"><div class="stk-listscroll"></div></div></div>`);
     layout.append(listCol);
-    listCol.append($(`<div v-for="r in list" :key="r.res" class="stk-item" :class="{ on: r.res === cur }" @click="select(r.res)"><div class="stk-row1"><span class="stk-iname">{{ r.name }}</span><span>{{ r.priceText }}</span></div><div class="stk-row2"><span class="stk-badges"><span v-if="r.lots > 0" class="has-text-warning">{{ r.lotsText }}</span><span v-if="r.orderCount > 0">{{ r.ordersText }}</span><b v-if="r.evText" :class="r.evClass">{{ r.evText }}</b></span><span :class="r.chgClass">{{ r.chgText }}</span></div></div>`));
+    listCol.find('.stk-listscroll').append($(`<div v-for="r in list" :key="r.res" class="stk-item" :class="{ on: r.res === cur }" @click="select(r.res)"><div class="stk-row1"><span class="stk-iname">{{ r.name }}</span><span>{{ r.priceText }}</span></div><div class="stk-row2"><span class="stk-badges"><span v-if="r.lots > 0" class="has-text-warning">{{ r.lotsText }}</span><span v-if="r.orderCount > 0">{{ r.ordersText }}</span><b v-if="r.evText" :class="r.evClass">{{ r.evText }}</b></span><span :class="r.chgClass">{{ r.chgText }}</span></div></div>`));
 
     vBind({
         el: `#stockExchange`,

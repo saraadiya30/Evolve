@@ -172,6 +172,12 @@ export function loopTimers(){
     };
 }
 
+// Maximum stored accelerated (2x) time, in game days. The original game caps it at 11520 (8*60*60/2.5 game days = 8 hours
+// of accelerated play, reached after 12 hours away). It is removed in this mod. Set a number here to bring a cap back.
+// NOTE: the original game wipes a stored value that is above its cap, so saves with a lot of accelerated time should not
+// be loaded in the unmodified game.
+const ATIME_CAP = Infinity;
+
 // Adds accelerated time if enough time has passed since `global.stats.current`. Returns true if there was accelerated
 // time added. If the parameter is true, it will only add the time if a threshold of 120s has been reached.
 export function addATime(currentTimestamp){
@@ -179,7 +185,7 @@ export function addATime(currentTimestamp){
     if (exceededATimeThreshold(currentTimestamp) || global.stats.hasOwnProperty('current') && global.settings.at > 0){
         let timeDiff = currentTimestamp - global.stats.current;
         // Removing any accelerated time if the value is larger than the cap.
-        if (global.settings.at > 11520){
+        if (global.settings.at > ATIME_CAP){
             global.settings.at = 0;
         }
         // Accelerated time is added only if it is over the threshold.
@@ -190,9 +196,9 @@ export function addATime(currentTimestamp){
             // at * gameDayDuration / timeAccelerationFactor = 2 / 3 * timeDiff
             global.settings.at += Math.floor(2 / 3 * timeDiff * timers.timeAccelerationFactor / gameDayDuration);
         }
-        // Accelerated time is capped at 8*60*60/2.5 game days.
-        if (global.settings.at > 11520){
-            global.settings.at = 11520;
+        // Accelerated time is capped at ATIME_CAP game days.
+        if (global.settings.at > ATIME_CAP){
+            global.settings.at = ATIME_CAP;
         }
         atrack.t = global.settings.at;
         // Updating the current date so that it won't be counted twice (e.g., when unpausing).
