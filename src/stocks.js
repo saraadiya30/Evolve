@@ -197,60 +197,81 @@ export function drawStocks(){
     let wrap = $(`<div id="stockExchange"></div>`);
     $('#miscNew').append(wrap);
 
-    wrap.append($(`<h3 class="has-text-info" style="margin:0 0 .5rem 1rem;">${loc('resource_Ocoin_name')}: <span>{{ ocoinText() }}</span> <span v-if="reservedOcoin() > 0" class="has-text-warning">({{ reservedText() }})</span></h3>`));
-    wrap.append($(`<div class="has-text-warning" style="margin:0 0 .5rem 1rem;">${loc('stock_ocoin_rate',[OCOIN_RATE, OCOIN_BUY_FEE * 100])}</div>`));
-    wrap.append($(`<div class="has-text-warning" style="margin:0 0 .5rem 1rem;">${loc('stock_lot_hint',[LOT_BONUS * 100])}</div>`));
-    wrap.append($(`<div class="has-text-warning" style="margin:0 0 .5rem 1rem;">${loc('stock_book_hint',[LEVEL_PCT])}</div>`));
+    // Small layout helpers. Vue ignores <style> tags inside templates, so the CSS goes into <head> once.
+    // Colours come from the game's own theme classes, so every theme keeps working.
+    if ($('#stockStyle').length === 0){
+        $('head').append($(`<style id="stockStyle">
+        #stockExchange .stk-top{margin:0 0 .5rem 1rem}
+        #stockExchange .stk-help{cursor:help;display:inline-block;width:1.1rem;height:1.1rem;line-height:1rem;text-align:center;border:.0625rem solid;border-radius:50%;font-size:.75rem;margin-left:.375rem}
+        #stockExchange .stk-note{margin:.125rem 0 0 1rem;font-size:.8125rem;opacity:.85}
+        #stockExchange .stk-card{display:block;margin:.5rem 0 0 1rem;padding-top:.375rem;border-top:.0625rem solid rgba(128,128,128,.4)}
+        #stockExchange .stk-head{display:flex;flex-wrap:wrap;align-items:baseline}
+        #stockExchange .stk-name{min-width:11rem;margin-right:.75rem;font-weight:700}
+        #stockExchange .stk-line{display:flex;flex-wrap:wrap;margin-top:.125rem;font-size:.875rem}
+        #stockExchange .stk-line>*{margin-right:1.25rem}
+        #stockExchange .stk-spark{font-size:.75rem;letter-spacing:.0625rem;opacity:.85}
+        #stockExchange .stk-line>.b-tooltip{min-width:8.5rem}
+        #stockExchange .stk-btns{margin:.375rem 0 .125rem -.25rem}
+        #stockExchange select option{background:#fff;color:#000}
+        #stockExchange .stk-title{margin:.75rem 0 .25rem 1rem;padding-top:.375rem;border-top:.0625rem solid rgba(128,128,128,.4)}
+        #stockExchange .stk-orderline{display:flex;align-items:center;margin:.125rem 0 0 1rem;font-size:.875rem}
+        #stockExchange .stk-orderline .order{margin-left:.75rem}
+        #stockExchange .market-item.stk-flow{flex-wrap:wrap;align-items:center}
+        #stockExchange .stk-flow>*{margin-bottom:.125rem}
+    </style>`));
+    }
+
+    wrap.append($(`<div class="stk-top"><h3 class="has-text-info">${loc('resource_Ocoin_name')}: <span>{{ ocoinText() }}</span></h3> <span v-if="reservedOcoin() > 0" class="has-text-warning">({{ reservedText() }})</span><b-tooltip :label="helpText()" position="is-bottom" size="is-large" multilined animated><span class="stk-help has-text-warning">?</span></b-tooltip></div>`));
+    wrap.append($(`<div class="stk-note has-text-warning">${loc('stock_ocoin_rate',[OCOIN_RATE, OCOIN_BUY_FEE * 100])}</div>`));
 
     // Money <-> Ocoin
-    let exchange = $(`<div id="stockOcoin" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('resource_Ocoin_name')}</h3></div>`);
+    let exchange = $(`<div id="stockOcoin" class="market-item stk-flow" style="margin-top:.5rem;"><h3 class="res has-text-info">${loc('stock_convert')}</h3></div>`);
     wrap.append(exchange);
-    exchange.append($(`<input type="number" min="0" step="any" v-model.number="st.qty" @change="clampQty()" style="width:7rem;margin-right:.5rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    exchange.append($(`<input type="number" min="0" step="any" v-model.number="st.qty" @change="clampQty()" style="width:7rem;margin-right:.5rem;background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;">`));
     exchange.append($(`<b-tooltip :label="buyOcoinTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !canBuyOcoin() }" @click="buyOcoin()">${loc('resource_market_buy')}</span></b-tooltip>`));
-    exchange.append($(`<b-tooltip :label="buyOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" @click="buyOcoinMax()">${loc('stock_max')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip :label="buyOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" @click="buyOcoinMax()">${loc('stock_buy_max')}</span></b-tooltip>`));
     exchange.append($(`<b-tooltip :label="sellOcoinTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !canSellOcoin() }" @click="sellOcoin()">${loc('resource_market_sell')}</span></b-tooltip>`));
-    exchange.append($(`<b-tooltip :label="sellOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" @click="sellOcoinMax()">${loc('stock_max')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip :label="sellOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" @click="sellOcoinMax()">${loc('stock_sell_max')}</span></b-tooltip>`));
 
     // Auto balance of Money income <-> Ocoin
-    let auto = $(`<div id="stockAuto" class="market-item" style="margin-bottom:.5rem;flex-wrap:wrap;"><h3 class="res has-text-info">${loc('stock_auto')}</h3></div>`);
+    let auto = $(`<div id="stockAuto" class="market-item stk-flow"><h3 class="res has-text-info">${loc('stock_auto')}</h3></div>`);
     wrap.append(auto);
-    auto.append($(`<b-tooltip :label="autoTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="s.stockAutoOn ? 'has-text-success' : 'has-text-danger'" @click="toggleAuto()">{{ autoLabel() }}</span></b-tooltip>`));
-    auto.append($(`<span class="has-text-warning" style="margin:0 .5rem 0 .25rem;">${loc('stock_auto_keep')}</span>`));
-    auto.append($(`<input type="number" min="0" step="any" v-model.number="s.stockAutoKeep" @change="clampKeep()" style="width:8rem;margin-right:.5rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
-    auto.append($(`<span class="current infoOnly">{{ autoStatus() }}</span>`));
+    auto.append($(`<b-tooltip :label="autoTip()" position="is-bottom" size="is-large" multilined animated><span role="button" class="order" :class="s.stockAutoOn ? 'has-text-success' : 'has-text-danger'" @click="toggleAuto()">{{ autoLabel() }}</span></b-tooltip>`));
+    auto.append($(`<span class="has-text-warning" style="margin:0 .5rem 0 .5rem;">${loc('stock_auto_keep')}</span>`));
+    auto.append($(`<input type="number" min="0" step="any" v-model.number="s.stockAutoKeep" @change="clampKeep()" style="width:7rem;margin-right:.75rem;background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;">`));
+    auto.append($(`<span style="font-size:.875rem;">{{ autoStatus() }}</span>`));
 
-    // One row per listed company: mid price, bid / ask with queue sizes, holdings, P/L and market orders
-    wrap.append($(`<div v-if="rows().length === 0" class="has-text-warning" style="margin:0 0 .5rem 1rem;">${loc('stock_empty')}</div>`));
-    let row = $(`<div v-for="r in rows()" :key="r.res" class="market-item" style="margin-bottom:.5rem;flex-wrap:wrap;"></div>`);
-    wrap.append(row);
-    row.append($(`<h3 class="res has-text-info">{{ r.name }}</h3>`));
-    row.append($(`<span class="current infoOnly">{{ r.priceText }} <span :class="r.chgClass">{{ r.chgText }}</span> {{ r.spark }} <b :class="r.evClass">{{ r.evText }}</b></span>`));
-    row.append($(`<b-tooltip :label="r.bidTip" position="is-bottom" size="is-small" multilined animated><span class="current infoOnly has-text-success">{{ r.bidText }}</span></b-tooltip>`));
-    row.append($(`<b-tooltip :label="r.askTip" position="is-bottom" size="is-small" multilined animated><span class="current infoOnly has-text-danger">{{ r.askText }}</span></b-tooltip>`));
-    row.append($(`<span class="current infoOnly">{{ r.spreadText }}</span>`));
-    row.append($(`<span class="current infoOnly">{{ r.holdText }}</span>`));
-    row.append($(`<span class="current infoOnly" :class="r.plClass">{{ r.plText }}</span>`));
-    row.append($(`<b-tooltip :label="r.buyTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !r.canBuy }" @click="buyLots(r.res, false)">{{ r.buyBtn }}</span></b-tooltip>`));
-    row.append($(`<b-tooltip :label="r.buyMaxTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !r.canBuy }" @click="buyLots(r.res, true)">${loc('stock_max')}</span></b-tooltip>`));
-    row.append($(`<b-tooltip :label="r.sellTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !r.canSell }" @click="sellLots(r.res, false)">{{ r.sellBtn }}</span></b-tooltip>`));
-    row.append($(`<b-tooltip :label="r.sellAllTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !r.canSell }" @click="sellLots(r.res, true)">${loc('stock_all')}</span></b-tooltip>`));
+    // One card per listed company
+    wrap.append($(`<div v-if="rows().length === 0" class="stk-note has-text-warning">${loc('stock_empty')}</div>`));
+    let card = $(`<div v-for="r in rows()" :key="r.res" class="market-item stk-card"></div>`);
+    wrap.append(card);
+    card.append($(`<div class="stk-head"><h3 class="stk-name has-text-info">{{ r.name }}</h3><span>{{ r.priceText }}</span>&nbsp;<span :class="r.chgClass">{{ r.chgText }}</span>&nbsp;<span class="stk-spark" :class="r.sparkClass">{{ r.spark }}</span>&nbsp;<b :class="r.evClass">{{ r.evText }}</b></div>`));
+    card.append($(`<div class="stk-line"><b-tooltip :label="r.bidTip" position="is-bottom" size="is-small" multilined animated><span class="has-text-success">{{ r.bidText }}</span></b-tooltip><b-tooltip :label="r.askTip" position="is-bottom" size="is-small" multilined animated><span class="has-text-danger">{{ r.askText }}</span></b-tooltip><span>{{ r.spreadText }}</span></div>`));
+    card.append($(`<div class="stk-line"><span>{{ r.holdText }}</span><span :class="r.plClass">{{ r.plText }}</span></div>`));
+    let btns = $(`<div class="stk-btns"></div>`);
+    card.append(btns);
+    btns.append($(`<b-tooltip :label="r.buyTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !r.canBuy }" @click="buyLots(r.res, false)">{{ r.buyBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="r.buyMaxTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !r.canBuy }" @click="buyLots(r.res, true)">${loc('stock_buy_max')}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="r.sellTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !r.canSell }" @click="sellLots(r.res, false)">{{ r.sellBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="r.sellAllTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !r.canSell }" @click="sellLots(r.res, true)">${loc('stock_sell_all')}</span></b-tooltip>`));
 
     // Order form (buy limit / buy stop / sell limit / sell stop)
-    let selectStyle = 'margin-right:.5rem;background:#1a1a1a;color:inherit;border:1px solid #555;';
-    let form = $(`<div id="stockOrderForm" v-if="rows().length > 0" class="market-item" style="margin:.5rem 0 .25rem 0;flex-wrap:wrap;"><h3 class="res has-text-info">${loc('stock_orders')}</h3></div>`);
+    let selectStyle = 'margin-right:.5rem;background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;';
+    wrap.append($(`<div v-if="rows().length > 0" class="stk-title"><h3 class="has-text-info">${loc('stock_orders')}</h3></div>`));
+    let form = $(`<div id="stockOrderForm" v-if="rows().length > 0" class="market-item stk-flow"></div>`);
     wrap.append(form);
     form.append($(`<select v-model="st.form.res" @change="resetPrice()" style="${selectStyle}"><option v-for="r in rows()" :key="r.res" :value="r.res">{{ r.name }}</option></select>`));
     form.append($(`<select v-model="st.form.type" @change="resetPrice()" style="${selectStyle}">${ORDER_TYPES.map(t => `<option value="${t}">${orderLabel(t)}</option>`).join('')}</select>`));
-    form.append($(`<input type="number" min="0" step="any" v-model.number="st.form.price" style="width:7rem;margin-right:.5rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
-    form.append($(`<input type="number" min="1" step="1" v-model.number="st.form.lots" style="width:5rem;margin-right:.5rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    form.append($(`<input type="number" min="0" step="any" v-model.number="st.form.price" style="width:6.5rem;margin-right:.5rem;background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;" placeholder="${loc('stock_order_price')}">`));
+    form.append($(`<input type="number" min="1" step="1" v-model.number="st.form.lots" style="width:4.5rem;margin-right:.5rem;background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;" placeholder="${loc('stock_order_lots')}">`));
     form.append($(`<b-tooltip :label="orderTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: orderError() !== '' }" @click="place()">${loc('stock_order_place')}</span></b-tooltip>`));
-    wrap.append($(`<div v-if="rows().length > 0" class="has-text-warning" style="margin:0 0 .5rem 1rem;">{{ orderHint() }}</div>`));
+    wrap.append($(`<div v-if="rows().length > 0" class="stk-note has-text-warning">{{ orderHint() }}</div>`));
 
     // Open orders
-    let orderRow = $(`<div v-for="o in orders()" :key="o.id" class="market-item" style="margin-bottom:.25rem;"></div>`);
+    let orderRow = $(`<div v-for="o in orders()" :key="o.id" class="stk-orderline"></div>`);
     wrap.append(orderRow);
-    orderRow.append($(`<span class="current infoOnly">{{ o.text }}</span>`));
-    orderRow.append($(`<span role="button" class="order has-text-danger" @click="cancel(o.res, o.id)">${loc('stock_order_cancel')}</span>`));
+    orderRow.append($(`<span>{{ o.text }}</span>`));
+    orderRow.append($(`<span role="button" class="order has-text-danger" style="min-width:4rem;" @click="cancel(o.res, o.id)">${loc('stock_order_cancel')}</span>`));
 
     vBind({
         el: `#stockExchange`,
@@ -261,6 +282,13 @@ export function drawStocks(){
             s: global.settings
         },
         methods: {
+            helpText(){
+                return [
+                    loc('stock_ocoin_rate',[OCOIN_RATE, OCOIN_BUY_FEE * 100]),
+                    loc('stock_lot_hint',[LOT_BONUS * 100]),
+                    loc('stock_book_hint',[LEVEL_PCT])
+                ].join(' ');
+            },
             // --- Auto balance ---
             autoLabel(){
                 return loc(global.settings.stockAutoOn ? 'stock_auto_on' : 'stock_auto_off');
@@ -395,6 +423,7 @@ export function drawStocks(){
                         chgText: `${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%`,
                         chgClass: chg >= 0 ? 'has-text-success' : 'has-text-danger',
                         spark: spark(st.hist),
+                        sparkClass: st.hist.length > 1 && st.hist[st.hist.length - 1] < st.hist[0] ? 'has-text-danger' : 'has-text-success',
                         bidText: loc('stock_bid',[fmt(bid), st.bq]),
                         askText: loc('stock_ask',[fmt(ask), st.aq]),
                         bidTip: loc('stock_bid_tip',[st.bq, st.dB, LEVEL_PCT]),
