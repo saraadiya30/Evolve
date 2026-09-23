@@ -5,7 +5,8 @@ import {
     OCOIN_RATE, OCOIN_BUY_FEE, LOT_BONUS, LEVEL_STEP, MAX_ORDERS, ORDER_TYPES, stockDefs, newStock, upgradeStock,
     stepMarket, settleAllOrders, buyQuote, sellQuote, maxBuyLots, executeBuy, executeSell, askPrice, bidPrice,
     validateOrder, placeOrder, cancelOrder, isBuyOrder, moneyToOcoin, ocoinCostInMoney, ocoinToMoney,
-    AUTO_TICK_SECONDS, autoTradeStep, warmUp
+    AUTO_TICK_SECONDS, autoTradeStep, warmUp,
+    tpPriceFromPct, slPriceFromPct, placeExitOrders, validateBracket, committedSellLots
 } from './stocks_core.js';
 
 const LEVEL_PCT = +(LEVEL_STEP * 100).toFixed(4);
@@ -85,7 +86,10 @@ export function initStocks(){
         setDefault('stockAutoKeep', 1000);
     }
     if (!s.form || typeof s.form !== 'object'){
-        s.form = { res: '', type: 'buyLimit', price: 0, lots: 1 };
+        s.form = { res: '', type: 'buyLimit', price: 0, lots: 1, priceMode: 'price', pct: 5, tpOn: false, tpMode: 'price', tpPrice: 0, tpPct: 10, slOn: false, slMode: 'price', slPrice: 0, slPct: 10 };
+    }
+    if (!s.exit || typeof s.exit !== 'object'){
+        s.exit = { tpOn: false, tpMode: 'price', tpPrice: 0, tpPct: 10, tpLots: 1, slOn: false, slMode: 'price', slPrice: 0, slPct: 10, slLots: 1 };
     }
     if (typeof s.sel !== 'string'){
         s.sel = '';
@@ -248,6 +252,15 @@ export function drawStocks(){
         #stockExchange .stk-orderline{display:flex;align-items:center;font-size:.875rem;margin:.125rem 0 0 0}
         #stockExchange .stk-orderline .order{margin-left:.75rem;min-width:4rem}
         #stockExchange select option{background:#fff;color:#000}
+        #stockExchange .stk-sub{margin:.375rem 0 0 0;padding:.375rem 0 0 0;border-top:.03125rem dashed rgba(128,128,128,.35);font-size:.875rem}
+        #stockExchange .stk-sub label{margin-right:.5rem;cursor:pointer;white-space:nowrap}
+        #stockExchange .stk-modebtn{cursor:pointer;padding:0 .4rem;border:.0625rem solid currentColor;border-radius:.25rem;font-size:.75rem;margin-right:.375rem;white-space:nowrap;flex:none}
+        #stockExchange .stk-modebtn.off{opacity:.4}
+        #stockExchange .stk-side{margin-bottom:.375rem}
+        #stockExchange .stk-side-head{display:flex;align-items:center;flex-wrap:wrap;margin-bottom:.125rem}
+        #stockExchange .stk-side-row{display:flex;align-items:center;flex-wrap:wrap;margin-left:1.35rem}
+        #stockExchange .stk-side input{width:4.5rem;margin-right:.375rem;flex:none}
+        #stockExchange .stk-side .stk-resolved{white-space:nowrap}
     </style>`));
     }
 
@@ -311,6 +324,39 @@ export function drawStocks(){
 
     main.append($(`<div class="stk-line"><b-tooltip :label="d.bidTip" position="is-bottom" size="is-small" multilined animated><span class="has-text-success">{{ d.bidText }}</span></b-tooltip><b-tooltip :label="d.askTip" position="is-bottom" size="is-small" multilined animated><span class="has-text-danger">{{ d.askText }}</span></b-tooltip><span>{{ d.spreadText }}</span></div>`));
     main.append($(`<div class="stk-line"><span>{{ d.holdText }}</span><span :class="d.plClass">{{ d.plText }}</span></div>`));
+    // Take-profit / stop-loss for the lots you already hold. Each side covers only the lots you type in - not
+    // necessarily all of them - and can be a price or a % away from your average cost.
+    let exitPanel = $(`<div v-if="d.res && (d.lots > d.exitFree || true) && d.lots > 0" class="stk-sub"></div>`);
+    main.append(exitPanel);
+    exitPanel.append($(`<div style="margin-bottom:.25rem;">${loc('stock_exit_title')} <span class="has-text-warning">{{ d.exitFreeText }}</span></div>`));
+    let tpSide = $(`<div class="stk-side"></div>`);
+    exitPanel.append(tpSide);
+    let tpHead = $(`<div class="stk-side-head"></div>`);
+    tpSide.append(tpHead);
+    tpHead.append($(`<label class="has-text-success"><input type="checkbox" v-model="ex.tpOn"> ${loc('stock_take_profit')}</label>`));
+    tpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.tpMode !== 'price' }" @click="ex.tpMode = 'price'">${loc('stock_mode_price')}</span>`));
+    tpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.tpMode !== 'pct' }" @click="ex.tpMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let tpRow = $(`<div v-if="ex.tpOn" class="stk-side-row"></div>`);
+    tpSide.append(tpRow);
+    tpRow.append($(`<input v-if="ex.tpMode === 'price'" type="number" min="0" step="any" v-model.number="ex.tpPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    tpRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="ex.tpPct" style="${inputStyle}" placeholder="%">`));
+    tpRow.append($(`<input type="number" min="1" step="1" v-model.number="ex.tpLots" style="${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
+    tpRow.append($(`<span class="stk-resolved has-text-warning">{{ d.tpPriceText }}</span>`));
+    let slSide = $(`<div class="stk-side"></div>`);
+    exitPanel.append(slSide);
+    let slHead = $(`<div class="stk-side-head"></div>`);
+    slSide.append(slHead);
+    slHead.append($(`<label class="has-text-danger"><input type="checkbox" v-model="ex.slOn"> ${loc('stock_stop_loss')}</label>`));
+    slHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.slMode !== 'price' }" @click="ex.slMode = 'price'">${loc('stock_mode_price')}</span>`));
+    slHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.slMode !== 'pct' }" @click="ex.slMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let slRow = $(`<div v-if="ex.slOn" class="stk-side-row"></div>`);
+    slSide.append(slRow);
+    slRow.append($(`<input v-if="ex.slMode === 'price'" type="number" min="0" step="any" v-model.number="ex.slPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    slRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="ex.slPct" style="${inputStyle}" placeholder="%">`));
+    slRow.append($(`<input type="number" min="1" step="1" v-model.number="ex.slLots" style="${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
+    slRow.append($(`<span class="stk-resolved has-text-warning">{{ d.slPriceText }}</span>`));
+    exitPanel.append($(`<div style="display:flex;align-items:center;flex-wrap:wrap;"><b-tooltip :label="d.exitTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !d.exitOk }" @click="placeExit()">${loc('stock_order_place')}</span></b-tooltip><span v-if="d.exitErr" class="has-text-warning" style="margin-left:.5rem;">{{ d.exitErr }}</span></div>`));
+
     let btns = $(`<div class="market-item stk-flow stk-btns"></div>`);
     main.append(btns);
     btns.append($(`<b-tooltip :label="d.buyTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(false)">{{ d.buyBtn }}</span></b-tooltip>`));
@@ -324,10 +370,42 @@ export function drawStocks(){
     main.append(form);
     let selectStyle = `margin-right:.5rem;${inputStyle}`;
     form.append($(`<b-tooltip :label="typeHint()" position="is-bottom" size="is-medium" multilined animated><select v-model="st.form.type" @change="resetPrice()" style="${selectStyle}">${ORDER_TYPES.map(t => `<option value="${t}">${orderLabel(t)}</option>`).join('')}</select></b-tooltip>`));
-    form.append($(`<input type="number" min="0" step="any" v-model.number="st.form.price" style="width:6.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    form.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.priceMode !== 'price' }" @click="setPriceMode('price')">${loc('stock_mode_price')}</span>`));
+    form.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.priceMode !== 'pct' }" @click="setPriceMode('pct')">${loc('stock_mode_pct')}</span>`));
+    form.append($(`<input v-if="st.form.priceMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.price" style="width:6.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    form.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.pct" style="width:5rem;margin-right:.5rem;${inputStyle}" placeholder="%">`));
     form.append($(`<input type="number" min="1" step="1" v-model.number="st.form.lots" style="width:4.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
     form.append($(`<b-tooltip :label="orderTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: orderError() !== '' }" @click="place()">${loc('stock_order_place')}</span></b-tooltip>`));
+    main.append($(`<div v-if="st.form.priceMode === 'pct'" class="stk-note has-text-warning" style="margin-left:0;">${loc('stock_pct_resolved')} <b>{{ fmtPrice(effPrice()) }}</b></div>`));
     main.append($(`<div v-if="orderHint() !== ''" class="stk-note" style="margin-left:0;"><span class="has-text-warning">{{ orderHint() }}</span></div>`));
+
+    // Optional take-profit / stop-loss attached to a pending buy: activates once the buy fills, covering whatever
+    // it actually bought (all of it - a partially filled buy protects only the part that went through).
+    let bracket = $(`<div v-if="st.form.type === 'buyLimit' || st.form.type === 'buyStop'" class="stk-sub"></div>`);
+    main.append(bracket);
+    let btpSide = $(`<div class="stk-side"></div>`);
+    bracket.append(btpSide);
+    let btpHead = $(`<div class="stk-side-head"></div>`);
+    btpSide.append(btpHead);
+    btpHead.append($(`<label class="has-text-success"><input type="checkbox" v-model="st.form.tpOn"> ${loc('stock_attach_tp')}</label>`));
+    btpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.tpMode !== 'price' }" @click="st.form.tpMode = 'price'">${loc('stock_mode_price')}</span>`));
+    btpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.tpMode !== 'pct' }" @click="st.form.tpMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let btpRow = $(`<div v-if="st.form.tpOn" class="stk-side-row"></div>`);
+    btpSide.append(btpRow);
+    btpRow.append($(`<input v-if="st.form.tpMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.tpPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    btpRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.tpPct" style="${inputStyle}" placeholder="%">`));
+    let bslSide = $(`<div class="stk-side"></div>`);
+    bracket.append(bslSide);
+    let bslHead = $(`<div class="stk-side-head"></div>`);
+    bslSide.append(bslHead);
+    bslHead.append($(`<label class="has-text-danger"><input type="checkbox" v-model="st.form.slOn"> ${loc('stock_attach_sl')}</label>`));
+    bslHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.slMode !== 'price' }" @click="st.form.slMode = 'price'">${loc('stock_mode_price')}</span>`));
+    bslHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.slMode !== 'pct' }" @click="st.form.slMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let bslRow = $(`<div v-if="st.form.slOn" class="stk-side-row"></div>`);
+    bslSide.append(bslRow);
+    bslRow.append($(`<input v-if="st.form.slMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.slPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    bslRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.slPct" style="${inputStyle}" placeholder="%">`));
+    bracket.append($(`<div v-if="bracketErr()" class="has-text-warning" style="margin-top:.25rem;">{{ bracketErr() }}</div>`));
     main.append($(`<div v-for="o in orders" :key="o.id" class="market-item stk-orderline"><span>{{ o.text }}</span><span role="button" class="order has-text-danger" @click="cancel(o.id)">${loc('stock_order_cancel')}</span></div>`));
 
     // Watchlist
@@ -342,6 +420,7 @@ export function drawStocks(){
             mk: global.stocks.market,
             res: global.resource,
             s: global.settings,
+            ex: global.stocks.exit,
             hv: -1,
             ranges: RANGES
         },
@@ -406,9 +485,21 @@ export function drawStocks(){
                 let buyMaxQ = buyQuote(st, buyMax);
                 let sellQ = sellQuote(st, sellN);
                 let sellAllQ = sellQuote(st, st.lots);
+                let free = Math.max(0, st.lots - committedSellLots(st));
+                let ex = global.stocks.exit;
+                let tpPrice = ex.tpMode === 'price' ? ex.tpPrice : (st.spent > 0 ? tpPriceFromPct(st.spent / st.lots, ex.tpPct) : 0);
+                let slPrice = ex.slMode === 'price' ? ex.slPrice : (st.spent > 0 ? slPriceFromPct(st.spent / st.lots, ex.slPct) : 0);
                 return {
                     res: res,
                     name: stockName(res),
+                    lots: st.lots,
+                    exitFree: free,
+                    exitFreeText: loc('stock_exit_free',[fmt(free, 0)]),
+                    tpPriceText: ex.tpOn ? loc('stock_pct_resolved') + ' ' + fmt(tpPrice) : '',
+                    slPriceText: ex.slOn ? loc('stock_pct_resolved') + ' ' + fmt(slPrice) : '',
+                    exitOk: this.exitError(tpPrice, slPrice) === '',
+                    exitErr: this.exitError(tpPrice, slPrice) !== '' ? loc(`stock_order_err_${this.exitError(tpPrice, slPrice)}`,[MAX_ORDERS]) : '',
+                    exitTip: loc('stock_exit_tip'),
                     priceText: `${fmt(st.price)} ${loc('resource_Ocoin_name')}`,
                     chgText: `${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%`,
                     chgClass: chg >= 0 ? 'has-text-success' : 'has-text-danger',
@@ -695,10 +786,52 @@ export function drawStocks(){
                 global.stocks.ocoin += executeSell(st, m);
             },
             // --- Limit / stop orders on the selected stock ---
+            fmtPrice(p){
+                return fmt(p);
+            },
+            setPriceMode(mode){
+                let f = global.stocks.form;
+                if (f.priceMode !== mode){
+                    f.priceMode = mode;
+                    this.resetPrice();
+                }
+            },
             resetPrice(){
                 let res = this.cur;
-                if (res){
-                    global.stocks.form.price = +suggestPrice(global.stocks.market[res], global.stocks.form.type).toPrecision(4);
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let f = global.stocks.form;
+                if (f.priceMode === 'price'){
+                    f.price = +suggestPrice(st, f.type).toPrecision(4);
+                }
+                else {
+                    // A sensible default % on the correct side of the current quote for this order type
+                    f.pct = 5;
+                }
+                f.tpPrice = +(askPrice(st) * 1.1).toPrecision(4);
+                f.slPrice = +(askPrice(st) * 0.9).toPrecision(4);
+            },
+            // The actual price the form will use: resolves the % mode against the live book, same direction as
+            // suggestPrice (buy limit = below the ask, buy stop = above it, sell limit = above the bid, sell stop
+            // = below it), so entering the same % always means "that much further from the current quote".
+            effPrice(){
+                let res = this.cur;
+                let f = global.stocks.form;
+                if (f.priceMode === 'price'){
+                    return f.price;
+                }
+                if (!res){
+                    return 0;
+                }
+                let st = global.stocks.market[res];
+                let pct = f.pct || 0;
+                switch (f.type){
+                    case 'buyLimit': return askPrice(st) * (1 - pct / 100);
+                    case 'buyStop': return askPrice(st) * (1 + pct / 100);
+                    case 'sellLimit': return bidPrice(st) * (1 + pct / 100);
+                    default: return bidPrice(st) * (1 - pct / 100);
                 }
             },
             orderError(){
@@ -707,7 +840,7 @@ export function drawStocks(){
                 if (!res){
                     return 'type';
                 }
-                return validateOrder(global.stocks, res, f.type, f.price, f.lots) || '';
+                return validateOrder(global.stocks, res, f.type, this.effPrice(), f.lots) || '';
             },
             orderTip(){
                 let f = global.stocks.form;
@@ -716,7 +849,7 @@ export function drawStocks(){
                 }
                 let lots = Math.max(0, Math.floor(f.lots || 0));
                 return isBuyOrder(f.type)
-                    ? loc('stock_order_tip_buy',[fmt(lots, 0), fmt(lots * (f.price || 0))])
+                    ? loc('stock_order_tip_buy',[fmt(lots, 0), fmt(lots * (this.effPrice() || 0))])
                     : loc('stock_order_tip_sell',[fmt(lots, 0)]);
             },
             // What the chosen order type does (tooltip on the type dropdown)
@@ -741,13 +874,41 @@ export function drawStocks(){
                 }
                 return '';
             },
+            // Resolves the attach-to-buy TP/SL prices from the form, honoring price/% mode (base = the buy's own price)
+            bracketPrices(){
+                let f = global.stocks.form;
+                if (!isBuyOrder(f.type)){
+                    return { tpPrice: null, slPrice: null };
+                }
+                let buyPrice = this.effPrice();
+                let tpPrice = f.tpOn ? (f.tpMode === 'price' ? f.tpPrice : tpPriceFromPct(buyPrice, f.tpPct)) : null;
+                let slPrice = f.slOn ? (f.slMode === 'price' ? f.slPrice : slPriceFromPct(buyPrice, f.slPct)) : null;
+                return { tpPrice: tpPrice, slPrice: slPrice };
+            },
+            bracketErr(){
+                let f = global.stocks.form;
+                if (!isBuyOrder(f.type) || (!f.tpOn && !f.slOn)){
+                    return '';
+                }
+                let { tpPrice, slPrice } = this.bracketPrices();
+                let bad = validateBracket(this.effPrice(), tpPrice, slPrice);
+                if (bad === 'tp'){
+                    return loc('stock_bracket_err_tp');
+                }
+                if (bad === 'sl'){
+                    return loc('stock_bracket_err_sl');
+                }
+                return '';
+            },
             place(){
-                if (this.orderError() !== ''){
+                if (this.orderError() !== '' || this.bracketErr() !== ''){
                     return;
                 }
                 let f = global.stocks.form;
                 let res = this.cur;
-                let out = placeOrder(global.stocks, res, f.type, f.price, f.lots);
+                let price = this.effPrice();
+                let bracket = isBuyOrder(f.type) && (f.tpOn || f.slOn) ? this.bracketPrices() : null;
+                let out = placeOrder(global.stocks, res, f.type, price, f.lots, bracket);
                 if (out.ok){
                     messageQueue(loc('stock_msg_placed',[stockName(res), orderLabel(f.type), fmt(out.order.lots, 0), fmt(out.order.price)]), 'info', false, ['minor_events']);
                 }
@@ -756,6 +917,72 @@ export function drawStocks(){
                 let res = this.cur;
                 if (res){
                     cancelOrder(global.stocks, res, id);
+                }
+            },
+            // --- Take-profit / stop-loss on the lots you already hold ---
+            exitError(tpPrice, slPrice){
+                let res = this.cur;
+                let ex = global.stocks.exit;
+                if (!res || (!ex.tpOn && !ex.slOn)){
+                    return '';
+                }
+                let st = global.stocks.market[res];
+                let free = Math.max(0, st.lots - committedSellLots(st));
+                if (ex.tpOn && !(ex.tpLots >= 1)){
+                    return 'lots';
+                }
+                if (ex.slOn && !(ex.slLots >= 1)){
+                    return 'lots';
+                }
+                if (ex.tpOn && !(tpPrice > bidPrice(st))){
+                    return 'side';
+                }
+                if (ex.slOn && !(slPrice < bidPrice(st))){
+                    return 'side';
+                }
+                let sameSlice = ex.tpOn && ex.slOn && ex.tpLots === ex.slLots;
+                let needed = sameSlice ? ex.tpLots : (ex.tpOn ? ex.tpLots : 0) + (ex.slOn ? ex.slLots : 0);
+                if (needed > free){
+                    return 'holdings';
+                }
+                return '';
+            },
+            placeExit(){
+                let res = this.cur;
+                let ex = global.stocks.exit;
+                if (!res || (!ex.tpOn && !ex.slOn)){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let avg = st.lots > 0 ? st.spent / st.lots : 0;
+                let tpPrice = ex.tpOn ? (ex.tpMode === 'price' ? ex.tpPrice : tpPriceFromPct(avg, ex.tpPct)) : null;
+                let slPrice = ex.slOn ? (ex.slMode === 'price' ? ex.slPrice : slPriceFromPct(avg, ex.slPct)) : null;
+                if (this.exitError(tpPrice, slPrice) !== ''){
+                    return;
+                }
+                let sameSlice = ex.tpOn && ex.slOn && ex.tpLots === ex.slLots;
+                let placed = [];
+                if (sameSlice){
+                    let out = placeExitOrders(global.stocks, res, ex.tpLots, tpPrice, slPrice);
+                    if (out.ok){
+                        if (out.tp){ placed.push(loc('stock_take_profit')); }
+                        if (out.sl){ placed.push(loc('stock_stop_loss')); }
+                    }
+                }
+                else {
+                    if (ex.tpOn){
+                        let out = placeExitOrders(global.stocks, res, ex.tpLots, tpPrice, null);
+                        if (out.ok){ placed.push(loc('stock_take_profit')); }
+                    }
+                    if (ex.slOn){
+                        let out = placeExitOrders(global.stocks, res, ex.slLots, null, slPrice);
+                        if (out.ok){ placed.push(loc('stock_stop_loss')); }
+                    }
+                }
+                if (placed.length > 0){
+                    messageQueue(loc('stock_msg_exit_placed',[stockName(res), placed.join(' + ')]), 'info', false, ['minor_events']);
+                    ex.tpOn = false;
+                    ex.slOn = false;
                 }
             }
         }

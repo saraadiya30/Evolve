@@ -390,8 +390,26 @@ export function orderPriceOk(st, type, price){
     return false;
 }
 
+// Lots already promised to a sell-type order. A linked take-profit/stop-loss pair (see placeExitOrders /
+// bracket orders below) shares one slice of your position - only one side will ever actually execute - so it is
+// counted once, not twice.
 export function committedSellLots(st){
-    return (st.orders || []).reduce((a, o) => a + (isBuyOrder(o.type) ? 0 : o.lots), 0);
+    let seen = new Set();
+    let total = 0;
+    (st.orders || []).forEach(function(o){
+        if (isBuyOrder(o.type)){
+            return;
+        }
+        if (o.oco){
+            let key = Math.min(o.id, o.oco);
+            if (seen.has(key)){
+                return;
+            }
+            seen.add(key);
+        }
+        total += o.lots;
+    });
+    return total;
 }
 
 // Checks a new order without changing anything. Returns null when it is fine, otherwise the reason:
@@ -415,10 +433,19 @@ export function validateOrder(S, res, type, price, lots){
 
 // Places an order. Buy orders lock lots*price Ocoin until they fill or are cancelled.
 // Returns { ok: true, order } or { ok: false, reason } (see validateOrder).
-export function placeOrder(S, res, type, price, lots){
+// `bracket` (buy orders only) is an optional { tpPrice, slPrice } - either or both - attached now and turned into
+// take-profit / stop-loss orders for whatever lots this order actually buys, as they get bought (see applyBracket).
+// Pass null/undefined tpPrice or slPrice to skip that side. Returns 'tp'/'sl' via validateBracket on a bad bracket.
+export function placeOrder(S, res, type, price, lots, bracket){
     let reason = validateOrder(S, res, type, price, lots);
     if (reason){
         return { ok: false, reason: reason };
+    }
+    if (bracket && isBuyOrder(type)){
+        let br = validateBracket(price, bracket.tpPrice, bracket.slPrice);
+        if (br){
+            return { ok: false, reason: br };
+        }
     }
     let st = S.market[res];
     lots = Math.floor(lots);
@@ -429,23 +456,191 @@ export function placeOrder(S, res, type, price, lots){
     }
     S.oid = (S.oid || 0) + 1;
     let order = { id: S.oid, type: type, price: price, lots: lots, total: lots, reserved: reserved };
+    if (bracket && isBuyOrder(type) && (bracket.tpPrice != null || bracket.slPrice != null)){
+        order.bracket = { tpPrice: bracket.tpPrice != null ? bracket.tpPrice : null, slPrice: bracket.slPrice != null ? bracket.slPrice : null, tpId: null, slId: null };
+    }
     st.orders.push(order);
     return { ok: true, order: order };
 }
 
+// Cancelling one side of a take-profit/stop-loss pair leaves the other side in place, on its own (it no longer
+// shares its lots with anything). This matches "cancel just the TP, keep the SL protecting me" as the common case.
 export function cancelOrder(S, res, id){
     let st = S.market[res];
     if (!st){ return false; }
     let i = st.orders.findIndex(o => o.id === id);
     if (i === -1){ return false; }
-    S.ocoin += st.orders[i].reserved;
+    let order = st.orders[i];
+    if (order.oco){
+        let sib = st.orders.find(o => o.id === order.oco);
+        if (sib){
+            sib.oco = null;
+        }
+    }
+    S.ocoin += order.reserved;
     st.orders.splice(i, 1);
     return true;
 }
 
+// Removing an order also unlinks any surviving OCO sibling, so nothing is ever left pointing at a dead id
+// (reduceOcoSibling already removes+unlinks the *other* side when it empties out; this covers the order itself
+// finishing normally - e.g. a take-profit that fills completely - which used to leave its stop-loss sibling's
+// `.oco` dangling).
 function removeOrder(st, order){
     let i = st.orders.indexOf(order);
-    if (i !== -1){ st.orders.splice(i, 1); }
+    if (i !== -1){
+        if (order.oco){
+            let sib = st.orders.find(o => o.id === order.oco);
+            if (sib){
+                sib.oco = null;
+            }
+        }
+        st.orders.splice(i, 1);
+    }
+}
+
+// --- Take profit / stop loss ------------------------------------------------------------------------------------
+// A "take profit" is a sellLimit and a "stop loss" is a sellStop; this section adds two conveniences on top of the
+// plain order engine: setting either one from a percentage instead of typing a price, and linking a TP+SL pair (or
+// attaching them to a still-open buy order) so only one side ever ends up executing for a given slice of lots.
+
+// Converts a percentage gain/loss into an absolute price. `base` is usually your average cost, or a pending buy
+// order's own price. pct is a plain percentage (25 means 25%), always positive.
+export function tpPriceFromPct(base, pct){
+    return base * (1 + pct / 100);
+}
+
+export function slPriceFromPct(base, pct){
+    return base * (1 - pct / 100);
+}
+
+// Links two existing orders (by id) as one-cancels-the-other: when either fills any amount, the other's remaining
+// lots shrink by the same amount (see reduceOcoSibling), and cancelling one only unlinks the other (see cancelOrder).
+function linkOco(a, b){
+    a.oco = b.id;
+    b.oco = a.id;
+}
+
+// When an order with a linked sibling (see linkOco) fills `filled` lots, the sibling represents the same slice of
+// the position, so its remaining lots shrink by the same amount. If that leaves it empty, it is removed outright -
+// with a note so the caller can tell the player their other order was auto-cancelled.
+function reduceOcoSibling(st, order, filled){
+    if (!order.oco || !(filled > 0)){
+        return null;
+    }
+    let sib = st.orders.find(o => o.id === order.oco);
+    if (!sib){
+        return null;
+    }
+    sib.lots -= filled;
+    if (sib.lots <= 0){
+        removeOrder(st, sib);
+        return { type: sib.type, canceled: true };
+    }
+    return null;
+}
+
+// Places a take-profit (sellLimit) and/or a stop-loss (sellStop) for lots you already hold (or have coming from a
+// filled buy), covering only `lots` of your position - the rest stays free to sell manually or attach its own exit
+// orders to. Passing both prices links them: whichever fires first, the other's matching lots are cancelled.
+// Returns { ok: true, tp: order|null, sl: order|null } or { ok: false, reason } - reasons as validateOrder, plus
+// 'price' when neither tpPrice nor slPrice was given.
+export function placeExitOrders(S, res, lots, tpPrice, slPrice){
+    let st = S.market[res];
+    if (!st){
+        return { ok: false, reason: 'type' };
+    }
+    lots = Math.floor(lots);
+    if (!(lots >= 1) || !isFinite(lots)){
+        return { ok: false, reason: 'lots' };
+    }
+    if (tpPrice == null && slPrice == null){
+        return { ok: false, reason: 'price' };
+    }
+    if (tpPrice != null && (!(tpPrice > 0) || !isFinite(tpPrice))){
+        return { ok: false, reason: 'price' };
+    }
+    if (slPrice != null && (!(slPrice > 0) || !isFinite(slPrice))){
+        return { ok: false, reason: 'price' };
+    }
+    if (tpPrice != null && !orderPriceOk(st, 'sellLimit', tpPrice)){
+        return { ok: false, reason: 'side' };
+    }
+    if (slPrice != null && !orderPriceOk(st, 'sellStop', slPrice)){
+        return { ok: false, reason: 'side' };
+    }
+    if (lots + committedSellLots(st) > st.lots){
+        return { ok: false, reason: 'holdings' };
+    }
+    let needed = (tpPrice != null ? 1 : 0) + (slPrice != null ? 1 : 0);
+    if (st.orders.length + needed > MAX_ORDERS){
+        return { ok: false, reason: 'max' };
+    }
+    let tp = null, sl = null;
+    if (tpPrice != null){
+        S.oid = (S.oid || 0) + 1;
+        tp = { id: S.oid, type: 'sellLimit', price: tpPrice, lots: lots, total: lots, reserved: 0 };
+        st.orders.push(tp);
+    }
+    if (slPrice != null){
+        S.oid = (S.oid || 0) + 1;
+        sl = { id: S.oid, type: 'sellStop', price: slPrice, lots: lots, total: lots, reserved: 0 };
+        st.orders.push(sl);
+    }
+    if (tp && sl){
+        linkOco(tp, sl);
+    }
+    return { ok: true, tp: tp, sl: sl };
+}
+
+// Checks a bracket (the optional take-profit/stop-loss attached to a buyLimit/buyStop) without changing anything.
+// Returns null when fine, otherwise 'tp' or 'sl' - the bracket price is on the wrong side of the buy order's own price.
+export function validateBracket(buyPrice, tpPrice, slPrice){
+    if (tpPrice != null && (!(tpPrice > buyPrice) || !isFinite(tpPrice))){
+        return 'tp';
+    }
+    if (slPrice != null && (!(slPrice > 0 && slPrice < buyPrice) || !isFinite(slPrice))){
+        return 'sl';
+    }
+    return null;
+}
+
+// Attaches (or extends) the bracket exit orders for `filled` lots that a buyLimit/buyStop order (`bo`, with
+// bo.bracket = { tpPrice, slPrice, tpId, slId }) just bought. Called from settleOrders right after a fill/trigger.
+// Bracket prices are not re-validated against the live book here: a stop/limit that is already on the "wrong" side
+// by the time the buy fills (the market moved while the buy order was waiting) still fires, just immediately/deeper
+// in the book - see buyQuote/sellQuote - the same way a manual order would if the market gapped past it.
+function applyBracket(S, res, bo, filled){
+    let br = bo.bracket;
+    if (!br || !(filled > 0)){
+        return;
+    }
+    let st = S.market[res];
+    let tp = br.tpId ? st.orders.find(o => o.id === br.tpId) : null;
+    let sl = br.slId ? st.orders.find(o => o.id === br.slId) : null;
+    if (br.tpPrice != null && !tp && st.orders.length < MAX_ORDERS){
+        S.oid = (S.oid || 0) + 1;
+        tp = { id: S.oid, type: 'sellLimit', price: br.tpPrice, lots: 0, total: 0, reserved: 0 };
+        st.orders.push(tp);
+        br.tpId = tp.id;
+    }
+    if (br.slPrice != null && !sl && st.orders.length < MAX_ORDERS){
+        S.oid = (S.oid || 0) + 1;
+        sl = { id: S.oid, type: 'sellStop', price: br.slPrice, lots: 0, total: 0, reserved: 0 };
+        st.orders.push(sl);
+        br.slId = sl.id;
+    }
+    if (tp){
+        tp.lots += filled;
+        tp.total += filled;
+    }
+    if (sl){
+        sl.lots += filled;
+        sl.total += filled;
+    }
+    if (tp && sl && tp.oco !== sl.id){
+        linkOco(tp, sl);
+    }
 }
 
 // Checks every open order of one stock against the current book and fills what can be filled.
@@ -467,6 +662,7 @@ export function settleOrders(S, res){
             o.reserved = Math.max(0, o.reserved - paidFromReserve);
             o.lots -= m;
             if (o.lots <= 0){ removeOrder(st, o); }
+            applyBracket(S, res, o, m);
             notes.push({ kind: 'fill', res: res, type: o.type, lots: m, avg: cost / m, done: o.lots <= 0 });
         }
         else if (o.type === 'buyStop'){
@@ -482,12 +678,15 @@ export function settleOrders(S, res){
             }
             let cost = executeBuy(st, m);
             S.ocoin = Math.max(0, S.ocoin - cost);
+            applyBracket(S, res, o, m);
             notes.push({ kind: 'trigger', res: res, type: o.type, lots: m, avg: cost / m, done: true, partial: m < o.lots });
         }
         else if (o.type === 'sellLimit'){
             if (st.lots <= 0){
                 removeOrder(st, o);
+                let cancel = reduceOcoSibling(st, o, o.lots);
                 notes.push({ kind: 'noholdings', res: res, type: o.type, lots: o.lots });
+                if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
                 return;
             }
             let m = Math.min(o.lots, st.lots, limitSellCapacity(st, o.price));
@@ -496,19 +695,25 @@ export function settleOrders(S, res){
             S.ocoin += gain;
             o.lots -= m;
             if (o.lots <= 0){ removeOrder(st, o); }
+            let cancel = reduceOcoSibling(st, o, m);
             notes.push({ kind: 'fill', res: res, type: o.type, lots: m, avg: gain / m, done: o.lots <= 0 });
+            if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
         }
         else if (o.type === 'sellStop'){
             if (bidPrice(st) > o.price){ return; }
             removeOrder(st, o);
             let m = Math.min(o.lots, st.lots);
             if (m <= 0){
+                let cancel = reduceOcoSibling(st, o, o.lots);
                 notes.push({ kind: 'noholdings', res: res, type: o.type, lots: o.lots });
+                if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
                 return;
             }
             let gain = executeSell(st, m);
             S.ocoin += gain;
+            let cancel = reduceOcoSibling(st, o, m);
             notes.push({ kind: 'trigger', res: res, type: o.type, lots: m, avg: gain / m, done: true, partial: m < o.lots });
+            if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
         }
     });
     return notes;
