@@ -22,6 +22,8 @@ import { index, mainVue, initTabs, loadTab } from './index.js';
 import { setWeather, seasonDesc, astrologySign, astroVal } from './seasons.js';
 import { getTopChange } from './wiki/change.js';
 import { enableDebug, updateDebugData } from './debug.js';
+import { stockFlags, storageBonus, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT } from './stocks_core.js';
+import { stockTick, applyStockBreakdown, stockAutoTrade } from './stocks.js';
 
 {
     $(document).ready(function() {
@@ -61,8 +63,9 @@ var quickMap = {
     showResearch: 3,
     showResources: 4,
     showGenetics: 5,
-    showAchieve: 6,
-    settings: 7
+    // 6 is the Misc tab (no shortcut)
+    showAchieve: 7,
+    settings: 8
 };
 
 $(document).keydown(function(e){
@@ -887,7 +890,27 @@ resourceAlt();
 
 var firstRun = true;
 var gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? global.arpa.sequence.on : 0;
+// Money delta of the last fast tick and how many seconds that tick lasted, captured by diffCalc() just before it resets
+// the delta. Used by the stock auto-balance to see the Money income of a tick.
+var moneyTick = null;
+
+// Wrapper: the stock portfolio production bonus (modRes) is only active while the production loop runs.
 function fastLoop(){
+    moneyTick = null;
+    stockFlags.prod = true;
+    try {
+        fastLoopCore();
+    }
+    finally {
+        stockFlags.prod = false;
+    }
+    applyStockBreakdown();
+    if (moneyTick !== null){
+        stockAutoTrade(moneyTick.delta, moneyTick.seconds);
+    }
+}
+
+function fastLoopCore(){
     if (global.prestige.hasOwnProperty('Aether')){
         let aetherRate;
         if (global.settings.aetherCustomRateOn){
@@ -3343,6 +3366,13 @@ function fastLoop(){
             morale = moraleCap + (morale - moraleCap) * gasVal / 100;
         }
         morale *= aetherMoraleMult;
+        // Stock portfolio morale bonus: a flat +0.1 Morale per lot held, added to the current value (not the cap),
+        // recomputed fresh every time morale is computed - so selling lots removes the bonus on the very next
+        // calculation, the same way the production and storage bonuses above track your current holdings rather
+        // than a one-off transaction.
+        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+            morale += global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
+        }
         global.city.morale.cap = moraleCap;
         global.city.morale.current = morale;
 
@@ -4024,6 +4054,11 @@ function fastLoop(){
                 }
                 if (global.genes['birth']){
                     lowerBound += global.genes['birth'];
+                }
+                // Stock portfolio birth rate bonus: same flat/reversible pattern as the Morale and Power stock
+                // bonuses above - recomputed every roll from current holdings, so selling lots removes it again.
+                if (global.stocks && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
+                    lowerBound += global.stocks.market.Birthrate.lots * BIRTH_BONUS_PER_LOT;
                 }
                 if (global.race['promiscuous']){
                     lowerBound += traits.promiscuous.vars()[0] * global.race['promiscuous'];
@@ -7998,6 +8033,11 @@ function fastLoop(){
             global.settings.showResearch = true;
         }
 
+        // Stock portfolio power bonus: a flat +1 Power (Watt) per lot held, added the same way as the morale
+        // bonus above - recomputed every tick from current holdings, so selling lots takes the Power away again.
+        if (global.stocks && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
+            power_grid += global.stocks.market.Power.lots * POWER_BONUS_PER_LOT;
+        }
         // Power grid state
         global.city.power_total = -max_power;
         global.city.power = power_grid;
@@ -10451,6 +10491,15 @@ function midLoop(){
             if (res !== 'Money' && res !== global.race.species){
                 caps[res] *= aetherStorageMult;
             }
+            // Stock portfolio storage bonus: +1% storage per lot held of that resource's company, multiplicative
+            // like the Aether storage draw above (so it compounds with warehouses instead of competing with them).
+            if (global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
+                let mult = storageBonus(global.stocks.market[res].lots);
+                caps[res] *= mult;
+                if (breakdown.c[res]){
+                    breakdown.c[res][loc('stock_bonus_label')] = 'x' + mult.toFixed(2);
+                }
+            }
             if (breakdown.c[res]){
                 breakdown.c[res][loc('resource_Crates_plural')] = crate+'v';
                 breakdown.c[res][loc('resource_Containers_plural')] = container+'v';
@@ -11631,6 +11680,7 @@ var kplv = 60;
 function longLoop(){
     const date = new Date();
     const astroSign = astrologySign();
+    stockTick();
     if (global.race.species !== 'protoplasm'){
 
         if (global.settings.tabLoad || (global.settings.civTabs === 2 && global.settings.govTabs === 2)){
@@ -12911,8 +12961,13 @@ function longLoop(){
     // Checking if a substantial amount of time elapsed since last longLoop, indicating system suspension,
     // hibernation or something similar (the threshold is the same as for counting accelerated time during pause).
     let restartNeeded = false;
+    // Set instead of restartNeeded when only the tick speed changes (accelerated time expiring), so the loop
+    // can be rescheduled in place rather than torn down and rebuilt - see the 'period' case in gameLoop().
+    let rescheduleNeeded = false;
     if (!global.settings.pause && exceededATimeThreshold(currentTimestamp)){
-        // Adding accelerated time based on last current time which is updated below.
+        // Adding accelerated time based on last current time which is updated below. A real time gap this
+        // large (system suspend/hibernate, tab throttled) means the worker's drift-correction timing state is
+        // stale, so this case gets a full restart rather than the lightweight reschedule.
         addATime(currentTimestamp);
         // The restart is needed to update the duration of the loop interval.
         restartNeeded = true;
@@ -12943,13 +12998,17 @@ function longLoop(){
         global.settings.at--;
         if (global.settings.at <= 0 || atrack.t <= 0){
             global.settings.at = 0;
-            restartNeeded = true;
+            // Boost just ran out mid-session - only the interval length needs to change, not a full restart.
+            rescheduleNeeded = true;
         }
     }
 
     if (restartNeeded){
         gameLoop('stop');
         gameLoop('start');
+    }
+    else if (rescheduleNeeded){
+        gameLoop('period');
     }
 }
 
@@ -12973,6 +13032,9 @@ function diffCalc(res,period){
         sec = Math.floor(sec * fast);
     }
 
+    if (res === 'Money'){
+        moneyTick = { delta: global.resource[res].delta, seconds: period / sec };
+    }
     global.resource[res].diff = +(global.resource[res].delta / (period / sec)).toFixed(2);
     global.resource[res].delta = 0;
 

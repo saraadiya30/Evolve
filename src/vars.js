@@ -2324,7 +2324,7 @@ function setRegionStates(reset){
 
     // Tab Indexes
     [
-        'civTabs','govTabs','govTabs2','hellTabs','resTabs','spaceTabs','marketTabs','statsTabs'
+        'civTabs','govTabs','govTabs2','hellTabs','resTabs','spaceTabs','marketTabs','miscTabs','statsTabs'
     ].forEach(function(k){
         if (!global.settings.hasOwnProperty(k) || reset){
             global.settings[k] = 0;
@@ -2338,6 +2338,7 @@ export function clearStates(){
     }
     global['queue'] = { display: false, queue: [] };
     global['r_queue'] = { display: false, queue: [] };
+    global['stocks'] = { ocoin: 0 };
     global.space = {};
     global.interstellar = {};
     global.galaxy = {};

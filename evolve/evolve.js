@@ -22,6 +22,13 @@ self.addEventListener('message', function(e){
             loopRun = false;
             clearTimeout(timerId);
             break;
+        case 'period':
+            // Lightweight reschedule: only the tick interval changes (e.g. accelerated time running out),
+            // the timer itself keeps running. Unlike 'start', this does NOT clear the timer or reset the
+            // jitter history/loopTargTs baseline, so there's no stutter while the drift correction rebuilds -
+            // lowDriftTimer picks up the new loopInterval on its very next run (see loopTargTs += loopInterval).
+            loopInterval = data.period;
+            break;
     };
   }, false);
 
