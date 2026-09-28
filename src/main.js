@@ -499,7 +499,7 @@ popover('morale',
         // calculation in the main tick, so the Morale stock bonus (a flat +0.1%/lot added to current, not part
         // of any modifier above) has to be listed here too, or Current can sit far above Total with nothing in
         // the breakdown explaining the gap.
-        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             let stockBonus = global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
             total += stockBonus;
             obj.popper.append(`<p class="modal_bd"><span>${loc('stock_bonus_label')}</span> <span class="has-text-success"> ${+(stockBonus).toFixed(1)}%</span></p>`);
@@ -3386,7 +3386,7 @@ function fastLoopCore(){
         // recomputed fresh every time morale is computed - so selling lots removes the bonus on the very next
         // calculation, the same way the production and storage bonuses above track your current holdings rather
         // than a one-off transaction.
-        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             morale += global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
             // The bonus is added after the cap clamp above, so it can push morale past moraleCap on its own -
             // clamp again here so current never actually exceeds the cap it's displayed next to.
@@ -4076,7 +4076,7 @@ function fastLoopCore(){
                 }
                 // Stock portfolio birth rate bonus: same flat/reversible pattern as the Morale and Power stock
                 // bonuses above - recomputed every roll from current holdings, so selling lots removes it again.
-                if (global.stocks && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
+                if (global.stocks && global.stocks.market && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
                     lowerBound += global.stocks.market.Birthrate.lots * BIRTH_BONUS_PER_LOT;
                 }
                 if (global.race['promiscuous']){
@@ -8054,7 +8054,7 @@ function fastLoopCore(){
 
         // Stock portfolio power bonus: a flat +1 Power (Watt) per lot held, added the same way as the morale
         // bonus above - recomputed every tick from current holdings, so selling lots takes the Power away again.
-        if (global.stocks && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
+        if (global.stocks && global.stocks.market && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
             power_grid += global.stocks.market.Power.lots * POWER_BONUS_PER_LOT;
         }
         // Power grid state
@@ -10512,7 +10512,7 @@ function midLoop(){
             }
             // Stock portfolio storage bonus: +1% storage per lot held of that resource's company, multiplicative
             // like the Aether storage draw above (so it compounds with warehouses instead of competing with them).
-            if (global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
+            if (global.stocks && global.stocks.market && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
                 let mult = storageBonus(global.stocks.market[res].lots);
                 caps[res] *= mult;
                 if (breakdown.c[res]){
