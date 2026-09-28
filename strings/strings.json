@@ -6613,6 +6613,7 @@
   "stock_order_err_max": "At most %0 open orders per stock.",
   "stock_order_err_funds": "Not enough Ocoin. Buy orders lock lots × price until they fill or are cancelled.",
   "stock_order_err_holdings": "You do not hold enough free lots (lots already in other sell orders do not count).",
+  "stock_exit_err_side": "Take-profit must be above the current bid; stop-loss must be below it.",
   "stock_order_tip_buy": "Place the order: locks %1 Ocoin for %0 lot(s) until it fills or is cancelled.",
   "stock_order_tip_sell": "Place the order to sell %0 lot(s). Nothing is locked.",
   "stock_order_line_buy": "%0 · %1: %2/%3 lots @ %4 (%5 Ocoin locked)",

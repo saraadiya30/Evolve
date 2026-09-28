@@ -63,7 +63,7 @@ var quickMap = {
     showResearch: 3,
     showResources: 4,
     showGenetics: 5,
-    // 6 is the Misc tab (no shortcut)
+    showMisc: 6,
     showAchieve: 7,
     settings: 8
 };
@@ -78,7 +78,9 @@ $(document).keydown(function(e){
     });
     if (!$(`input`).is(':focus') && !$(`textarea`).is(':focus')){
         Object.keys(quickMap).forEach(function(k){
-            if (key === global.settings.keyMap[k] && global.settings.civTabs !== 0 && (k === 'settings' || global.settings[k])){
+            // Misc has no global.settings.showMisc flag like the other tabs - it gates on species the same way
+            // the tab's own :visible="showMiscTab()" does (see index.js), so it's checked separately here.
+            if (key === global.settings.keyMap[k] && global.settings.civTabs !== 0 && (k === 'settings' || (k === 'showMisc' ? global.race.species !== 'protoplasm' : global.settings[k]))){
                 if (global.settings.civTabs !== quickMap[k]) {
                     global.settings.civTabs = quickMap[k];
                 }
@@ -110,6 +112,10 @@ $(document).keydown(function(e){
                             s = global.settings.arpa;
                             tabName = 'arpaTabs';
                             tabList = [s.physics, s.genetics, s.crispr, s.blood];
+                            break;
+                        case quickMap.showMisc:
+                            tabName = 'miscTabs';
+                            tabList = ["Aether", "New"]; // always visible
                             break;
                         case quickMap.showAchieve:
                             tabName = 'statsTabs';
@@ -3372,6 +3378,9 @@ function fastLoopCore(){
         // than a one-off transaction.
         if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             morale += global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
+            // The bonus is added after the cap clamp above, so it can push morale past moraleCap on its own -
+            // clamp again here so current never actually exceeds the cap it's displayed next to.
+            morale = Math.min(morale, moraleCap);
         }
         global.city.morale.cap = moraleCap;
         global.city.morale.current = morale;
@@ -10497,7 +10506,11 @@ function midLoop(){
                 let mult = storageBonus(global.stocks.market[res].lots);
                 caps[res] *= mult;
                 if (breakdown.c[res]){
-                    breakdown.c[res][loc('stock_bonus_label')] = 'x' + mult.toFixed(2);
+                    // Breakdown values are parsed as parseFloat(raw.slice(0,-1)) - a number plus one suffix char
+                    // ('v' for a flat amount, '%' for a bonus). 'x1.87' broke that (sliced to 'x1.8', NaN, silently
+                    // dropped from the tooltip), which is why this line never showed up next to the others. Written
+                    // as a '%' bonus instead, same convention as the production bonus below in stocks.js.
+                    breakdown.c[res][loc('stock_bonus_label')] = +((mult - 1) * 100).toFixed(2) + '%';
                 }
             }
             if (breakdown.c[res]){

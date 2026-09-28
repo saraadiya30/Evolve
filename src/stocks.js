@@ -314,6 +314,9 @@ export function drawStocks(){
         #stockExchange .stk-depth{border-collapse:collapse;margin:.25rem 0;font-size:.8125rem;width:100%;max-width:16rem}
         #stockExchange .stk-depth th{text-align:left;font-weight:600;padding:0 .75rem .125rem 0;opacity:.75}
         #stockExchange .stk-depth td{padding:.03125rem .75rem .03125rem 0;white-space:nowrap}
+        #stockExchange .stk-depth-cell{cursor:pointer}
+        #stockExchange .stk-depth-cell:hover{text-decoration:underline}
+        #stockExchange .stk-depth-cell.off{cursor:default;text-decoration:none;opacity:.5}
         #stockExchange .stk-sub{margin:.375rem 0 0 0;padding:.375rem 0 0 0;border-top:.03125rem dashed rgba(128,128,128,.35);font-size:.875rem}
         #stockExchange .stk-sub label{margin-right:.5rem;cursor:pointer;white-space:nowrap}
         #stockExchange .stk-modebtn{cursor:pointer;padding:0 .4rem;border:.0625rem solid currentColor;border-radius:.25rem;font-size:.75rem;margin-right:.375rem;white-space:nowrap;flex:none}
@@ -384,12 +387,15 @@ export function drawStocks(){
         <text :x="c.r" :y="c.h - 5" text-anchor="end" font-size="10" fill="currentColor" fill-opacity=".65">{{ c.xr }}</text>
     </svg>`));
 
+    // Each level is clickable: it buys/sells everything from the best price through that level in one go
+    // (you can't fill a deeper level without also taking the ones in front of it), instead of repeating
+    // Buy/Sell one keyMultiplier chunk at a time to clear out a level.
     let depth = $(`<table class="stk-depth"><thead><tr><th class="has-text-danger">${loc('stock_asks')}</th><th class="has-text-success">${loc('stock_bids')}</th></tr></thead><tbody></tbody></table>`);
     main.append(depth);
     let depthRow = $(`<tr v-for="(row, i) in d.depth" :key="i"></tr>`);
     depth.find('tbody').append(depthRow);
-    depthRow.append($(`<td class="has-text-danger">{{ row.ask }}</td>`));
-    depthRow.append($(`<td class="has-text-success">{{ row.bid }}</td>`));
+    depthRow.append($(`<td><b-tooltip :label="askFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-danger stk-depth-cell" :class="{ off: !canFillAsk(i) }" @click="fillAsk(i)">{{ row.ask }}</span></b-tooltip></td>`));
+    depthRow.append($(`<td><b-tooltip :label="bidFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-success stk-depth-cell" :class="{ off: !canFillBid(i) }" @click="fillBid(i)">{{ row.bid }}</span></b-tooltip></td>`));
     main.append($(`<div class="stk-line"><span>{{ d.spreadText }}</span></div>`));
     main.append($(`<div class="stk-line"><span>{{ d.holdText }}</span><span :class="d.plClass">{{ d.plText }}</span></div>`));
     // Take-profit / stop-loss for the lots you already hold. Each side covers only the lots you type in - not
@@ -557,6 +563,11 @@ export function drawStocks(){
                 let ex = global.stocks.exit;
                 let tpPrice = ex.tpMode === 'price' ? ex.tpPrice : (st.spent > 0 ? tpPriceFromPct(st.spent / st.lots, ex.tpPct) : 0);
                 let slPrice = ex.slMode === 'price' ? ex.slPrice : (st.spent > 0 ? slPriceFromPct(st.spent / st.lots, ex.slPct) : 0);
+                // 'side' has no generic stock_order_err_side string (only per-order-type variants like
+                // stock_order_err_side_buyLimit exist, which don't apply here), so it needs its own message -
+                // otherwise loc() falls back to returning the raw key as text.
+                let exitCode = this.exitError(tpPrice, slPrice);
+                let exitErrText = exitCode === '' ? '' : (exitCode === 'side' ? loc('stock_exit_err_side') : loc(`stock_order_err_${exitCode}`,[MAX_ORDERS]));
                 return {
                     res: res,
                     name: stockName(res),
@@ -565,8 +576,8 @@ export function drawStocks(){
                     exitFreeText: loc('stock_exit_free',[fmt(free, 0)]),
                     tpPriceText: ex.tpOn ? loc('stock_pct_resolved') + ' ' + fmt(tpPrice) : '',
                     slPriceText: ex.slOn ? loc('stock_pct_resolved') + ' ' + fmt(slPrice) : '',
-                    exitOk: this.exitError(tpPrice, slPrice) === '',
-                    exitErr: this.exitError(tpPrice, slPrice) !== '' ? loc(`stock_order_err_${this.exitError(tpPrice, slPrice)}`,[MAX_ORDERS]) : '',
+                    exitOk: exitCode === '',
+                    exitErr: exitErrText,
                     exitTip: loc('stock_exit_tip'),
                     priceText: `${fmt(st.price)} ${loc('resource_Ocoin_name')}`,
                     chgText: `${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%`,
@@ -863,6 +874,94 @@ export function drawStocks(){
                 }
                 let st = global.stocks.market[res];
                 let m = all ? st.lots : Math.min(keyMultiplier(), st.lots);
+                if (!(m > 0)){
+                    return;
+                }
+                global.stocks.ocoin += executeSell(st, m);
+            },
+            // --- Order-book depth: click level i to buy/sell everything from the best price through that level.
+            // Row 0 is the best ask/bid (aq/bq lots); each row after that is one more full LEVEL_STEP chunk (dA/dB),
+            // matching how buyQuote/sellQuote actually walk the book - the depth table's own qty column adds a
+            // little jitter per row for display so it doesn't look like the same number repeated, but the fill
+            // amount here always uses the real chunk size so the trade math stays exact.
+            askFillLots(i){
+                let res = this.cur;
+                if (!res){
+                    return 0;
+                }
+                let st = global.stocks.market[res];
+                return Math.floor(st.aq + i * st.dA);
+            },
+            bidFillLots(i){
+                let res = this.cur;
+                if (!res){
+                    return 0;
+                }
+                let st = global.stocks.market[res];
+                return Math.floor(st.bq + i * st.dB);
+            },
+            canFillAsk(i){
+                let res = this.cur;
+                if (!res){
+                    return false;
+                }
+                let st = global.stocks.market[res];
+                return Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin)) > 0;
+            },
+            canFillBid(i){
+                let res = this.cur;
+                if (!res){
+                    return false;
+                }
+                let st = global.stocks.market[res];
+                return Math.min(this.bidFillLots(i), st.lots) > 0;
+            },
+            askFillTip(i){
+                let res = this.cur;
+                if (!res){
+                    return '';
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin));
+                if (!(m > 0)){
+                    return loc('stock_order_err_funds');
+                }
+                let q = buyQuote(st, m);
+                return loc('stock_buy_tip',[fmt(m, 0), fmt(q.cost), fmt(q.avg), fmt(askPrice(st) * Math.exp(q.ap - st.ap))]);
+            },
+            bidFillTip(i){
+                let res = this.cur;
+                if (!res){
+                    return '';
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.bidFillLots(i), st.lots);
+                if (!(m > 0)){
+                    return loc('stock_order_err_holdings');
+                }
+                let q = sellQuote(st, m);
+                return loc('stock_sell_tip',[fmt(m, 0), fmt(q.proceeds), fmt(q.avg), fmt(bidPrice(st) * Math.exp(st.bp - q.bp))]);
+            },
+            fillAsk(i){
+                let res = this.cur;
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin));
+                if (!(m > 0)){
+                    return;
+                }
+                let cost = executeBuy(st, m);
+                global.stocks.ocoin = Math.max(0, global.stocks.ocoin - cost);
+            },
+            fillBid(i){
+                let res = this.cur;
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.bidFillLots(i), st.lots);
                 if (!(m > 0)){
                     return;
                 }
