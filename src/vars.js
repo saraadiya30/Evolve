@@ -1510,8 +1510,16 @@ if (typeof global.settings.keyMap.showCiv === 'undefined'){
     global.settings.keyMap['showResearch'] = '3'; // 51
     global.settings.keyMap['showResources'] = '4'; // 52
     global.settings.keyMap['showGenetics'] = '5'; // 53
-    global.settings.keyMap['showAchieve'] = '6'; // 54
-    global.settings.keyMap['settings'] = '7'; // 55
+    global.settings.keyMap['showMisc'] = '6'; // 54
+    global.settings.keyMap['showAchieve'] = '7'; // 55
+    global.settings.keyMap['settings'] = '8'; // 56
+}
+// Migration for saves made before the Misc tab existed: showAchieve/settings shift down to make room for it,
+// same as the fresh-save defaults above.
+if (typeof global.settings.keyMap.showMisc === 'undefined'){
+    global.settings.keyMap['showMisc'] = '6';
+    global.settings.keyMap['showAchieve'] = '7';
+    global.settings.keyMap['settings'] = '8';
 }
 delete global.settings.keyMap['d'];
 if (typeof global.settings.qAny === 'undefined'){
