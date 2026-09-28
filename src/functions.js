@@ -702,7 +702,7 @@ export function modRes(res,val,notrack){
         return false;
     }
     // Stock portfolio bonus: only boosts income produced during the production loop (see fastLoop wrapper in main.js)
-    if (val > 0 && !notrack && stockFlags.prod && global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
+    if (val > 0 && !notrack && stockFlags.prod && global.stocks && global.stocks.market && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
         val *= lotBonus(global.stocks.market[res].lots);
     }
     let count = global.resource[res].amount + val;
