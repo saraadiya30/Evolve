@@ -23,6 +23,9 @@ import { setWeather, seasonDesc, astrologySign, astroVal } from './seasons.js';
 import { getTopChange } from './wiki/change.js';
 import { enableDebug, updateDebugData } from './debug.js';
 import { stockFlags, storageBonus, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT } from './stocks_core.js';
+import { SPRING_MORALE_BONUS, WINTER_MORALE_PENALTY, THUNDERSTORM_MORALE_PENALTY, RAIN_MORALE_PENALTY,
+    SUNNY_MORALE_BONUS, VAX_C_MORALE_PENALTY, VAX_F_MORALE_PENALTY, VAX_S_MORALE_BONUS,
+    MORALE_BOOST_TECH_BONUS, PET_BASE_BONUS, PET_EVENT_BONUS, PET_TYPE_BONUS } from './morale.config.js';
 import { stockTick, applyStockBreakdown, stockAutoTrade } from './stocks.js';
 
 {
@@ -499,7 +502,7 @@ popover('morale',
         // calculation in the main tick, so the Morale stock bonus (a flat +0.1%/lot added to current, not part
         // of any modifier above) has to be listed here too, or Current can sit far above Total with nothing in
         // the breakdown explaining the gap.
-        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             let stockBonus = global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
             total += stockBonus;
             obj.popper.append(`<p class="modal_bd"><span>${loc('stock_bonus_label')}</span> <span class="has-text-success"> ${+(stockBonus).toFixed(1)}%</span></p>`);
@@ -1406,7 +1409,7 @@ function fastLoopCore(){
         }
 
         if (global.city.calendar.season === 0 && global.city.calendar.year > 0){ // Spring
-            let spring = global.race['chilled'] || global.race['smoldering'] ? 0 : 5;
+            let spring = global.race['chilled'] || global.race['smoldering'] ? 0 : SPRING_MORALE_BONUS;
             morale += spring;
             global.city.morale.season = spring;
         }
@@ -1420,8 +1423,8 @@ function fastLoopCore(){
                 global.city.morale.season = traits.chilled.vars()[0];
             }
             else {
-                morale -= global.race['leathery'] ? traits.leathery.vars()[0] : 5;
-                global.city.morale.season = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -5;
+                morale -= global.race['leathery'] ? traits.leathery.vars()[0] : WINTER_MORALE_PENALTY;
+                global.city.morale.season = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -WINTER_MORALE_PENALTY;
             }
         }
         else {
@@ -1439,15 +1442,15 @@ function fastLoopCore(){
         }
 
         if (global.tech['vax_c'] || global.tech['vax_f']){
-            morale -= global.tech['vax_c'] ? 10 : 50;
+            morale -= global.tech['vax_c'] ? VAX_C_MORALE_PENALTY : VAX_F_MORALE_PENALTY;
         }
         else if (global.tech['vax_s']){
-            morale += 20;
+            morale += VAX_S_MORALE_BONUS;
         }
 
         if (global.tech['m_boost']){
-            global.city.morale.leadership = 20;
-            morale += 20;
+            global.city.morale.leadership = MORALE_BOOST_TECH_BONUS;
+            morale += MORALE_BOOST_TECH_BONUS;
         }
         else {
             global.city.morale.leadership = 0;
@@ -1494,12 +1497,12 @@ function fastLoopCore(){
                         weather_morale = -(traits.skittish.vars()[0]);
                     }
                     else {
-                        weather_morale = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -5;
+                        weather_morale = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -THUNDERSTORM_MORALE_PENALTY;
                     }
                 }
                 else {
                     // Rain
-                    weather_morale = global.race['leathery'] ? 0 : -2;
+                    weather_morale = global.race['leathery'] ? 0 : -RAIN_MORALE_PENALTY;
                 }
             }
         }
@@ -1512,7 +1515,7 @@ function fastLoopCore(){
                 //Still and Not Hot
                 // -or-
                 //Windy and Hot
-                weather_morale = 2;
+                weather_morale = SUNNY_MORALE_BONUS;
             }
         }
         else {
@@ -1534,15 +1537,15 @@ function fastLoopCore(){
         }
 
         if (global.race['pet']){
-            morale++;
+            morale += PET_BASE_BONUS;
             if (global.race.pet.event > 0){
-                morale++;
+                morale += PET_EVENT_BONUS;
             }
             if (global.race.pet.pet > 0){
-                morale += global.race.pet.type === 'cat' ? 2 : 1
+                morale += global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
             }
             else if (global.race.pet.pet < 0){
-                morale -= global.race.pet.type === 'cat' ? 2 : 1;
+                morale -= global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
             }
         }
 
@@ -3386,7 +3389,7 @@ function fastLoopCore(){
         // recomputed fresh every time morale is computed - so selling lots removes the bonus on the very next
         // calculation, the same way the production and storage bonuses above track your current holdings rather
         // than a one-off transaction.
-        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             morale += global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
             // The bonus is added after the cap clamp above, so it can push morale past moraleCap on its own -
             // clamp again here so current never actually exceeds the cap it's displayed next to.
@@ -4076,7 +4079,7 @@ function fastLoopCore(){
                 }
                 // Stock portfolio birth rate bonus: same flat/reversible pattern as the Morale and Power stock
                 // bonuses above - recomputed every roll from current holdings, so selling lots removes it again.
-                if (global.stocks && global.stocks.market && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
+                if (global.stocks && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
                     lowerBound += global.stocks.market.Birthrate.lots * BIRTH_BONUS_PER_LOT;
                 }
                 if (global.race['promiscuous']){
@@ -8054,7 +8057,7 @@ function fastLoopCore(){
 
         // Stock portfolio power bonus: a flat +1 Power (Watt) per lot held, added the same way as the morale
         // bonus above - recomputed every tick from current holdings, so selling lots takes the Power away again.
-        if (global.stocks && global.stocks.market && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
+        if (global.stocks && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
             power_grid += global.stocks.market.Power.lots * POWER_BONUS_PER_LOT;
         }
         // Power grid state
@@ -8531,16 +8534,16 @@ function midLoop(){
 
             let pet = 0;
             if (global.race['pet']){
-                pet = 1;
+                pet = PET_BASE_BONUS;
                 if (global.race['pet']){
                     if (global.race.pet.event > 0){
-                        pet++;
+                        pet += PET_EVENT_BONUS;
                     }
                     if (global.race.pet.pet > 0){
-                        pet += global.race.pet.type === 'cat' ? 2 : 1;
+                        pet += global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
                     }
                     else if (global.race.pet.pet < 0){
-                        pet -= global.race.pet.type === 'cat' ? 2 : 1
+                        pet -= global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
                     }
                 }
                 caps.Authority += pet;
@@ -10512,7 +10515,7 @@ function midLoop(){
             }
             // Stock portfolio storage bonus: +1% storage per lot held of that resource's company, multiplicative
             // like the Aether storage draw above (so it compounds with warehouses instead of competing with them).
-            if (global.stocks && global.stocks.market && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
+            if (global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
                 let mult = storageBonus(global.stocks.market[res].lots);
                 caps[res] *= mult;
                 if (breakdown.c[res]){
