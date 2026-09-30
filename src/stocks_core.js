@@ -834,17 +834,28 @@ export const AUTO_TICK_SECONDS = 0.25;
 //  - income above `keepPerTick`: the surplus is taken out of Money and converted into Ocoin (with the usual fee)
 //  - income below `keepPerTick`: the shortfall is paid out of Ocoin into Money (no fee), as far as Ocoin and Money storage allow
 // `money` is the Money resource ({ amount, max, delta }), S the stock state ({ ocoin }).
+// `lost` is the part of `natural` that the Money storage cap already cut off before this runs (money.amount is clamped to
+// money.max right after production, but `natural` counts the full income). Without it, a large income makes the surplus be
+// taken from an amount that never received it: Money then settles at max - (natural - keepPerTick) instead of filling up.
 // delta is adjusted too, so the Money rate shown in the resource panel is the rate you actually end up with.
-export function autoTradeStep(S, money, natural, keepPerTick){
+export function autoTradeStep(S, money, natural, keepPerTick, lost = 0){
     let out = { kind: 'none', money: 0, ocoin: 0 };
     if (!isFinite(natural) || !(keepPerTick >= 0)){
         return out;
     }
+    if (!isFinite(lost) || lost < 0){
+        lost = 0;
+    }
     if (natural > keepPerTick){
-        let move = Math.min(natural - keepPerTick, Math.max(0, money.amount));
+        // The income the cap cut off counts as part of the surplus: put it back, take the surplus out, then apply the cap again
+        let avail = Math.max(0, money.amount + lost);
+        let move = Math.min(natural - keepPerTick, avail);
         if (move > 0){
             let gained = moneyToOcoin(move);
-            money.amount -= move;
+            money.amount = avail - move;
+            if (money.max >= 0 && money.amount > money.max){
+                money.amount = money.max;
+            }
             money.delta -= move;
             S.ocoin += gained;
             out = { kind: 'convert', money: move, ocoin: gained };

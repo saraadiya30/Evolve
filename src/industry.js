@@ -9,6 +9,7 @@ import { fortressTech } from './portal.js';
 import { edenicTech } from './edenic.js';
 import { checkPathRequirements } from './truepath.js';
 import { highPopAdjust, production } from './prod.js';
+import { INFERNO_SMELTER_RATE } from './smelter.config.js';
 
 export function loadIndustry(industry,parent,bind){
     switch (industry){
@@ -482,16 +483,11 @@ function loadSmelter(parent,bind){
                     }
                 }
             case 'oil':
-                return global.race['forge'] ? loc('modal_build_forge') : loc('modal_build_oil',['0.35',global.resource.Oil.name]);
+                return global.race['forge'] ? loc('modal_build_forge') : loc('modal_build_oil',[fuel_config.o_cost,global.resource.Oil.name]);
             case 'star':
                 return global.tech['irid_smelting'] ? loc('modal_build_star2',[global.resource.Titanium.name,global.resource.Iridium.name]) : loc('modal_build_star',[global.resource.Titanium.name]);
             case 'inferno':
-                {
-                    let coal = 50;
-                    let oil = 35;
-                    let infernite = 0.5;
-                    return loc('modal_build_inferno',[coal,global.resource.Coal.name,oil,global.resource.Oil.name,infernite,global.resource.Infernite.name]);
-                }
+                return loc('modal_build_inferno',[INFERNO_SMELTER_RATE.Coal,global.resource.Coal.name,INFERNO_SMELTER_RATE.Oil,global.resource.Oil.name,INFERNO_SMELTER_RATE.Infernite,global.resource.Infernite.name]);
         }
     }
 

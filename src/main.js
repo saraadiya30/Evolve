@@ -29,6 +29,7 @@ import { SPRING_MORALE_BONUS, WINTER_MORALE_PENALTY, THUNDERSTORM_MORALE_PENALTY
 import { petMorale } from './morale_core.js';
 import { OCULAR_POWER_CHARM_BASE } from './ocular_power.config.js';
 import { stockTick, applyStockBreakdown, stockAutoTrade } from './stocks.js';
+import { INFERNO_SMELTER_RATE } from './smelter.config.js';
 
 {
     $(document).ready(function() {
@@ -887,10 +888,13 @@ var gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? g
 // Money delta of the last fast tick and how many seconds that tick lasted, captured by diffCalc() just before it resets
 // the delta. Used by the stock auto-balance to see the Money income of a tick.
 var moneyTick = null;
+// Money that the storage cap cut off during the last fast tick (0 when the cap was not hit)
+var moneyClampLost = 0;
 
 // Wrapper: the stock portfolio production bonus (modRes) is only active while the production loop runs.
 function fastLoop(){
     moneyTick = null;
+    moneyClampLost = 0;
     stockFlags.prod = true;
     try {
         fastLoopCore();
@@ -900,7 +904,7 @@ function fastLoop(){
     }
     applyStockBreakdown();
     if (moneyTick !== null){
-        stockAutoTrade(moneyTick.delta, moneyTick.seconds);
+        stockAutoTrade(moneyTick.delta, moneyTick.seconds, moneyClampLost);
     }
 }
 
@@ -5081,11 +5085,7 @@ function fastLoopCore(){
             }
 
             if (inferno_bonus > 0){
-                let inferno_rate = {
-                    Oil: 35,
-                    Coal: 50,
-                    Infernite: 0.5
-                };
+                let inferno_rate = INFERNO_SMELTER_RATE;
                 let max_operable_oil = Math.floor((global.resource.Oil.amount - consume_oil) / (inferno_rate.Oil * time_multiplier));
                 let max_operable_coal = Math.floor((global.resource.Coal.amount - consume_coal) / (inferno_rate.Coal * time_multiplier));
                 let max_operable_infernite = Math.floor(global.resource.Infernite.amount / (inferno_rate.Infernite * time_multiplier));
@@ -8199,6 +8199,10 @@ function fastLoopCore(){
     // main resource delta tracking
     Object.keys(global.resource).forEach(function (res) {
         if (global.resource[res].amount > global.resource[res].max && global.resource[res].max >= 0){
+            if (res === 'Money'){
+                // Income thrown away by the storage cap this tick; the stock auto-balance needs it (see stockAutoTrade)
+                moneyClampLost += global.resource[res].amount - global.resource[res].max;
+            }
             global.resource[res].amount = global.resource[res].max;
         }
         if (global['resource'][res].rate > 0 || (global['resource'][res].rate === 0 && global['resource'][res].max === -1)){
