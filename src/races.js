@@ -3,6 +3,7 @@ import { loc } from './locale.js';
 import { defineIndustry } from './industry.js';
 import { setJobName, jobScale, loadFoundry } from './jobs.js';
 import { vBind, clearElement, popover, removeFromQueue, removeFromRQueue, calc_mastery, gameLoop, getEaster, getHalloween, randomKey, modRes, messageQueue } from './functions.js';
+import { OCULAR_POWER_DISINTEGRATION_BASE, OCULAR_POWER_WOUND_BASE, OCULAR_POWER_TELEKINESIS_BASE, OCULAR_POWER_CHARM_BASE } from './ocular_power.config.js';
 import { setResourceName, drawResourceTab, atomic_mass } from './resources.js';
 import { buildGarrison, govEffect, govTitle, armyRating, govCivics } from './civics.js';
 import { govActive, removeTask, defineGovernor } from './governor.js';
@@ -6654,7 +6655,7 @@ export function racialTrait(workers,type){
     }
     if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.t 
         && ['farmer','miner','lumberjack','scavenger','factory'].includes(type)){
-        let labor = 20 * (traits.ocular_power.vars()[1] / 100);
+        let labor = OCULAR_POWER_TELEKINESIS_BASE * (traits.ocular_power.vars()[1] / 100);
         modifier *= 1 + (labor / 100);
     }
     if (type === 'hunting'){
@@ -9097,20 +9098,20 @@ function ocularPower(parent){
             function(){
                 switch(power){
                     case 'disintegration':
-                        let attack = 50 * (traits.ocular_power.vars()[1] / 100);
+                        let attack = OCULAR_POWER_DISINTEGRATION_BASE * (traits.ocular_power.vars()[1] / 100);
                         return loc(`ocular_${power}_desc`,[attack]);
                     case 'petrification':
                         return loc(`ocular_${power}_desc`,[global.resource.Stone.name]);
                     case 'wound':
-                        let hunt = 60 * (traits.ocular_power.vars()[1] / 100);
+                        let hunt = OCULAR_POWER_WOUND_BASE * (traits.ocular_power.vars()[1] / 100);
                         return loc(`ocular_${power}_desc`,[hunt]);
                     case 'telekinesis':
-                        let labor = 20 * (traits.ocular_power.vars()[1] / 100);
+                        let labor = OCULAR_POWER_TELEKINESIS_BASE * (traits.ocular_power.vars()[1] / 100);
                         return loc(`ocular_${power}_desc`,[labor]);
                     case 'fear':
                         return loc(`ocular_${power}_desc`);
                     case 'charm':
-                        let trade = 70 * (traits.ocular_power.vars()[1] / 100);
+                        let trade = OCULAR_POWER_CHARM_BASE * (traits.ocular_power.vars()[1] / 100);
                         return loc(`ocular_${power}_desc`,[trade]);
                 }
             },{

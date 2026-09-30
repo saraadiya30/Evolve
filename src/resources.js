@@ -3,6 +3,8 @@ import { vBind, clearElement, modRes, flib, calc_mastery, calcPillar, eventActiv
 import { traits, fathomCheck } from './races.js';
 import { templeCount, actions } from './actions.js';
 import { workerScale } from './jobs.js';
+import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL } from './storage.config.js';
+import { OCULAR_POWER_CHARM_BASE } from './ocular_power.config.js';
 import { hellSupression } from './portal.js';
 import { syndicate } from './truepath.js';
 import { govActive, defineGovernor } from './governor.js';
@@ -1450,7 +1452,7 @@ export function marketItem(mount,market_item,name,color,full){
                     rate *= 1 + (astroVal('capricorn')[0] / 100);
                 }
                 if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.c){
-                    let trade = 70 * (traits.ocular_power.vars()[1] / 100);
+                    let trade = OCULAR_POWER_CHARM_BASE * (traits.ocular_power.vars()[1] / 100);
                     rate *= 1 + (trade / 100);
                 }
                 if (global.race['devious']){
@@ -2664,7 +2666,7 @@ export function crateValue(){
     if (global.stats.achieve['banana'] && global.stats.achieve.banana.l >= 3){
         create_value *= 1.1;
     }
-    create_value *= global.stats.achieve['blackhole'] ? 1 + (global.stats.achieve.blackhole.l * 0.05) : 1;
+    create_value *= global.stats.achieve['blackhole'] ? 1 + (global.stats.achieve.blackhole.l * BLACKHOLE_STORAGE_BONUS_PER_LEVEL) : 1;
     return Math.round(spatialReasoning(create_value)) * 1000;
 }
 
@@ -2686,7 +2688,7 @@ export function containerValue(){
     if (fathom > 0){
         container_value *= 1 + (traits.pack_rat.vars(1)[0] / 100 * fathom);
     }
-    container_value *= global.stats.achieve['blackhole'] ? 1 + (global.stats.achieve.blackhole.l * 0.05) : 1;
+    container_value *= global.stats.achieve['blackhole'] ? 1 + (global.stats.achieve.blackhole.l * BLACKHOLE_STORAGE_BONUS_PER_LEVEL) : 1;
     return Math.round(spatialReasoning(container_value)) * 10000;
 }
 

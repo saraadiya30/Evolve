@@ -25,7 +25,9 @@ import { enableDebug, updateDebugData } from './debug.js';
 import { stockFlags, storageBonus, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT } from './stocks_core.js';
 import { SPRING_MORALE_BONUS, WINTER_MORALE_PENALTY, THUNDERSTORM_MORALE_PENALTY, RAIN_MORALE_PENALTY,
     SUNNY_MORALE_BONUS, VAX_C_MORALE_PENALTY, VAX_F_MORALE_PENALTY, VAX_S_MORALE_BONUS,
-    MORALE_BOOST_TECH_BONUS, PET_BASE_BONUS, PET_EVENT_BONUS, PET_TYPE_BONUS } from './morale.config.js';
+    MORALE_BOOST_TECH_BONUS } from './morale.config.js';
+import { petMorale } from './morale_core.js';
+import { OCULAR_POWER_CHARM_BASE } from './ocular_power.config.js';
 import { stockTick, applyStockBreakdown, stockAutoTrade } from './stocks.js';
 
 {
@@ -357,7 +359,7 @@ popover('morale',
 
         let total = 100 + global.city.morale.unemployed + global.city.morale.stress;
         Object.keys(global.city.morale).forEach(function (morale){
-            if (!['current','unemployed','stress','season','cap','potential'].includes(morale) && global.city.morale[morale] !== 0){
+            if (!['current','unemployed','stress','season','cap','potential','pet'].includes(morale) && global.city.morale[morale] !== 0){
                 total += global.city.morale[morale];
                 let type = global.city.morale[morale] > 0 ? 'success' : 'danger';
 
@@ -426,38 +428,11 @@ popover('morale',
             obj.popper.append(`<p class="modal_bd"><span>${loc(`trait_artisan_name`)}</span> <span class="has-text-success"> ${boost}%</span></p>`)
         }
 
-        if (global.race['pet']){
-            let change = 1;
-            if (global.race['catnip']){
-                change = traits.catnip.vars()[0];
-            }
-            else if (global.race['anise']){
-                change = traits.anise.vars()[0];
-            }
-            if (global.race['pet']){
-                if (global.race.pet.event > 0){
-                    if (global.race['catnip']){
-                        change += traits.catnip.vars()[0];
-                    }
-                    else if (global.race['anise']){
-                        change += traits.anise.vars()[0];
-                    }
-                    else {
-                        change++;
-                    }
-                }
-                if (global.race.pet.pet > 0){
-                    change += global.race.pet.type === 'cat' ? (global.race['catnip'] ? traits.catnip.vars()[1] : 2) : (global.race['anise'] ? traits.anise.vars()[1] : 1);
-                }
-                else if (global.race.pet.pet < 0){
-                    change -= global.race.pet.type === 'cat' ? (global.race['catnip'] ? traits.catnip.vars()[1] : 2) : (global.race['anise'] ? traits.anise.vars()[1] : 1);
-                }
-            }
-            if (change !== 0){
-                total += change;
-                let style = change > 0 ? 'success' : 'danger';
-                obj.popper.append(`<p class="modal_bd"><span>${loc(`event_pet_${global.race.pet.type}_owner`)}</span> <span class="has-text-${style}"> ${change}%</span></p>`);
-            }
+        if (global.race['pet'] && global.city.morale.pet){
+            let change = global.city.morale.pet;
+            total += change;
+            let style = change > 0 ? 'success' : 'danger';
+            obj.popper.append(`<p class="modal_bd"><span>${loc(`event_pet_${global.race.pet.type}_owner`)}</span> <span class="has-text-${style}"> ${change}%</span></p>`);
         }
 
         if (global.race['wishStats'] && global.race.wishStats.fame !== 0){
@@ -1537,16 +1512,9 @@ function fastLoopCore(){
         }
 
         if (global.race['pet']){
-            morale += PET_BASE_BONUS;
-            if (global.race.pet.event > 0){
-                morale += PET_EVENT_BONUS;
-            }
-            if (global.race.pet.pet > 0){
-                morale += global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
-            }
-            else if (global.race.pet.pet < 0){
-                morale -= global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
-            }
+            let petBonus = petMorale(global.race.pet);
+            global.city.morale.pet = petBonus;
+            morale += petBonus;
         }
 
         if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.fame !== 0){
@@ -1655,7 +1623,7 @@ function fastLoopCore(){
                             rate *= 1 + (traits.merchant.vars()[1] / 100);
                         }
                         if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.c){
-                            let trade = 70 * (traits.ocular_power.vars()[1] / 100);
+                            let trade = OCULAR_POWER_CHARM_BASE * (traits.ocular_power.vars()[1] / 100);
                             rate *= 1 + (trade / 100);
                         }
                         let fathom = fathomCheck('goblin');
@@ -8534,18 +8502,7 @@ function midLoop(){
 
             let pet = 0;
             if (global.race['pet']){
-                pet = PET_BASE_BONUS;
-                if (global.race['pet']){
-                    if (global.race.pet.event > 0){
-                        pet += PET_EVENT_BONUS;
-                    }
-                    if (global.race.pet.pet > 0){
-                        pet += global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
-                    }
-                    else if (global.race.pet.pet < 0){
-                        pet -= global.race.pet.type === 'cat' ? PET_TYPE_BONUS.cat : PET_TYPE_BONUS.other;
-                    }
-                }
+                pet = petMorale(global.race.pet);
                 caps.Authority += pet;
                 breakdown.c.Authority[loc(`event_pet_${global.race.pet.type}_owner`)] = pet+'v';
             }
