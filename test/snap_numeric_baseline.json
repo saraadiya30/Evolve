@@ -1,0 +1,12 @@
+{
+  "eden": {
+    "n": 5000,
+    "hash": "a8c10ffd8ce4be56",
+    "nonTrivial": 1023,
+    "threw": 41
+  },
+  "ship": {
+    "n": 8000,
+    "hash": "771fe0f2d2aa67ea"
+  }
+}

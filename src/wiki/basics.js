@@ -1,4 +1,4 @@
-import { loc } from './../locale.js';
+import { loc } from '../core/locale.js';
 import { infoBoxBuilder } from './functions.js';
 
 export function basicsPage(content){

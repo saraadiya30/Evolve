@@ -1,5 +1,5 @@
-import { loc } from './../locale.js';
-import { clearElement } from './../functions.js';
+import { loc } from '../core/locale.js';
+import { clearElement } from '../functions/dom_helpers.js';
 import { faqPage } from './faq.js';
 import { basicsPage } from './basics.js';
 import { mechanicsPage } from './mechanics.js';
@@ -11,6 +11,7 @@ import { resetsPage } from './resets.js';
 import { planetsPage } from './planets.js';
 import { universePage } from './universes.js';
 import { hellPage } from './hell.js';
+import { miscPage } from './misc.js';
 import { pResPage } from './p_res.js';
 import { perksPage } from './perks.js';
 import { mainEventsPage, minorEventsPage, progressEventsPage, specialEventsPage} from './events.js';
@@ -38,6 +39,7 @@ const pages = [
     [planetsPage, false, "gameplay", "planets"],
     [universePage, true, "gameplay", "universes"],
     [hellPage, true, "gameplay", "hell"],
+    [miscPage, true, "gameplay", "misc"],
     [pResPage, true, "prestige", "resources"],
     [perksPage, true, "prestige", "perks"],
     [mainEventsPage, true, "events", "major"],

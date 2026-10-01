@@ -1,4 +1,4 @@
-import { loc } from './../locale.js';
+import { loc } from '../core/locale.js';
 import { sideMenu, infoBoxBuilder } from './functions.js';
 
 export function combatPage(content){

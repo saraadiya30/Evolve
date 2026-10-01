@@ -1,9 +1,11 @@
-import { loc } from './../locale.js';
+import { loc } from '../core/locale.js';
 import { sideMenu, subSideMenu, infoBoxBuilder } from './functions.js';
 import { govBoost } from './government.js';
-import { gmen, gov_traits, gov_tasks } from './../governor.js';
-import { hoovedRename } from './../functions.js';
-import { hoovedReskin } from './../races.js';
+import { gov_tasks } from '../core/registries.js';
+import { gmen } from '../governor/gov_men.js';
+import { gov_traits } from '../core/registries.js';
+import { hoovedRename } from '../functions/run_stats_helpers.js';
+import { hoovedReskin } from '../races/trait_logic/trait_skin.js';
 
 export function governPage(content){
     let mainContent = sideMenu('create',content);

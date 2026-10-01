@@ -1,4 +1,4 @@
-import { clearElement } from './../functions.js';
+import { clearElement } from '../functions/dom_helpers.js';
 import { projectsPage } from './projects.js';
 import { crisprPage } from './crispr.js';
 import { bloodPage } from './blood.js';

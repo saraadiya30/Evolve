@@ -1,4 +1,4 @@
-import { clearElement } from './../functions.js';
+import { clearElement } from '../functions/dom_helpers.js';
 import { basicsPage } from './basics.js';
 import { mechanicsPage } from './mechanics.js';
 import { govPage } from './government.js';
@@ -9,6 +9,7 @@ import { resetsPage } from './resets.js';
 import { planetsPage } from './planets.js';
 import { universePage } from './universes.js';
 import { hellPage } from './hell.js';
+import { miscPage } from './misc.js';
 
 export function gamePlayPage(zone){
     let content = $(`#content`);
@@ -44,6 +45,9 @@ export function gamePlayPage(zone){
             break;
         case 'hell':
             hellPage(content);
-            break;        
+            break;
+        case 'misc':
+            miscPage(content);
+            break;
     }
 }

@@ -1,7 +1,30 @@
-import {} from './../vars.js';
-import { clearElement } from './../functions.js';
+import {} from '../core/vars.js';
+import { clearElement } from '../functions/dom_helpers.js';
 
 export const changeList = [
+    {
+        version: `1.5.0`,
+        date: `10/11/2026`,
+        changes: [
+            `Added a Misc tab with two sub-tabs: Aether and Stocks.`,
+            `Added Aether: generated every tick from your Plasmids and Phage, and exchangeable for Plasmid, Phage, Money, Ocoin, Power, Storage, Production, Morale and game speed.`,
+            `Added the Stock Market: a new currency (Ocoin, 1 Ocoin = 1000 Money, 5% fee when buying), a company for every material resource, order books, Buy/Sell Limit and Stop orders, Take Profit/Stop Loss, price charts and random boom/crash events.`,
+            `Added Auto Convert, which balances your Money income around an amount you choose to keep by converting the surplus into Ocoin or paying a shortfall from Ocoin.`,
+            `Stock lots are split between Production (+0.1% each) and Storage (+1% each): each lot gives only one of the two bonuses. The production bonus does not apply to Market trading or trade routes.`,
+            `Added special companies: Highspirit Morale Co. (+0.1 Morale per lot), Wattbridge Grid Holdings (+1 Power per lot) and Cradlewell Fertility Fund (+0.05 citizen growth per lot).`,
+            `Added the Compoundia Yield Trust stock: each lot adds +0.1% of your available Ocoin every game day (compounding).`,
+            `The Stocks tab now shows your net Ocoin change per second next to the balance (green for a surplus, red for a deficit), adding up Auto Convert and the Compoundia payout, with a tooltip for the breakdown.`,
+            `Stock market numbers now use the game's single-letter unit suffixes (K, M, B, t, ...) instead of SI units (K, M, G, T).`,
+            `Crates now hold 1000x and Containers 10000x as much as before.`,
+            `Storage Yard, Warehouse, Trade Post and Wharf costs no longer increase as you build more of them.`,
+            `Supercollider now boosts Warehouse (and Garage) capacity by 100% instead of 5%.`,
+            `Trade Posts give 100x more trade routes, and Wharves and GPS Satellites give 200.`,
+            `Removed the cap on time accumulated while offline.`,
+            `Fixed Auto Convert producing a different amount of Money than the displayed max, and wrong Money to Ocoin conversion at very high income.`,
+            `Added a Misc tab page to the wiki (Stocks and Aether).`,
+            `Internal: source files were reorganized into folders by category, circular imports were removed and an automated test suite was added. No gameplay change is intended.`
+        ]
+    },
     {
         version: `1.4.10`,
         date: `6/19/2026`,

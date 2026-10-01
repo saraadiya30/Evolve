@@ -1,9 +1,12 @@
-import { global } from './../vars.js';
-import { universeAffix, alevel } from './../achieve.js';
-import { loc } from './../locale.js';
-import { vBind, challenge_multiplier, getResetConstants, calcPrestige, darkEffect } from './../functions.js';
-import { jobScale } from './../jobs.js';
-import { races, traits } from './../races.js';
+import { global } from '../core/vars.js';
+import { alevel } from '../achievements/achievement_helpers.js';
+import { universeAffix } from '../functions/universe_utils.js';
+import { loc } from '../core/locale.js';
+import { darkEffect } from '../functions/power_modifiers.js';
+import { vBind } from '../functions/dom_helpers.js';
+import { challenge_multiplier, getResetConstants, calcPrestige } from '../functions/prestige_calc.js';
+import { jobScale } from '../civics/jobs/job_scale.js';
+import { races, traits } from '../core/registries.js';
 import { infoBoxBuilder, sideMenu, createCalcSection } from './functions.js';
 
 export function pResPage(content){
