@@ -1,4 +1,4 @@
-import { clearElement } from './../functions.js';
+import { clearElement } from '../functions/dom_helpers.js';
 import { basicsPage } from './basics.js';
 import { mechanicsPage } from './mechanics.js';
 import { govPage } from './government.js';

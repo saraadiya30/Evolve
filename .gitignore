@@ -6,4 +6,5 @@ strings/last-strings.json
 node_modules/*
 docs
 dist
-*.map
+*.maptest/diagnostics/accel_out.json
+test/_golden_*.json

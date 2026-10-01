@@ -1,8 +1,11 @@
-import { loc } from './../locale.js';
+import { loc } from '../core/locale.js';
 import { infoBoxBuilder, sideMenu } from './functions.js';
-import { calcPillar } from './../functions.js';
-import { mechSize, mechWeaponPower, mechCost, terrainEffect, monsters } from './../portal.js';
-import { global } from './../vars.js';
+import { calcPillar } from '../functions/functions.js';
+import { mechSize, terrainEffect } from '../portal/mech/mechbay.js';
+import { mechWeaponPower } from '../portal/mech/mech_analysis.js';
+import { mechCost } from '../portal/mech/mech_cost.js';
+import { monsters } from '../core/registries.js';
+import { global } from '../core/vars.js';
 
 export function hellPage(content){
     let mainContent = sideMenu('create',content);

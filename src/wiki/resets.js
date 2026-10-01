@@ -1,5 +1,5 @@
-import { loc } from './../locale.js';
-import { universe_types } from './../space.js';
+import { loc } from '../core/locale.js';
+import { universe_types } from '../space/space.js';
 import { infoBoxBuilder, sideMenu, createCalcSection } from './functions.js';
 import { prestigeCalc } from './p_res.js';
 import { massCalc } from './mechanics.js';

@@ -1,9 +1,11 @@
-import { global, sizeApproximation } from './../vars.js';
-import { loc } from './../locale.js';
-import { clearElement, popover, vBind, adjustCosts } from './../functions.js';
-import { actions } from './../actions.js';
-import { towerSize } from './../portal.js';
-import { races } from './../races.js';
+import { global, sizeApproximation } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { clearElement, vBind } from '../functions/dom_helpers.js';
+import { popover } from '../functions/popover.js';
+import { adjustCosts } from '../functions/cost_adjusters.js';
+import { actions } from '../core/registries.js';
+import { towerSize } from '../portal/portal.js';
+import { races } from '../core/registries.js';
 import { actionDesc, sideMenu } from './functions.js';
 
 export function renderStructurePage(zone,path){

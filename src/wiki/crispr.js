@@ -1,6 +1,6 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { genePool } from './../arpa.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { genePool } from '../core/registries.js';
 import { sideMenu } from './functions.js';
 
 export function crisprPage(content){
@@ -57,13 +57,12 @@ const specialRequirements = {
     ]
 }
 
-var crisprTrees = {};
+let crisprTrees = {};
 Object.keys(genePool).forEach(function (gene){
     let crispr = genePool[gene];
     if (!crisprTrees[crispr.grant[0]]){
         crisprTrees[crispr.grant[0]] = {};
     }
-    let text = typeof genePool[gene].title === 'string' ? genePool[gene].title : genePool[gene].title();
     crisprTrees[crispr.grant[0]][crispr.grant[1]] = {
         name: gene
     };

@@ -1,10 +1,11 @@
-import { global } from './../vars.js';
-import { races } from './../races.js';
-import { govTitle } from './../civics.js';
-import { housingLabel } from './../actions.js';
-import { clearElement, eventActive } from './../functions.js';
-import { loc } from './../locale.js';
-import { swissKnife } from './../tech.js';
+import { global } from '../core/vars.js';
+import { races } from '../core/registries.js';
+import { govTitle } from '../civics/military/government_definitions.js';
+import { housingLabel } from '../actions/core/structure_ui.js';
+import { clearElement } from '../functions/dom_helpers.js';
+import { eventActive } from '../functions/event_dates.js';
+import { loc } from '../core/locale.js';
+import { swissKnife } from '../core/swiss_knife.js';
 import { sideMenu, infoBoxBuilder, getSolarName } from './functions.js';
 
 export function eventsPage(zone){
@@ -1240,7 +1241,7 @@ export function progressEventsPage(content){
     }
     
     {   // Elerium Discovery
-        let section = infoBoxBuilder(mainContent,{ name: 'elerium', template: 'events', label: loc('wiki_events_elerium'), paragraphs: 2, break: [2], h_level: 2,
+        infoBoxBuilder(mainContent,{ name: 'elerium', template: 'events', label: loc('wiki_events_elerium'), paragraphs: 2, break: [2], h_level: 2,
             para_data: {
                 1: [loc(`resource_Elerium_name`),loc(`tech_elerium_mining`)],
                 2: [loc(`space_belt_iron_ship_title`),loc(`space_belt_iridium_ship_title`),`0.4%`]
@@ -1257,7 +1258,7 @@ export function progressEventsPage(content){
     }
     
     {   // Gas Moon Oil
-        let section = infoBoxBuilder(mainContent,{ name: 'oil', template: 'events', label: loc('wiki_events_oil'), paragraphs: 2, break: [2], h_level: 2,
+        infoBoxBuilder(mainContent,{ name: 'oil', template: 'events', label: loc('wiki_events_oil'), paragraphs: 2, break: [2], h_level: 2,
             para_data: {
                 1: [loc(`resource_Oil_name`),getSolarName('gas_moon'),loc(`space_gas_moon_oil_extractor_title`)],
                 2: [loc(`space_gas_moon_outpost_title`),`1%`]
@@ -1342,7 +1343,7 @@ export function progressEventsPage(content){
     }
     
     {   // Alien Database
-        let section = infoBoxBuilder(mainContent,{ name: 'alien_database', template: 'events', label: loc('wiki_events_alien_database'), paragraphs: 2, break: [2], h_level: 2,
+        infoBoxBuilder(mainContent,{ name: 'alien_database', template: 'events', label: loc('wiki_events_alien_database'), paragraphs: 2, break: [2], h_level: 2,
             para_data: {
                 1: [loc(`galaxy_scavenger`),loc(`tech_alien_database`)],
                 2: [loc(`galaxy_scavenger`),`2%`]
@@ -1385,7 +1386,7 @@ export function progressEventsPage(content){
     }
     
     {   // Vault Discovery
-        let section = infoBoxBuilder(mainContent,{ name: 'vault_find', template: 'events', label: loc('wiki_events_vault_find'), paragraphs: 3, break: [2], h_level: 2,
+        infoBoxBuilder(mainContent,{ name: 'vault_find', template: 'events', label: loc('wiki_events_vault_find'), paragraphs: 3, break: [2], h_level: 2,
             para_data: {
                 1: [loc(`job_archaeologist`),loc(`portal_vault_title`),loc(`portal_ruins_name`)],
                 2: [loc(`job_archaeologist`),`2.5%`],
