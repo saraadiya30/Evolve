@@ -1,8 +1,10 @@
-import { global, setGlobal, save } from './../vars.js';
-import { loc } from './../locale.js';
+import '../core/boot_register.js';
+import { global, setGlobal, save } from '../core/vars.js';
+import { loc } from '../core/locale.js';
 import {} from './init.js';
-import {} from './../achieve.js';
-import { vBind, clearElement, tagEvent } from './../functions.js';
+import {} from '../achievements/achieve.js';
+import { vBind, clearElement } from '../functions/dom_helpers.js';
+import { tagEvent } from '../functions/analytics.js';
 import { faqPage } from './faq.js';
 import { speciesPage } from './species.js';
 import { planetsPage } from './planets.js';
@@ -157,7 +159,7 @@ function initPage(){
     wikiMenu = wikiMenu + `</b-menu-list></b-menu></template>`;
     menu.append(wikiMenu);
 
-    var menuData = {};
+    let menuData = {};
     vBind({
         el: `#menu`,
         data: menuData,
@@ -197,7 +199,7 @@ async function menuDispatch(main,sub,frag){
     
     $(`#content`).removeClass('flex');
 
-    var global_data = save.getItem('evolved') || false;
+    let global_data = save.getItem('evolved') || false;
     if (global_data){
         setGlobal(JSON.parse(LZString.decompressFromUTF16(global_data)));
     }

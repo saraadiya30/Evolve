@@ -1,0 +1,9 @@
+{
+  "modules": 316,
+  "largestCycle": 105,
+  "modulesInCycles": 107,
+  "cycleGroups": 2,
+  "edgesInLargestCycle": 581,
+  "evalTimeEdgesInLargestCycle": 0,
+  "evalTimeEdgesInAllCycles": 0
+}

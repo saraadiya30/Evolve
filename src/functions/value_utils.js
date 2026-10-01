@@ -1,0 +1,27 @@
+
+export const valAdjust = {
+    promiscuous: false,
+    revive: false,
+    fast_growth: false,
+    spores: false,
+    terrifying: false,
+    fibroblast: true,
+    hivemind: true,
+    imitation: true,
+    elusive: true,
+    chameleon: true,
+    blood_thirst: true,
+    selenophobia: true,
+    hooved: true,
+    anthropophagite: true,
+    unfathomable: false,
+    darkness: false,
+    living_tool: false,
+    living_materials: true,
+    blurry: true,
+    playful: true,
+    ghostly: true,
+    environmentalist: true,
+    catnip: true,
+    anise: true
+};

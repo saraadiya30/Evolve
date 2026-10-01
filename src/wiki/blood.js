@@ -1,7 +1,7 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { vBind } from './../functions.js';
-import { bloodPool } from './../arpa.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { vBind } from '../functions/dom_helpers.js';
+import { bloodPool } from '../arpa/arpa.js';
 import { sideMenu } from './functions.js';
 
 export function bloodPage(content){
@@ -20,13 +20,12 @@ export function bloodPage(content){
     });
 }
 
-var bloodTrees = {};
+let bloodTrees = {};
 Object.keys(bloodPool).forEach(function (blood){
     let infusion = bloodPool[blood];
     if (!bloodTrees[infusion.grant[0]]){
         bloodTrees[infusion.grant[0]] = {};
     }
-    let text = typeof bloodPool[blood].title === 'string' ? bloodPool[blood].title : bloodPool[blood].title();
     bloodTrees[infusion.grant[0]][infusion.grant[1]] = {
         name: blood
     };

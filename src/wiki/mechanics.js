@@ -1,15 +1,22 @@
-import { global } from './../vars.js';
-import { universeAffix } from './../achieve.js';
-import { loc } from './../locale.js';
-import { timeFormat, vBind, svgIcons, svgViewBox, calcGenomeScore, powerModifier } from './../functions.js';
-import { job_desc } from './../jobs.js';
-import { races, traits, planetTraits } from './../races.js';
-import { atomic_mass } from './../resources.js';
-import { universe_types } from './../space.js';
-import { swissKnife } from './../tech.js';
-import { actions, structName } from './../actions.js';
-import { astroVal, astrologySign } from './../seasons.js';
-import { shipAttackPower, sensorRange, shipCrewSize, shipPower } from './../truepath.js';
+import { global } from '../core/vars.js';
+import { universeAffix } from '../functions/universe_utils.js';
+import { loc } from '../core/locale.js';
+import { powerModifier } from '../functions/power_modifiers.js';
+import { vBind } from '../functions/dom_helpers.js';
+import { timeFormat } from '../functions/time_format.js';
+import { svgIcons, svgViewBox } from '../functions/icons_easter_eggs.js';
+import { calcGenomeScore } from '../functions/run_stats_helpers.js';
+import { job_desc } from '../civics/jobs.js';
+import { races, traits } from '../core/registries.js';
+import { planetTraits } from '../races/races.js';
+import { atomic_mass } from '../resources/resources.js';
+import { universe_types } from '../space/space.js';
+import { swissKnife } from '../core/swiss_knife.js';
+import { actions } from '../core/registries.js';
+import { structName } from '../actions/core/structure_ui.js';
+import { astroVal, astrologySign } from '../functions/astrology.js';
+import { shipAttackPower, shipCrewSize, shipPower } from '../truepath/tau_ceti_shipyard.js';
+import { sensorRange } from '../truepath/ship_orbits.js';
 import { sideMenu, infoBoxBuilder, createRevealSection, createCalcSection, getSolarName } from './functions.js';
 
 export function mechanicsPage(content){
@@ -442,7 +449,7 @@ export function mechanicsPage(content){
     }
 
     { // CRISPR Mutation
-        let crispr_mutation = infoBoxBuilder(mainContent,{ name: 'crispr_mutation', template: 'mechanics', label: loc('wiki_mechanics_crispr_mutation'), paragraphs: 5, break: [3], h_level: 2,
+        infoBoxBuilder(mainContent,{ name: 'crispr_mutation', template: 'mechanics', label: loc('wiki_mechanics_crispr_mutation'), paragraphs: 5, break: [3], h_level: 2,
             para_data: {
                 1: [loc('tab_arpa_crispr'),loc('arpa_genepool_mutation_title'),loc('resource_Plasmid_plural_name')],
                 3: [loc('tech_arpa'),loc('tab_arpa_genetics'),],
@@ -742,7 +749,7 @@ export function mechanicsPage(content){
     { // Syndicate
         let syndicate = infoBoxBuilder(mainContent,{ name: 'syndicate', template: 'mechanics', label: loc('wiki_mechanics_syndicate'), paragraphs: 2, h_level: 2,
             para_data: {
-                1: [loc('wiki_mechanics_syndicate'),loc('wiki_challenges_scenarios_truepath'),loc('wiki_mechanics_syndicate_para1_note1'),loc('tech_shipyard',[races[global.race.species ? global.race.species : human].solar.dwarf])],
+                1: [loc('wiki_mechanics_syndicate'),loc('wiki_challenges_scenarios_truepath'),loc('wiki_mechanics_syndicate_para1_note1'),loc('tech_shipyard',[races[global.race.species ? global.race.species : 'human'].solar.dwarf])],
                 2: [loc('galaxy_piracy'),loc('tab_galactic')]
             },
             data_link: {
@@ -875,7 +882,7 @@ export function mechanicsPage(content){
     }
 
     { // Seeded Randomness
-        let seed = infoBoxBuilder(mainContent,{ name: 'seed', template: 'mechanics', label: loc('wiki_mechanics_seed'), paragraphs: 14, break: [3,5,6,7,8,9,10,11,12,13,14], h_level: 2,
+        infoBoxBuilder(mainContent,{ name: 'seed', template: 'mechanics', label: loc('wiki_mechanics_seed'), paragraphs: 14, break: [3,5,6,7,8,9,10,11,12,13,14], h_level: 2,
             para_data: {
                 4: [loc('wiki_faq_q_soft_reset')],
                 7: [loc('evo_sentience_title')],
@@ -2354,7 +2361,6 @@ export function massCalc(info){
                 
                     if (show.result.vis){
                         let total = 0;
-                        let exotic = 0;
                         resources.forEach(function(res){
                             total += inputs[res].val * atomic_mass[res];
                         });

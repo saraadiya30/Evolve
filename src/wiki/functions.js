@@ -1,8 +1,9 @@
-import { global, sizeApproximation } from './../vars.js';
-import { loc } from './../locale.js';
-import { clearElement, vBind, adjustCosts } from './../functions.js';
-import { actions } from './../actions.js';
-import { planetName } from './../space.js';
+import { global, sizeApproximation } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { clearElement, vBind } from '../functions/dom_helpers.js';
+import { adjustCosts } from '../functions/cost_adjusters.js';
+import { actions } from '../core/registries.js';
+import { planetName } from '../space/planet_generation.js';
 
 export function headerBoxBuilder(parent,args,box){
     if (!args.hasOwnProperty('h_level')){
@@ -224,7 +225,7 @@ export function actionDesc(info, c_action, extended, isStruct){
     }
 }
 
-export function bindScroll(elm, target){
+function bindScroll(elm, target){
     elm.click(function(){
         window.location.hash = `#${target}`;
         document.getElementById(target).scrollIntoView({

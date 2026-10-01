@@ -1,9 +1,14 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { clearElement, popover, getEaster, getHalloween, getTraitDesc } from './../functions.js';
-import { races, traits, genus_def, traitSkin } from './../races.js';
-import { ascendLab } from './../space.js';
-import { actions } from './../actions.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { clearElement } from '../functions/dom_helpers.js';
+import { popover } from '../functions/popover.js';
+import { getEaster, getHalloween } from '../functions/event_dates.js';
+import { getTraitDesc } from '../functions/trait_description.js';
+import { races, traits } from '../core/registries.js';
+import { genus_def } from '../races/genus_def.js';
+import { traitSkin } from '../races/trait_logic/trait_ranks.js';
+import { ascendLab } from '../space/ascend_lab.js';
+import { actions } from '../core/registries.js';
 import { sideMenu } from './functions.js';
 import { customRaceMechanics } from './mechanics.js';
 
@@ -26,7 +31,7 @@ export function speciesPage(zone){
     }
 }
 
-export function customPage(content) {
+function customPage(content) {
     customRaceMechanics(content,true);
     let lab = $(`<div class="infoBox wide"></div>`);
     content.append(lab);

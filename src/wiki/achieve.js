@@ -1,10 +1,15 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { clearElement, svgIcons, svgViewBox, format_emblem, getBaseIcon, sLevel } from './../functions.js';
-import { achievements, feats, universeAffix } from './../achieve.js';
-import { races, biomes, genus_def } from './../races.js';
-import { monsters } from './../portal.js';
-import { vBind, popover } from './../functions.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { clearElement } from '../functions/dom_helpers.js';
+import { svgIcons, svgViewBox, format_emblem, getBaseIcon, sLevel } from '../functions/icons_easter_eggs.js';
+import { achievements, feats } from '../achievements/achieve.js';
+import { universeAffix } from '../functions/universe_utils.js';
+import { races } from '../core/registries.js';
+import { biomes } from '../races/races.js';
+import { genus_def } from '../races/genus_def.js';
+import { monsters } from '../core/registries.js';
+import { vBind } from '../functions/dom_helpers.js';
+import { popover } from '../functions/popover.js';
 
 export function renderAchievePage(zone){
     let content = $(`#content`);

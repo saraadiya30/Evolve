@@ -1,4 +1,4 @@
-import { perkList } from './../achieve.js';
+import { perkList } from '../core/registries.js';
 import { sideMenu } from './functions.js';
 
 export function perksPage(content){
