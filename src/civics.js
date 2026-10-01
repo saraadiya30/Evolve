@@ -3,6 +3,7 @@ import { loc } from './locale.js';
 import { calcPrestige, clearElement, popover, clearPopper, vBind, timeFormat, modRes, messageQueue, genCivName, darkEffect, eventActive, easterEgg, trickOrTreat } from './functions.js';
 import { universeAffix } from './achieve.js';
 import { races, racialTrait, traits, planetTraits, biomes, fathomCheck, blubberFill } from './races.js';
+import { OCULAR_POWER_DISINTEGRATION_BASE, OCULAR_POWER_WOUND_BASE } from './ocular_power.config.js';
 import { defineGovernor, govActive } from './governor.js';
 import { drawTech } from  './actions.js';
 import { soulForgeSoldiers } from './portal.js';
@@ -2295,7 +2296,7 @@ export function armyRating(val,type,wound,analysis){
             data.push({ k: 'trait_elemental_name', v: elemental });
         }
         if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.d){
-            let attack = 50 * (traits.ocular_power.vars()[1] / 100);
+            let attack = OCULAR_POWER_DISINTEGRATION_BASE * (traits.ocular_power.vars()[1] / 100);
             let ocular = (attack / 100);
             army *= 1 + ocular;
             data.push({ k: 'trait_ocular_power_name', v: ocular });
@@ -2319,7 +2320,7 @@ export function armyRating(val,type,wound,analysis){
             data.push({ k: 'trait_unfathomable_name', v: -(34) });
         }
         if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.w){
-            let hunt = 60 * (traits.ocular_power.vars()[1] / 100);
+            let hunt = OCULAR_POWER_WOUND_BASE * (traits.ocular_power.vars()[1] / 100);
             let ocular = (hunt / 100);
             army *= 1 + ocular;
             data.push({ k: 'trait_ocular_power_name', v: ocular });

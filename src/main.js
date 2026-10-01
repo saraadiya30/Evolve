@@ -23,7 +23,13 @@ import { setWeather, seasonDesc, astrologySign, astroVal } from './seasons.js';
 import { getTopChange } from './wiki/change.js';
 import { enableDebug, updateDebugData } from './debug.js';
 import { stockFlags, storageBonus, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT } from './stocks_core.js';
+import { SPRING_MORALE_BONUS, WINTER_MORALE_PENALTY, THUNDERSTORM_MORALE_PENALTY, RAIN_MORALE_PENALTY,
+    SUNNY_MORALE_BONUS, VAX_C_MORALE_PENALTY, VAX_F_MORALE_PENALTY, VAX_S_MORALE_BONUS,
+    MORALE_BOOST_TECH_BONUS } from './morale.config.js';
+import { petMorale } from './morale_core.js';
+import { OCULAR_POWER_CHARM_BASE } from './ocular_power.config.js';
 import { stockTick, applyStockBreakdown, stockAutoTrade } from './stocks.js';
+import { INFERNO_SMELTER_RATE } from './smelter.config.js';
 
 {
     $(document).ready(function() {
@@ -354,7 +360,7 @@ popover('morale',
 
         let total = 100 + global.city.morale.unemployed + global.city.morale.stress;
         Object.keys(global.city.morale).forEach(function (morale){
-            if (!['current','unemployed','stress','season','cap','potential'].includes(morale) && global.city.morale[morale] !== 0){
+            if (!['current','unemployed','stress','season','cap','potential','pet'].includes(morale) && global.city.morale[morale] !== 0){
                 total += global.city.morale[morale];
                 let type = global.city.morale[morale] > 0 ? 'success' : 'danger';
 
@@ -423,38 +429,11 @@ popover('morale',
             obj.popper.append(`<p class="modal_bd"><span>${loc(`trait_artisan_name`)}</span> <span class="has-text-success"> ${boost}%</span></p>`)
         }
 
-        if (global.race['pet']){
-            let change = 1;
-            if (global.race['catnip']){
-                change = traits.catnip.vars()[0];
-            }
-            else if (global.race['anise']){
-                change = traits.anise.vars()[0];
-            }
-            if (global.race['pet']){
-                if (global.race.pet.event > 0){
-                    if (global.race['catnip']){
-                        change += traits.catnip.vars()[0];
-                    }
-                    else if (global.race['anise']){
-                        change += traits.anise.vars()[0];
-                    }
-                    else {
-                        change++;
-                    }
-                }
-                if (global.race.pet.pet > 0){
-                    change += global.race.pet.type === 'cat' ? (global.race['catnip'] ? traits.catnip.vars()[1] : 2) : (global.race['anise'] ? traits.anise.vars()[1] : 1);
-                }
-                else if (global.race.pet.pet < 0){
-                    change -= global.race.pet.type === 'cat' ? (global.race['catnip'] ? traits.catnip.vars()[1] : 2) : (global.race['anise'] ? traits.anise.vars()[1] : 1);
-                }
-            }
-            if (change !== 0){
-                total += change;
-                let style = change > 0 ? 'success' : 'danger';
-                obj.popper.append(`<p class="modal_bd"><span>${loc(`event_pet_${global.race.pet.type}_owner`)}</span> <span class="has-text-${style}"> ${change}%</span></p>`);
-            }
+        if (global.race['pet'] && global.city.morale.pet){
+            let change = global.city.morale.pet;
+            total += change;
+            let style = change > 0 ? 'success' : 'danger';
+            obj.popper.append(`<p class="modal_bd"><span>${loc(`event_pet_${global.race.pet.type}_owner`)}</span> <span class="has-text-${style}"> ${change}%</span></p>`);
         }
 
         if (global.race['wishStats'] && global.race.wishStats.fame !== 0){
@@ -499,7 +478,7 @@ popover('morale',
         // calculation in the main tick, so the Morale stock bonus (a flat +0.1%/lot added to current, not part
         // of any modifier above) has to be listed here too, or Current can sit far above Total with nothing in
         // the breakdown explaining the gap.
-        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             let stockBonus = global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
             total += stockBonus;
             obj.popper.append(`<p class="modal_bd"><span>${loc('stock_bonus_label')}</span> <span class="has-text-success"> ${+(stockBonus).toFixed(1)}%</span></p>`);
@@ -909,10 +888,13 @@ var gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? g
 // Money delta of the last fast tick and how many seconds that tick lasted, captured by diffCalc() just before it resets
 // the delta. Used by the stock auto-balance to see the Money income of a tick.
 var moneyTick = null;
+// Money that the storage cap cut off during the last fast tick (0 when the cap was not hit)
+var moneyClampLost = 0;
 
 // Wrapper: the stock portfolio production bonus (modRes) is only active while the production loop runs.
 function fastLoop(){
     moneyTick = null;
+    moneyClampLost = 0;
     stockFlags.prod = true;
     try {
         fastLoopCore();
@@ -922,7 +904,7 @@ function fastLoop(){
     }
     applyStockBreakdown();
     if (moneyTick !== null){
-        stockAutoTrade(moneyTick.delta, moneyTick.seconds);
+        stockAutoTrade(moneyTick.delta, moneyTick.seconds, moneyClampLost);
     }
 }
 
@@ -1406,7 +1388,7 @@ function fastLoopCore(){
         }
 
         if (global.city.calendar.season === 0 && global.city.calendar.year > 0){ // Spring
-            let spring = global.race['chilled'] || global.race['smoldering'] ? 0 : 5;
+            let spring = global.race['chilled'] || global.race['smoldering'] ? 0 : SPRING_MORALE_BONUS;
             morale += spring;
             global.city.morale.season = spring;
         }
@@ -1420,8 +1402,8 @@ function fastLoopCore(){
                 global.city.morale.season = traits.chilled.vars()[0];
             }
             else {
-                morale -= global.race['leathery'] ? traits.leathery.vars()[0] : 5;
-                global.city.morale.season = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -5;
+                morale -= global.race['leathery'] ? traits.leathery.vars()[0] : WINTER_MORALE_PENALTY;
+                global.city.morale.season = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -WINTER_MORALE_PENALTY;
             }
         }
         else {
@@ -1439,15 +1421,15 @@ function fastLoopCore(){
         }
 
         if (global.tech['vax_c'] || global.tech['vax_f']){
-            morale -= global.tech['vax_c'] ? 10 : 50;
+            morale -= global.tech['vax_c'] ? VAX_C_MORALE_PENALTY : VAX_F_MORALE_PENALTY;
         }
         else if (global.tech['vax_s']){
-            morale += 20;
+            morale += VAX_S_MORALE_BONUS;
         }
 
         if (global.tech['m_boost']){
-            global.city.morale.leadership = 20;
-            morale += 20;
+            global.city.morale.leadership = MORALE_BOOST_TECH_BONUS;
+            morale += MORALE_BOOST_TECH_BONUS;
         }
         else {
             global.city.morale.leadership = 0;
@@ -1494,12 +1476,12 @@ function fastLoopCore(){
                         weather_morale = -(traits.skittish.vars()[0]);
                     }
                     else {
-                        weather_morale = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -5;
+                        weather_morale = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -THUNDERSTORM_MORALE_PENALTY;
                     }
                 }
                 else {
                     // Rain
-                    weather_morale = global.race['leathery'] ? 0 : -2;
+                    weather_morale = global.race['leathery'] ? 0 : -RAIN_MORALE_PENALTY;
                 }
             }
         }
@@ -1512,7 +1494,7 @@ function fastLoopCore(){
                 //Still and Not Hot
                 // -or-
                 //Windy and Hot
-                weather_morale = 2;
+                weather_morale = SUNNY_MORALE_BONUS;
             }
         }
         else {
@@ -1534,16 +1516,9 @@ function fastLoopCore(){
         }
 
         if (global.race['pet']){
-            morale++;
-            if (global.race.pet.event > 0){
-                morale++;
-            }
-            if (global.race.pet.pet > 0){
-                morale += global.race.pet.type === 'cat' ? 2 : 1
-            }
-            else if (global.race.pet.pet < 0){
-                morale -= global.race.pet.type === 'cat' ? 2 : 1;
-            }
+            let petBonus = petMorale(global.race.pet);
+            global.city.morale.pet = petBonus;
+            morale += petBonus;
         }
 
         if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.fame !== 0){
@@ -1652,7 +1627,7 @@ function fastLoopCore(){
                             rate *= 1 + (traits.merchant.vars()[1] / 100);
                         }
                         if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.c){
-                            let trade = 70 * (traits.ocular_power.vars()[1] / 100);
+                            let trade = OCULAR_POWER_CHARM_BASE * (traits.ocular_power.vars()[1] / 100);
                             rate *= 1 + (trade / 100);
                         }
                         let fathom = fathomCheck('goblin');
@@ -3386,7 +3361,7 @@ function fastLoopCore(){
         // recomputed fresh every time morale is computed - so selling lots removes the bonus on the very next
         // calculation, the same way the production and storage bonuses above track your current holdings rather
         // than a one-off transaction.
-        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             morale += global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
             // The bonus is added after the cap clamp above, so it can push morale past moraleCap on its own -
             // clamp again here so current never actually exceeds the cap it's displayed next to.
@@ -4076,7 +4051,7 @@ function fastLoopCore(){
                 }
                 // Stock portfolio birth rate bonus: same flat/reversible pattern as the Morale and Power stock
                 // bonuses above - recomputed every roll from current holdings, so selling lots removes it again.
-                if (global.stocks && global.stocks.market && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
+                if (global.stocks && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
                     lowerBound += global.stocks.market.Birthrate.lots * BIRTH_BONUS_PER_LOT;
                 }
                 if (global.race['promiscuous']){
@@ -5110,11 +5085,7 @@ function fastLoopCore(){
             }
 
             if (inferno_bonus > 0){
-                let inferno_rate = {
-                    Oil: 35,
-                    Coal: 50,
-                    Infernite: 0.5
-                };
+                let inferno_rate = INFERNO_SMELTER_RATE;
                 let max_operable_oil = Math.floor((global.resource.Oil.amount - consume_oil) / (inferno_rate.Oil * time_multiplier));
                 let max_operable_coal = Math.floor((global.resource.Coal.amount - consume_coal) / (inferno_rate.Coal * time_multiplier));
                 let max_operable_infernite = Math.floor(global.resource.Infernite.amount / (inferno_rate.Infernite * time_multiplier));
@@ -8054,7 +8025,7 @@ function fastLoopCore(){
 
         // Stock portfolio power bonus: a flat +1 Power (Watt) per lot held, added the same way as the morale
         // bonus above - recomputed every tick from current holdings, so selling lots takes the Power away again.
-        if (global.stocks && global.stocks.market && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
+        if (global.stocks && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
             power_grid += global.stocks.market.Power.lots * POWER_BONUS_PER_LOT;
         }
         // Power grid state
@@ -8228,6 +8199,10 @@ function fastLoopCore(){
     // main resource delta tracking
     Object.keys(global.resource).forEach(function (res) {
         if (global.resource[res].amount > global.resource[res].max && global.resource[res].max >= 0){
+            if (res === 'Money'){
+                // Income thrown away by the storage cap this tick; the stock auto-balance needs it (see stockAutoTrade)
+                moneyClampLost += global.resource[res].amount - global.resource[res].max;
+            }
             global.resource[res].amount = global.resource[res].max;
         }
         if (global['resource'][res].rate > 0 || (global['resource'][res].rate === 0 && global['resource'][res].max === -1)){
@@ -8531,18 +8506,7 @@ function midLoop(){
 
             let pet = 0;
             if (global.race['pet']){
-                pet = 1;
-                if (global.race['pet']){
-                    if (global.race.pet.event > 0){
-                        pet++;
-                    }
-                    if (global.race.pet.pet > 0){
-                        pet += global.race.pet.type === 'cat' ? 2 : 1;
-                    }
-                    else if (global.race.pet.pet < 0){
-                        pet -= global.race.pet.type === 'cat' ? 2 : 1
-                    }
-                }
+                pet = petMorale(global.race.pet);
                 caps.Authority += pet;
                 breakdown.c.Authority[loc(`event_pet_${global.race.pet.type}_owner`)] = pet+'v';
             }
@@ -10512,7 +10476,7 @@ function midLoop(){
             }
             // Stock portfolio storage bonus: +1% storage per lot held of that resource's company, multiplicative
             // like the Aether storage draw above (so it compounds with warehouses instead of competing with them).
-            if (global.stocks && global.stocks.market && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
+            if (global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
                 let mult = storageBonus(global.stocks.market[res].lots);
                 caps[res] *= mult;
                 if (breakdown.c[res]){
