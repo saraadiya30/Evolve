@@ -6,6 +6,7 @@ import { armyRating, garrisonSize, soldierDeath } from './civics.js';
 import { jobScale, job_desc, loadFoundry, limitCraftsmen } from './jobs.js';
 import { production, highPopAdjust } from './prod.js';
 import { actions, payCosts, powerOnNewStruct, setAction, drawTech, bank_vault, buildTemplate, casinoEffect, housingLabel, structName, initStruct } from './actions.js';
+import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL } from './storage.config.js';
 import { fuel_adjust, int_fuel_adjust, spaceTech, renderSpace, checkRequirements, incrementStruct, planetName } from './space.js';
 import { defineGovernor, removeTask, govActive } from './governor.js';
 import { defineIndustry, nf_resources, addSmelter, setupRituals, cancelRituals } from './industry.js';
@@ -5499,7 +5500,7 @@ export function tpStorageMultiplier(type,heavy,wiki){
         multiplier *= 1 + (traits.pack_rat.vars()[1] / 100);
     }
     if (global.stats.achieve['blackhole']){
-        multiplier *= 1 + global.stats.achieve.blackhole.l * 0.05;
+        multiplier *= 1 + global.stats.achieve.blackhole.l * BLACKHOLE_STORAGE_BONUS_PER_LEVEL;
     }
     if (global.tech['world_control']){
         multiplier *= 3;

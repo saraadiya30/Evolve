@@ -211,9 +211,10 @@ export function stockTick(){
     });
 }
 
-// Called every fast tick with the Money delta the game recorded for that tick (`delta`) and how many seconds the tick lasted.
+// Called every fast tick with the Money delta the game recorded for that tick (`delta`), how many seconds the tick lasted and
+// how much of that income the Money storage cap had already cut off (`lost`).
 // When auto-balance is on, income above the amount you keep becomes Ocoin and a shortfall is paid from Ocoin.
-export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS){
+export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0){
     let money = global.resource.Money;
     // Money is only displayed once currency is unlocked, so nothing happens during the early evolution stage
     if (!money || !money.display || !isFinite(delta) || !(seconds > 0)){
@@ -228,7 +229,7 @@ export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS){
     let flow = 0;
     let adj = 0;
     if (global.settings.stockAutoOn){
-        let out = autoTradeStep(s, money, natural, global.settings.stockAutoKeep * seconds);
+        let out = autoTradeStep(s, money, natural, global.settings.stockAutoKeep * seconds, lost);
         if (out.kind === 'convert'){
             flow = out.money;
             adj = -out.money;

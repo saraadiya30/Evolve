@@ -13,6 +13,7 @@ import { edenicTech, renderEdenic } from './edenic.js';
 import { tauCetiTech, renderTauCeti, loneSurvivor } from './truepath.js';
 import { arpa, gainGene, gainBlood } from './arpa.js';
 import { production, highPopAdjust } from './prod.js';
+import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL } from './storage.config.js';
 import { techList, techPath } from './tech.js';
 import { defineGovernor, govActive, removeTask, gov_tasks } from './governor.js';
 import { bioseed } from './resets.js';
@@ -5797,7 +5798,7 @@ function setScenario(scenario){
 
 export function BHStorageMulti(val){
     if (global.stats.achieve['blackhole']){
-        val *= 1 + global.stats.achieve.blackhole.l * 0.05;
+        val *= 1 + global.stats.achieve.blackhole.l * BLACKHOLE_STORAGE_BONUS_PER_LEVEL;
     }
     return Math.round(val);
 }
@@ -5824,7 +5825,7 @@ export function storageMultipler(scale = 1, wiki = false){
         multiplier *= 1.5;
     }
     if (global.stats.achieve['blackhole']){
-        multiplier *= 1 + global.stats.achieve.blackhole.l * 0.05;
+        multiplier *= 1 + global.stats.achieve.blackhole.l * BLACKHOLE_STORAGE_BONUS_PER_LEVEL;
     }
     multiplier *= global.tech['world_control'] ? 3 : 1;
     if (global.race['ascended']){
