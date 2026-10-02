@@ -18,14 +18,14 @@ atrack.t = 0; G.settings.at = 0;
 const M = G.resource.Money, inc = Number(incArg), keep = Number(keepArg), noise = Number(noiseArg) / 100;
 G.settings.stockAutoOn = true; G.settings.stockAutoKeep = keep; G.stocks.ocoin = 1e12;
 const pat = [0, 1, -1, 0.5, -0.5, 1, -1, 0, 0.7, -0.7];
-const diffs = [];
+const diffs = []; const amts = [];
 for (let i = 0; i < 100; i++) {
     M.amount = 0.5 * M.max;
     const add = inc * 0.25 * (1 + noise * pat[i % pat.length]);
     M.amount += add; M.delta += add;
     execGameLoops(1);
-    if (i >= 20) diffs.push(M.diff);
+    if (i >= 20) { diffs.push(M.diff); amts.push(M.amount); }
 }
 const mn = Math.min(...diffs), mx = Math.max(...diffs);
-console.log(`income~${inc}/s keep=${keep}/s noise=${noiseArg}% | Money/s tampil: min=${mn} max=${mx} rata2=${(diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(1)} | tick merah (<0): ${diffs.filter(d => d < 0).length}`);
+console.log(`income~${inc}/s keep=${keep}/s noise=${noiseArg}% | Money/s tampil: min=${mn} max=${mx} rata2=${(diffs.reduce((a, b) => a + b, 0) / diffs.length).toFixed(1)} | tick merah (<0): ${diffs.filter(d => d < 0).length} | amount: min=${Math.min(...amts)} max=${Math.max(...amts)} (storage max=${M.max})`);
 process.exit(0);

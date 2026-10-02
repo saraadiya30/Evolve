@@ -838,7 +838,11 @@ export const AUTO_TICK_SECONDS = 0.25;
 // money.max right after production, but `natural` counts the full income). Without it, a large income makes the surplus be
 // taken from an amount that never received it: Money then settles at max - (natural - keepPerTick) instead of filling up.
 // delta is adjusted too, so the Money rate shown in the resource panel is the rate you actually end up with.
-export function autoTradeStep(S, money, natural, keepPerTick, lost = 0){
+// `start` is the Money amount at the start of the tick (before any production). With a huge income, `natural` and the amount
+// that was cut off by the cap are enormous numbers that differ by about keepPerTick, and subtracting one from the other
+// throws away the precision the result needs (at ~1e21 per tick every digit of the small remainder is lost). So when `start`
+// is known the result is computed directly: what is left is exactly the start amount plus the part that is kept.
+export function autoTradeStep(S, money, natural, keepPerTick, lost = 0, start = NaN){
     let out = { kind: 'none', money: 0, ocoin: 0 };
     if (!isFinite(natural) || !(keepPerTick >= 0)){
         return out;
@@ -849,14 +853,22 @@ export function autoTradeStep(S, money, natural, keepPerTick, lost = 0){
     if (natural > keepPerTick){
         // The income the cap cut off counts as part of the surplus: put it back, take the surplus out, then apply the cap again
         let avail = Math.max(0, money.amount + lost);
-        let move = Math.min(natural - keepPerTick, avail);
+        let surplus = natural - keepPerTick;
+        let move = Math.min(surplus, avail);
         if (move > 0){
             let gained = moneyToOcoin(move);
-            money.amount = avail - move;
+            if (isFinite(start) && start >= 0 && move === surplus){
+                // Exact: nothing huge is subtracted from something huge
+                money.amount = start + keepPerTick;
+                money.delta = (money.delta - natural) + keepPerTick;
+            }
+            else {
+                money.amount = avail - move;
+                money.delta -= move;
+            }
             if (money.max >= 0 && money.amount > money.max){
                 money.amount = money.max;
             }
-            money.delta -= move;
             S.ocoin += gained;
             out = { kind: 'convert', money: move, ocoin: gained };
         }

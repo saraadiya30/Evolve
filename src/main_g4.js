@@ -195,7 +195,7 @@ export function diffCalc(res,period){
     if (res === 'Money'){
         S.moneyTick = { delta: global.resource[res].delta, seconds: period / sec };
         // Stock auto-balance first (it adjusts Money amount and delta), so the rate shown below is the final one of this tick
-        stockAutoTrade(S.moneyTick.delta, S.moneyTick.seconds, S.moneyClampLost + stockFlags.moneyLost);
+        stockAutoTrade(S.moneyTick.delta, S.moneyTick.seconds, S.moneyClampLost + stockFlags.moneyLost, S.moneyStart);
     }
     global.resource[res].diff = +(global.resource[res].delta / (period / sec)).toFixed(2);
     global.resource[res].delta = 0;

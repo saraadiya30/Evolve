@@ -1,4 +1,4 @@
-import { webWorker } from './vars.js';
+import { webWorker, global } from './vars.js';
 import { timeScale } from './functions.js';
 import { doCallbacks } from './actions.js';
 import { stockFlags } from './stocks_core.js';
@@ -47,6 +47,7 @@ export function fastLoop(){
     S.moneyTick = null;
     S.moneyClampLost = 0;
     stockFlags.moneyLost = 0;
+    S.moneyStart = global.resource.Money ? global.resource.Money.amount : NaN; // Money before this tick's production (see autoTradeStep)
     stockFlags.prod = true;
     try {
         fastLoopCore();

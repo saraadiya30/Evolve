@@ -217,7 +217,7 @@ export function stockTick(){
 // When auto-balance is on, income above the amount you keep becomes Ocoin and a shortfall is paid from Ocoin.
 // The conversion is applied to money.amount and money.delta in the same tick, so the Money/s that diffCalc then displays is
 // the final rate of this tick (income minus what was converted) and nothing is carried over into the next tick.
-export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0){
+export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0, start = NaN){
     let money = global.resource.Money;
     // Money is only displayed once currency is unlocked, so nothing happens during the early evolution stage
     if (!money || !money.display || !isFinite(delta) || !(seconds > 0)){
@@ -232,7 +232,7 @@ export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0){
     let flow = 0;
     let adj = 0;
     if (global.settings.stockAutoOn){
-        let out = autoTradeStep(s, money, natural, global.settings.stockAutoKeep * seconds, lost);
+        let out = autoTradeStep(s, money, natural, global.settings.stockAutoKeep * seconds, lost, start);
         if (out.kind === 'convert'){
             flow = out.money;
             adj = -out.money;

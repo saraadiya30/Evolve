@@ -470,7 +470,7 @@ popover('morale',
         // calculation in the main tick, so the Morale stock bonus (a flat +0.1%/lot added to current, not part
         // of any modifier above) has to be listed here too, or Current can sit far above Total with nothing in
         // the breakdown explaining the gap.
-        if (global.stocks && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+        if (global.stocks && global.stocks.market &&  global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
             let stockBonus = global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
             total += stockBonus;
             obj.popper.append(`<p class="modal_bd"><span>${loc('stock_bonus_label')}</span> <span class="has-text-success"> ${+(stockBonus).toFixed(1)}%</span></p>`);
@@ -859,6 +859,7 @@ S.gene_sequence = global.arpa['sequence'] && global.arpa['sequence']['on'] ? glo
 S.moneyTick = null;
 // Money that the storage cap cut off during the last fast tick (0 when the cap was not hit)
 S.moneyClampLost = 0;
+S.moneyStart = NaN;
 
 export let sythMap = {
     1: 1.1,
