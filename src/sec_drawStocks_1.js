@@ -1,0 +1,922 @@
+import { initStocks, CHART_W, CHART_H, orderLabel, liveStockDefs, listed, stockName, fmt, isSpecial, specialBonusPerLot, signed, LEVEL_STEP_DISPLAY, moneyRoom, suggestPrice } from './stocks.js';
+import { loc } from './locale.js';
+import { OCOIN_RATE, OCOIN_BUY_FEE, ORDER_TYPES, askPrice, bidPrice, maxBuyLots, sellQuote, buyQuote, committedSellLots, tpPriceFromPct, slPriceFromPct, MAX_ORDERS, LOT_BONUS, isBuyOrder, bookLevels, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, moneyToOcoin, ocoinCostInMoney, ocoinToMoney, executeBuy, executeSell, validateOrder, validateBracket, placeOrder, cancelOrder, placeExitOrders } from './stocks_core.js';
+import { vBind, messageQueue } from './functions.js';
+import { global, keyMultiplier } from './vars.js';
+
+// Bagian dari drawStocks (stocks.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
+
+export function drawStocks_s1($ctx){
+        initStocks();
+    $ctx.RANGES = [60, 120, 240];
+
+    // Vue ignores <style> tags inside templates, so the CSS goes into <head> once.
+    // Colours come from the game's own theme classes, so every theme keeps working.
+    if ($('#stockStyle').length === 0){
+        $('head').append($(`<style id="stockStyle">
+        #stockExchange .stk-top{display:flex;align-items:baseline;margin:0 0 .25rem 1rem}
+        #stockExchange .stk-help{cursor:help;display:inline-block;width:1.1rem;height:1.1rem;line-height:1rem;text-align:center;border:.0625rem solid;border-radius:50%;font-size:.75rem;margin-left:.375rem}
+        #stockExchange .stk-toggle{margin-left:auto;cursor:pointer;font-size:.875rem}
+        #stockExchange .stk-toggle:hover{text-decoration:underline}
+        #stockExchange .stk-wallet{margin:.25rem 0 .5rem 0;padding:.25rem 0;border-top:.0625rem solid rgba(128,128,128,.4);border-bottom:.0625rem solid rgba(128,128,128,.4)}
+        #stockExchange .stk-note{margin:.125rem 0 0 1rem;font-size:.8125rem;opacity:.85}
+        #stockExchange .market-item.stk-flow{flex-wrap:wrap;align-items:center}
+        #stockExchange .stk-flow>*{margin-bottom:.125rem}
+        #stockExchange .stk-layout{display:flex;flex-wrap:wrap;align-items:stretch;margin:.5rem 0 0 1rem}
+        #stockExchange .stk-main{flex:1 1 24rem;min-width:0}
+        #stockExchange .stk-list{flex:0 0 14rem;margin-left:1rem;border-left:.0625rem solid rgba(128,128,128,.4);display:flex;flex-direction:column;min-height:12rem}
+        #stockExchange .stk-listwrap{flex:1 1 0;position:relative;min-height:0}
+        #stockExchange .stk-listscroll{position:absolute;top:0;right:0;bottom:0;left:0;overflow-y:auto;overflow-x:hidden;scrollbar-width:thin}
+        #stockExchange .stk-listhead{flex:none;padding:.125rem .5rem;font-size:.8125rem;opacity:.75}
+        #stockExchange .stk-item{padding:.25rem .5rem;cursor:pointer;border-left:.1875rem solid transparent;margin-left:-.0625rem}
+        #stockExchange .stk-item:hover{background:rgba(128,128,128,.12)}
+        #stockExchange .stk-item.on{background:rgba(128,128,128,.22);border-left-color:currentColor}
+        #stockExchange .stk-row1,#stockExchange .stk-row2{display:flex;justify-content:space-between;align-items:baseline}
+        #stockExchange .stk-iname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:.5rem}
+        #stockExchange .stk-row2{font-size:.75rem}
+        #stockExchange .stk-badges>*{margin-right:.5rem}
+        #stockExchange .stk-head{display:flex;flex-wrap:wrap;align-items:baseline}
+        #stockExchange .stk-name{font-weight:700;font-size:1.05rem;margin-right:.75rem}
+        #stockExchange .stk-rng{margin-left:auto}
+        #stockExchange .stk-rng>span{cursor:pointer;padding:0 .4rem;margin-left:.125rem;border:.0625rem solid transparent;border-radius:.25rem;font-size:.8125rem}
+        #stockExchange .stk-rng>span.on{border-color:currentColor}
+        #stockExchange .stk-chart{display:block;width:100%;height:auto;margin:.25rem 0}
+        #stockExchange .stk-line{display:flex;flex-wrap:wrap;margin-top:.125rem;font-size:.875rem}
+        #stockExchange .stk-line>*{margin-right:1.25rem}
+        #stockExchange .stk-line>.b-tooltip{min-width:8.5rem}
+        #stockExchange .stk-btns{margin:.375rem 0 .25rem -.25rem}
+        #stockExchange .stk-title{margin:.5rem 0 .25rem 0;padding-top:.375rem;border-top:.0625rem solid rgba(128,128,128,.4)}
+        #stockExchange .market-item.stk-plain{margin:.25rem 0 0 0}
+        #stockExchange .stk-orderline{display:flex;align-items:center;font-size:.875rem;margin:.125rem 0 0 0}
+        #stockExchange .stk-orderline .order{margin-left:.75rem;min-width:4rem}
+        #stockExchange select option{background:#fff;color:#000}
+        #stockExchange .stk-depth{border-collapse:collapse;margin:.25rem 0;font-size:.8125rem;width:100%;max-width:16rem}
+        #stockExchange .stk-depth th{text-align:left;font-weight:600;padding:0 .75rem .125rem 0;opacity:.75}
+        #stockExchange .stk-depth td{padding:.03125rem .75rem .03125rem 0;white-space:nowrap}
+        #stockExchange .stk-depth-cell{cursor:pointer}
+        #stockExchange .stk-depth-cell:hover{text-decoration:underline}
+        #stockExchange .stk-depth-cell.off{cursor:default;text-decoration:none;opacity:.5}
+        #stockExchange .stk-sub{margin:.375rem 0 0 0;padding:.375rem 0 0 0;border-top:.03125rem dashed rgba(128,128,128,.35);font-size:.875rem}
+        #stockExchange .stk-sub label{margin-right:.5rem;cursor:pointer;white-space:nowrap}
+        #stockExchange .stk-modebtn{cursor:pointer;padding:0 .4rem;border:.0625rem solid currentColor;border-radius:.25rem;font-size:.75rem;margin-right:.375rem;white-space:nowrap;flex:none}
+        #stockExchange .stk-modebtn.off{opacity:.4}
+        #stockExchange .stk-side{margin-bottom:.375rem}
+        #stockExchange .stk-side-head{display:flex;align-items:center;flex-wrap:wrap;margin-bottom:.125rem}
+        #stockExchange .stk-side-row{display:flex;align-items:center;flex-wrap:wrap;margin-left:1.35rem}
+        #stockExchange .stk-side input{width:4.5rem;margin-right:.375rem;flex:none}
+        #stockExchange .stk-side .stk-resolved{white-space:nowrap}
+    </style>`));
+    }
+
+    let wrap = $(`<div id="stockExchange"></div>`);
+    $('#miscNew').append(wrap);
+    let inputStyle = 'background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;';
+
+    // Top bar: balance and the wallet toggle
+    wrap.append($(`<div class="stk-top"><h3 class="has-text-info">${loc('resource_Ocoin_name')}: <span>{{ ocoinText() }}</span></h3>&nbsp;<span v-if="reservedOcoin() > 0" class="has-text-warning">({{ reservedText() }})</span><b-tooltip :label="helpText()" position="is-bottom" size="is-large" multilined animated><span class="stk-help has-text-warning">?</span></b-tooltip><span role="button" class="stk-toggle" @click="toggleWallet()">{{ s.stockWalletOpen ? '▾' : '▸' }} ${loc('stock_wallet')}</span></div>`));
+
+    // Wallet: Money <-> Ocoin and the auto balance
+    let wallet = $(`<div v-if="s.stockWalletOpen" class="stk-wallet"></div>`);
+    wrap.append(wallet);
+    wallet.append($(`<div class="stk-note has-text-warning" style="margin-bottom:.25rem;">${loc('stock_ocoin_rate',[OCOIN_RATE, OCOIN_BUY_FEE * 100])}</div>`));
+    let exchange = $(`<div id="stockOcoin" class="market-item stk-flow"><h3 class="res has-text-info">${loc('stock_convert')}</h3></div>`);
+    wallet.append(exchange);
+    exchange.append($(`<input type="number" min="0" step="any" v-model.number="st.qty" @change="clampQty()" style="width:7rem;margin-right:.5rem;${inputStyle}">`));
+    exchange.append($(`<b-tooltip :label="buyOcoinTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !canBuyOcoin() }" @click="buyOcoin()">${loc('resource_market_buy')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip :label="buyOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" @click="buyOcoinMax()">${loc('stock_buy_max')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip :label="sellOcoinTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !canSellOcoin() }" @click="sellOcoin()">${loc('resource_market_sell')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip :label="sellOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" @click="sellOcoinMax()">${loc('stock_sell_max')}</span></b-tooltip>`));
+    let auto = $(`<div id="stockAuto" class="market-item stk-flow"><h3 class="res has-text-info">${loc('stock_auto')}</h3></div>`);
+    wallet.append(auto);
+    auto.append($(`<b-tooltip :label="autoTip()" position="is-bottom" size="is-large" multilined animated><span role="button" class="order" :class="s.stockAutoOn ? 'has-text-success' : 'has-text-danger'" @click="toggleAuto()">{{ autoLabel() }}</span></b-tooltip>`));
+    auto.append($(`<span class="has-text-warning" style="margin:0 .5rem;">${loc('stock_auto_keep')}</span>`));
+    auto.append($(`<input type="number" min="0" step="any" v-model.number="s.stockAutoKeep" @change="clampKeep()" style="width:7rem;margin-right:.75rem;${inputStyle}">`));
+    auto.append($(`<span style="font-size:.875rem;">{{ autoStatus() }}</span>`));
+
+    // Trading view: one chart for the selected stock on the left, the watchlist on the right
+    wrap.append($(`<div v-if="list.length === 0" class="stk-note has-text-warning">${loc('stock_empty')}</div>`));
+    let layout = $(`<div v-else class="stk-layout"></div>`);
+    wrap.append(layout);
+    let main = $(`<div class="stk-main"></div>`);
+    layout.append(main);
+
+    main.append($(`<div class="stk-head"><h3 class="stk-name has-text-info">{{ d.name }}</h3><span>{{ d.priceText }}</span>&nbsp;<span :class="d.chgClass">{{ d.chgText }}</span>&nbsp;<b :class="d.evClass">{{ d.evText }}</b><span class="stk-rng"><span v-for="n in ranges" :key="n" role="button" :class="{ on: s.stockRange === n }" @click="setRange(n)">{{ rangeLabel(n) }}</span></span></div>`));
+
+    main.append($(`<svg v-if="c" class="stk-chart" viewBox="0 0 ${CHART_W} ${CHART_H}" preserveAspectRatio="xMidYMid meet" @mousemove="chartMove($event)" @mouseleave="hv = -1">
+        <g v-for="(gl, gi) in c.grid" :key="'g' + gi">
+            <line :x1="c.l" :x2="c.r" :y1="gl.y" :y2="gl.y" stroke="currentColor" stroke-opacity=".13"></line>
+            <text :x="c.r + 6" :y="gl.y + 3" font-size="10" fill="currentColor" fill-opacity=".65">{{ gl.t }}</text>
+        </g>
+        <g :class="c.trend">
+            <polygon :points="c.area" fill="currentColor" fill-opacity=".1"></polygon>
+            <polyline :points="c.line" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"></polyline>
+            <rect :x="c.r + 3" :y="c.last.y - 8" width="58" height="16" rx="3" fill="none" stroke="currentColor"></rect>
+            <text :x="c.r + 32" :y="c.last.y + 4" text-anchor="middle" font-size="10.5" fill="currentColor">{{ c.last.t }}</text>
+        </g>
+        <g v-for="(o, oi) in c.lines" :key="'o' + oi" :class="o.cls">
+            <line :x1="c.l" :x2="c.r" :y1="o.y" :y2="o.y" stroke="currentColor" stroke-dasharray="4 3"></line>
+            <text :x="c.r - 4" :y="o.ly" text-anchor="end" font-size="10" fill="currentColor">{{ o.t }}</text>
+        </g>
+        <g v-if="c.hover">
+            <line :x1="c.hover.x" :x2="c.hover.x" :y1="c.t" :y2="c.b" stroke="currentColor" stroke-opacity=".5"></line>
+            <circle :cx="c.hover.x" :cy="c.hover.y" r="3" fill="currentColor"></circle>
+            <text :x="c.hover.tx" :y="c.t + 11" :text-anchor="c.hover.anchor" font-size="11" fill="currentColor">{{ c.hover.t }}</text>
+        </g>
+        <text :x="c.l" :y="c.h - 5" font-size="10" fill="currentColor" fill-opacity=".65">{{ c.xl }}</text>
+        <text :x="c.r" :y="c.h - 5" text-anchor="end" font-size="10" fill="currentColor" fill-opacity=".65">{{ c.xr }}</text>
+    </svg>`));
+
+    // Each level is clickable: it buys/sells everything from the best price through that level in one go
+    // (you can't fill a deeper level without also taking the ones in front of it), instead of repeating
+    // Buy/Sell one keyMultiplier chunk at a time to clear out a level.
+    let depth = $(`<table class="stk-depth"><thead><tr><th class="has-text-danger">${loc('stock_asks')}</th><th class="has-text-success">${loc('stock_bids')}</th></tr></thead><tbody></tbody></table>`);
+    main.append(depth);
+    let depthRow = $(`<tr v-for="(row, i) in d.depth" :key="i"></tr>`);
+    depth.find('tbody').append(depthRow);
+    depthRow.append($(`<td><b-tooltip :label="askFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-danger stk-depth-cell" :class="{ off: !canFillAsk(i) }" @click="fillAsk(i)">{{ row.ask }}</span></b-tooltip></td>`));
+    depthRow.append($(`<td><b-tooltip :label="bidFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-success stk-depth-cell" :class="{ off: !canFillBid(i) }" @click="fillBid(i)">{{ row.bid }}</span></b-tooltip></td>`));
+    main.append($(`<div class="stk-line"><span>{{ d.spreadText }}</span></div>`));
+    main.append($(`<div class="stk-line"><span>{{ d.holdText }}</span><span :class="d.plClass">{{ d.plText }}</span></div>`));
+    // Take-profit / stop-loss for the lots you already hold. Each side covers only the lots you type in - not
+    // necessarily all of them - and can be a price or a % away from your average cost.
+    let exitPanel = $(`<div v-if="d.res && (d.lots > d.exitFree || true) && d.lots > 0" class="stk-sub"></div>`);
+    main.append(exitPanel);
+    exitPanel.append($(`<div style="margin-bottom:.25rem;">${loc('stock_exit_title')} <span class="has-text-warning">{{ d.exitFreeText }}</span></div>`));
+    let tpSide = $(`<div class="stk-side"></div>`);
+    exitPanel.append(tpSide);
+    let tpHead = $(`<div class="stk-side-head"></div>`);
+    tpSide.append(tpHead);
+    tpHead.append($(`<label class="has-text-success"><input type="checkbox" v-model="ex.tpOn"> ${loc('stock_take_profit')}</label>`));
+    tpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.tpMode !== 'price' }" @click="ex.tpMode = 'price'">${loc('stock_mode_price')}</span>`));
+    tpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.tpMode !== 'pct' }" @click="ex.tpMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let tpRow = $(`<div v-if="ex.tpOn" class="stk-side-row"></div>`);
+    tpSide.append(tpRow);
+    tpRow.append($(`<input v-if="ex.tpMode === 'price'" type="number" min="0" step="any" v-model.number="ex.tpPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    tpRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="ex.tpPct" style="${inputStyle}" placeholder="%">`));
+    tpRow.append($(`<input type="number" min="1" step="1" v-model.number="ex.tpLots" style="${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
+    tpRow.append($(`<span class="stk-resolved has-text-warning">{{ d.tpPriceText }}</span>`));
+    let slSide = $(`<div class="stk-side"></div>`);
+    exitPanel.append(slSide);
+    let slHead = $(`<div class="stk-side-head"></div>`);
+    slSide.append(slHead);
+    slHead.append($(`<label class="has-text-danger"><input type="checkbox" v-model="ex.slOn"> ${loc('stock_stop_loss')}</label>`));
+    slHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.slMode !== 'price' }" @click="ex.slMode = 'price'">${loc('stock_mode_price')}</span>`));
+    slHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: ex.slMode !== 'pct' }" @click="ex.slMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let slRow = $(`<div v-if="ex.slOn" class="stk-side-row"></div>`);
+    slSide.append(slRow);
+    slRow.append($(`<input v-if="ex.slMode === 'price'" type="number" min="0" step="any" v-model.number="ex.slPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    slRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="ex.slPct" style="${inputStyle}" placeholder="%">`));
+    slRow.append($(`<input type="number" min="1" step="1" v-model.number="ex.slLots" style="${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
+    slRow.append($(`<span class="stk-resolved has-text-warning">{{ d.slPriceText }}</span>`));
+    exitPanel.append($(`<div style="display:flex;align-items:center;flex-wrap:wrap;"><b-tooltip :label="d.exitTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !d.exitOk }" @click="placeExit()">${loc('stock_order_place')}</span></b-tooltip><span v-if="d.exitErr" class="has-text-warning" style="margin-left:.5rem;">{{ d.exitErr }}</span></div>`));
+
+    let btns = $(`<div class="market-item stk-flow stk-btns"></div>`);
+    main.append(btns);
+    btns.append($(`<b-tooltip :label="d.buyTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(false)">{{ d.buyBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="d.buyMaxTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(true)">${loc('stock_buy_max')}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="d.sellTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(false)">{{ d.sellBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="d.sellAllTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(true)">${loc('stock_sell_all')}</span></b-tooltip>`));
+
+    // Orders for the selected stock
+    main.append($(`<div class="stk-title"><h3 class="has-text-info">${loc('stock_orders')}</h3></div>`));
+    let form = $(`<div id="stockOrderForm" class="market-item stk-flow stk-plain"></div>`);
+    main.append(form);
+    let selectStyle = `margin-right:.5rem;${inputStyle}`;
+    form.append($(`<b-tooltip :label="typeHint()" position="is-bottom" size="is-medium" multilined animated><select v-model="st.form.type" @change="resetPrice()" style="${selectStyle}">${ORDER_TYPES.map(t => `<option value="${t}">${orderLabel(t)}</option>`).join('')}</select></b-tooltip>`));
+    form.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.priceMode !== 'price' }" @click="setPriceMode('price')">${loc('stock_mode_price')}</span>`));
+    form.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.priceMode !== 'pct' }" @click="setPriceMode('pct')">${loc('stock_mode_pct')}</span>`));
+    form.append($(`<input v-if="st.form.priceMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.price" style="width:6.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    form.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.pct" style="width:5rem;margin-right:.5rem;${inputStyle}" placeholder="%">`));
+    form.append($(`<input type="number" min="1" step="1" v-model.number="st.form.lots" style="width:4.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
+    form.append($(`<b-tooltip :label="orderTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: orderError() !== '' }" @click="place()">${loc('stock_order_place')}</span></b-tooltip>`));
+    main.append($(`<div v-if="st.form.priceMode === 'pct'" class="stk-note has-text-warning" style="margin-left:0;">${loc('stock_pct_resolved')} <b>{{ fmtPrice(effPrice()) }}</b></div>`));
+    main.append($(`<div v-if="orderHint() !== ''" class="stk-note" style="margin-left:0;"><span class="has-text-warning">{{ orderHint() }}</span></div>`));
+
+    // Optional take-profit / stop-loss attached to a pending buy: activates once the buy fills, covering whatever
+    // it actually bought (all of it - a partially filled buy protects only the part that went through).
+    let bracket = $(`<div v-if="st.form.type === 'buyLimit' || st.form.type === 'buyStop'" class="stk-sub"></div>`);
+    main.append(bracket);
+    let btpSide = $(`<div class="stk-side"></div>`);
+    bracket.append(btpSide);
+    let btpHead = $(`<div class="stk-side-head"></div>`);
+    btpSide.append(btpHead);
+    btpHead.append($(`<label class="has-text-success"><input type="checkbox" v-model="st.form.tpOn"> ${loc('stock_attach_tp')}</label>`));
+    btpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.tpMode !== 'price' }" @click="st.form.tpMode = 'price'">${loc('stock_mode_price')}</span>`));
+    btpHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.tpMode !== 'pct' }" @click="st.form.tpMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let btpRow = $(`<div v-if="st.form.tpOn" class="stk-side-row"></div>`);
+    btpSide.append(btpRow);
+    btpRow.append($(`<input v-if="st.form.tpMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.tpPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    btpRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.tpPct" style="${inputStyle}" placeholder="%">`));
+    let bslSide = $(`<div class="stk-side"></div>`);
+    bracket.append(bslSide);
+    let bslHead = $(`<div class="stk-side-head"></div>`);
+    bslSide.append(bslHead);
+    bslHead.append($(`<label class="has-text-danger"><input type="checkbox" v-model="st.form.slOn"> ${loc('stock_attach_sl')}</label>`));
+    bslHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.slMode !== 'price' }" @click="st.form.slMode = 'price'">${loc('stock_mode_price')}</span>`));
+    bslHead.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.slMode !== 'pct' }" @click="st.form.slMode = 'pct'">${loc('stock_mode_pct')}</span>`));
+    let bslRow = $(`<div v-if="st.form.slOn" class="stk-side-row"></div>`);
+    bslSide.append(bslRow);
+    bslRow.append($(`<input v-if="st.form.slMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.slPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
+    bslRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.slPct" style="${inputStyle}" placeholder="%">`));
+    bracket.append($(`<div v-if="bracketErr()" class="has-text-warning" style="margin-top:.25rem;">{{ bracketErr() }}</div>`));
+    main.append($(`<div v-for="o in orders" :key="o.id" class="market-item stk-orderline"><span>{{ o.text }}</span><span role="button" class="order has-text-danger" @click="cancel(o.id)">${loc('stock_order_cancel')}</span></div>`));
+
+    // Watchlist
+    let listCol = $(`<div class="stk-list"><div class="stk-listhead">${loc('stock_watchlist')}</div><div class="stk-listwrap"><div class="stk-listscroll"></div></div></div>`);
+    layout.append(listCol);
+    listCol.find('.stk-listscroll').append($(`<div v-for="r in list" :key="r.res" class="stk-item" :class="{ on: r.res === cur }" @click="select(r.res)"><div class="stk-row1"><span class="stk-iname">{{ r.name }}</span><span>{{ r.priceText }}</span></div><div class="stk-row2"><span class="stk-badges"><span v-if="r.lots > 0" class="has-text-warning">{{ r.lotsText }}</span><span v-if="r.orderCount > 0">{{ r.ordersText }}</span><b v-if="r.evText" :class="r.evClass">{{ r.evText }}</b></span><span :class="r.chgClass">{{ r.chgText }}</span></div></div>`));
+}
+
+export function drawStocks_s2($ctx){
+        vBind({
+        el: `#stockExchange`,
+        data: {
+            st: global.stocks,
+            mk: global.stocks.market,
+            res: global.resource,
+            s: global.settings,
+            ex: global.stocks.exit,
+            hv: -1,
+            ranges: $ctx.RANGES
+        },
+        computed: {
+            // The stock shown in the chart (the selected one, or the first listed one)
+            cur(){
+                let defs = liveStockDefs().filter(listed);
+                if (defs.length === 0){
+                    return '';
+                }
+                return defs.some(d => d.res === global.stocks.sel) ? global.stocks.sel : defs[0].res;
+            },
+            // Watchlist entries
+            list(){
+                let out = [];
+                let range = global.settings.stockRange;
+                liveStockDefs().forEach(function(def){
+                    if (!listed(def)){
+                        return;
+                    }
+                    let st = global.stocks.market[def.res];
+                    let n = Math.min(range, st.hist.length);
+                    let first = st.hist[st.hist.length - n];
+                    let chg = first > 0 ? (st.price / first - 1) * 100 : 0;
+                    out.push({
+                        res: def.res,
+                        name: stockName(def.res),
+                        priceText: fmt(st.price),
+                        chgText: `${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%`,
+                        chgClass: chg >= 0 ? 'has-text-success' : 'has-text-danger',
+                        lots: st.lots,
+                        lotsText: loc('stock_list_lots',[fmt(st.lots, 0)]),
+                        orderCount: st.orders.length,
+                        ordersText: loc('stock_list_orders',[st.orders.length]),
+                        evText: st.ev ? loc(st.ev.type === 'boom' ? 'stock_event_boom' : 'stock_event_crash') : '',
+                        evClass: st.ev ? (st.ev.type === 'boom' ? 'has-text-success' : 'has-text-danger') : ''
+                    });
+                });
+                return out;
+            },
+            // Everything about the selected stock
+            d(){
+                let res = this.cur;
+                if (!res){
+                    return {};
+                }
+                let st = global.stocks.market[res];
+                let q = keyMultiplier();
+                let ask = askPrice(st);
+                let bid = bidPrice(st);
+                let buyMax = maxBuyLots(st, global.stocks.ocoin);
+                let buyN = Math.min(q, buyMax);
+                let sellN = Math.min(q, st.lots);
+                let value = sellQuote(st, st.lots).proceeds;
+                let pl = value - st.spent;
+                let plPct = st.spent > 0 ? pl / st.spent * 100 : 0;
+                let n = Math.min(global.settings.stockRange, st.hist.length);
+                let first = st.hist[st.hist.length - n];
+                let chg = first > 0 ? (st.price / first - 1) * 100 : 0;
+                let buyShow = buyN || q;
+                let buyQ = buyQuote(st, buyShow);
+                let buyMaxQ = buyQuote(st, buyMax);
+                let sellQ = sellQuote(st, sellN);
+                let sellAllQ = sellQuote(st, st.lots);
+                let free = Math.max(0, st.lots - committedSellLots(st));
+                let ex = global.stocks.exit;
+                let tpPrice = ex.tpMode === 'price' ? ex.tpPrice : (st.spent > 0 ? tpPriceFromPct(st.spent / st.lots, ex.tpPct) : 0);
+                let slPrice = ex.slMode === 'price' ? ex.slPrice : (st.spent > 0 ? slPriceFromPct(st.spent / st.lots, ex.slPct) : 0);
+                // 'side' has no generic stock_order_err_side string (only per-order-type variants like
+                // stock_order_err_side_buyLimit exist, which don't apply here), so it needs its own message -
+                // otherwise loc() falls back to returning the raw key as text.
+                let exitCode = this.exitError(tpPrice, slPrice);
+                let exitErrText = exitCode === '' ? '' : (exitCode === 'side' ? loc('stock_exit_err_side') : loc(`stock_order_err_${exitCode}`,[MAX_ORDERS]));
+                return {
+                    res: res,
+                    name: stockName(res),
+                    lots: st.lots,
+                    exitFree: free,
+                    exitFreeText: loc('stock_exit_free',[fmt(free, 0)]),
+                    tpPriceText: ex.tpOn ? loc('stock_pct_resolved') + ' ' + fmt(tpPrice) : '',
+                    slPriceText: ex.slOn ? loc('stock_pct_resolved') + ' ' + fmt(slPrice) : '',
+                    exitOk: exitCode === '',
+                    exitErr: exitErrText,
+                    exitTip: loc('stock_exit_tip'),
+                    priceText: `${fmt(st.price)} ${loc('resource_Ocoin_name')}`,
+                    chgText: `${chg >= 0 ? '▲' : '▼'} ${Math.abs(chg).toFixed(2)}%`,
+                    chgClass: chg >= 0 ? 'has-text-success' : 'has-text-danger',
+                    evText: st.ev ? loc(st.ev.type === 'boom' ? 'stock_event_boom' : 'stock_event_crash') : '',
+                    evClass: st.ev ? (st.ev.type === 'boom' ? 'has-text-success' : 'has-text-danger') : '',
+                    depth: this.depthRows(st),
+                    // The real current gap between the best ask and best bid, as a % of the mid price - this already
+                    // includes any push your own trading left on the book (st.spread alone would understate it).
+                    spreadText: loc('stock_spread',[((ask - bid) / st.price * 100).toFixed(2)]),
+                    holdText: isSpecial(res)
+                        ? loc('stock_hold_special',[fmt(st.lots, 0), fmt(st.lots * specialBonusPerLot(res)), loc(`stock_stat_${res}`)])
+                        : loc('stock_hold',[fmt(st.lots, 0), +(st.lots * LOT_BONUS * 100).toFixed(2), loc(`resource_${res}_name`)]),
+                    plText: st.lots > 0 ? loc('stock_pl',[fmt(st.spent), fmt(value), signed(pl), plPct.toFixed(1)]) : '',
+                    plClass: st.lots === 0 ? '' : (pl >= 0 ? 'has-text-success' : 'has-text-danger'),
+                    canBuy: buyN > 0,
+                    canSell: sellN > 0,
+                    buyBtn: `${loc('resource_market_buy')} ×${q}`,
+                    sellBtn: `${loc('resource_market_sell')} ×${q}`,
+                    buyTip: loc('stock_buy_tip',[fmt(buyShow, 0), fmt(buyQ.cost), fmt(buyQ.avg), fmt(askPrice(st) * Math.exp(buyQ.ap - st.ap))]),
+                    buyMaxTip: loc('stock_buy_tip',[fmt(buyMax, 0), fmt(buyMaxQ.cost), fmt(buyMaxQ.avg), fmt(askPrice(st) * Math.exp(buyMaxQ.ap - st.ap))]),
+                    sellTip: loc('stock_sell_tip',[fmt(sellN, 0), fmt(sellQ.proceeds), fmt(sellQ.avg), fmt(bidPrice(st) * Math.exp(st.bp - sellQ.bp))]),
+                    sellAllTip: loc('stock_sell_tip',[fmt(st.lots, 0), fmt(sellAllQ.proceeds), fmt(sellAllQ.avg), fmt(bidPrice(st) * Math.exp(st.bp - sellAllQ.bp))])
+                };
+            },
+            // Line chart of the selected stock: price line, grid, your average cost and your open orders
+            c(){
+                let res = this.cur;
+                if (!res){
+                    return null;
+                }
+                let st = global.stocks.market[res];
+                let pts = st.hist.slice(-Math.min(global.settings.stockRange, st.hist.length));
+                let n = pts.length;
+                if (n < 2){
+                    return null;
+                }
+                const W = CHART_W, H = CHART_H, L = 8, R = W - 66, T = 12, B = H - 22;
+                let lo = Math.min(...pts);
+                let hi = Math.max(...pts);
+                let span = hi - lo || hi * 0.02 || 1;
+                let pad = span * 0.1;
+                let marks = [];
+                if (st.lots > 0 && st.spent > 0){
+                    let avg = st.spent / st.lots;
+                    marks.push({ v: avg, cls: 'has-text-warning', t: loc('stock_avg',[fmt(avg)]) });
+                }
+                st.orders.forEach(function(o){
+                    marks.push({ v: o.price, cls: isBuyOrder(o.type) ? 'has-text-success' : 'has-text-danger', t: `${orderLabel(o.type)} ${fmt(o.price)}` });
+                });
+                // Lines that are reasonably close make the chart range grow to include them, far ones stick to the edge
+                let lo2 = lo - pad;
+                let hi2 = hi + pad;
+                marks.forEach(function(m){
+                    if (m.v > lo2 - span * 0.5 && m.v < hi2 + span * 0.5){
+                        lo2 = Math.min(lo2, m.v - pad * 0.5);
+                        hi2 = Math.max(hi2, m.v + pad * 0.5);
+                    }
+                });
+                let y = v => T + (hi2 - v) / (hi2 - lo2) * (B - T);
+                let x = i => L + i * (R - L) / (n - 1);
+                let line = pts.map((v, i) => `${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(' ');
+                let grid = [];
+                for (let k = 0; k <= 4; k++){
+                    let v = lo2 + k * (hi2 - lo2) / 4;
+                    grid.push({ y: y(v), t: fmt(v) });
+                }
+                let lines = marks.map(function(m){
+                    let yy = y(m.v);
+                    let prefix = '';
+                    if (yy < T){ yy = T; prefix = '▲ '; }
+                    else if (yy > B){ yy = B; prefix = '▼ '; }
+                    return { y: yy, ly: yy - 3, cls: m.cls, t: prefix + m.t };
+                });
+                // Push labels apart so two lines that are close together stay readable
+                lines.slice().sort((a, b) => a.y - b.y).reduce(function(prev, cur){
+                    if (prev !== null && cur.ly - prev < 11){
+                        cur.ly = prev + 11;
+                    }
+                    return cur.ly;
+                }, null);
+                let hover = null;
+                let hv = this.hv;
+                if (hv >= 0 && hv < n){
+                    let hx = x(hv);
+                    let right = hx > (L + R) * 0.55;
+                    hover = {
+                        x: hx,
+                        y: y(pts[hv]),
+                        tx: right ? hx - 6 : hx + 6,
+                        anchor: right ? 'end' : 'start',
+                        t: `${hv === n - 1 ? loc('stock_chart_now') : loc('stock_chart_ago',[n - 1 - hv])} · ${fmt(pts[hv])}`
+                    };
+                }
+                return {
+                    w: W, h: H, l: L, r: R, t: T, b: B, n: n,
+                    line: line,
+                    area: `${line} ${x(n - 1).toFixed(1)},${B} ${x(0).toFixed(1)},${B}`,
+                    grid: grid,
+                    lines: lines,
+                    last: { y: y(pts[n - 1]), t: fmt(pts[n - 1]) },
+                    trend: pts[n - 1] >= pts[0] ? 'has-text-success' : 'has-text-danger',
+                    hover: hover,
+                    xl: loc('stock_chart_ago',[n - 1]),
+                    xr: loc('stock_chart_now')
+                };
+            },
+            // Open orders of the selected stock
+            orders(){
+                let res = this.cur;
+                if (!res){
+                    return [];
+                }
+                return global.stocks.market[res].orders.map(function(o){
+                    return {
+                        id: o.id,
+                        text: loc(isBuyOrder(o.type) ? 'stock_order_line_buy' : 'stock_order_line_sell',
+                            [stockName(res), orderLabel(o.type), fmt(o.lots, 0), fmt(o.total, 0), fmt(o.price), fmt(o.reserved)])
+                    };
+                }).sort((a, b) => a.id - b.id);
+            }
+        },
+        methods: {
+            // 5-level order-book depth for the chart panel: one row per price level, best price first on both sides.
+            depthRows(st){
+                let asks = bookLevels(st, 'ask', 5);
+                let bids = bookLevels(st, 'bid', 5);
+                let rows = [];
+                for (let i = 0; i < 5; i++){
+                    rows.push({
+                        ask: `${fmt(asks[i].price)} ×${asks[i].qty}`,
+                        bid: `${fmt(bids[i].price)} ×${bids[i].qty}`
+                    });
+                }
+                return rows;
+            },
+            helpText(){
+                return [
+                    loc('stock_ocoin_rate',[OCOIN_RATE, OCOIN_BUY_FEE * 100]),
+                    loc('stock_lot_hint',[LOT_BONUS * 100, STORAGE_BONUS * 100]),
+                    loc('stock_special_hint',[MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT]),
+                    loc('stock_book_hint',[LEVEL_STEP_DISPLAY])
+                ].join(' ');
+            },
+            toggleWallet(){
+                global.settings.stockWalletOpen = !global.settings.stockWalletOpen;
+            },
+            // --- Chart and watchlist ---
+            select(res){
+                global.stocks.sel = res;
+                this.hv = -1;
+                this.resetPrice();
+            },
+            setRange(n){
+                global.settings.stockRange = n;
+                this.hv = -1;
+            },
+            rangeLabel(n){
+                return loc('stock_range_days',[n]);
+            },
+            chartMove(e){
+                let c = this.c;
+                if (!c){
+                    return;
+                }
+                let box = e.currentTarget.getBoundingClientRect();
+                if (!(box.width > 0)){
+                    return;
+                }
+                let px = (e.clientX - box.left) / box.width * c.w;
+                let i = Math.round((px - c.l) / (c.r - c.l) * (c.n - 1));
+                this.hv = Math.max(0, Math.min(c.n - 1, i));
+            },
+            // --- Auto balance ---
+            autoLabel(){
+                return loc(global.settings.stockAutoOn ? 'stock_auto_on' : 'stock_auto_off');
+            },
+            autoTip(){
+                return loc('stock_auto_tip',[OCOIN_BUY_FEE * 100]);
+            },
+            toggleAuto(){
+                global.settings.stockAutoOn = !global.settings.stockAutoOn;
+            },
+            clampKeep(){
+                let keep = global.settings.stockAutoKeep;
+                if (typeof keep !== 'number' || !isFinite(keep) || keep < 0){
+                    global.settings.stockAutoKeep = 0;
+                }
+            },
+            autoStatus(){
+                let nat = global.stocks.autoNat;
+                let flow = global.stocks.autoFlow;
+                if (!global.settings.stockAutoOn || Math.abs(flow) < 1e-9){
+                    return loc('stock_auto_status_even',[signed(nat)]);
+                }
+                if (flow > 0){
+                    return loc('stock_auto_status_convert',[signed(nat), fmt(flow), fmt(moneyToOcoin(flow))]);
+                }
+                return loc('stock_auto_status_topup',[signed(nat), fmt(-flow), fmt(-flow / OCOIN_RATE)]);
+            },
+            ocoinText(){
+                return fmt(global.stocks.ocoin);
+            },
+            reservedOcoin(){
+                let total = 0;
+                Object.keys(global.stocks.market).forEach(function(res){
+                    global.stocks.market[res].orders.forEach(function(o){
+                        total += o.reserved;
+                    });
+                });
+                return total;
+            },
+            reservedText(){
+                return loc('stock_reserved',[fmt(this.reservedOcoin())]);
+            },
+            clampQty(){
+                if (!global.stocks.qty || global.stocks.qty < 0 || !isFinite(global.stocks.qty)){
+                    global.stocks.qty = 0;
+                }
+            },
+            // --- Money <-> Ocoin ---
+            canBuyOcoin(){
+                let qty = global.stocks.qty || 0;
+                return qty > 0 && ocoinCostInMoney(qty) <= global.resource.Money.amount;
+            },
+            buyOcoinTip(){
+                let qty = global.stocks.qty || 0;
+                return loc('stock_ocoin_buy_tip',[fmt(ocoinCostInMoney(qty)), OCOIN_BUY_FEE * 100, fmt(qty)]);
+            },
+            buyOcoin(){
+                if (!this.canBuyOcoin()){
+                    return;
+                }
+                let qty = global.stocks.qty;
+                global.resource.Money.amount = Math.max(0, global.resource.Money.amount - ocoinCostInMoney(qty));
+                global.stocks.ocoin += qty;
+            },
+            buyOcoinMaxTip(){
+                return loc('stock_ocoin_buy_max_tip',[fmt(moneyToOcoin(global.resource.Money.amount)), OCOIN_BUY_FEE * 100]);
+            },
+            buyOcoinMax(){
+                let money = global.resource.Money.amount;
+                if (money > 0){
+                    global.stocks.ocoin += moneyToOcoin(money);
+                    global.resource.Money.amount = 0;
+                }
+            },
+            sellOcoinQty(all){
+                let qty = all ? global.stocks.ocoin : (global.stocks.qty || 0);
+                return Math.max(0, Math.min(qty, global.stocks.ocoin, moneyRoom() / OCOIN_RATE));
+            },
+            canSellOcoin(){
+                return this.sellOcoinQty(false) > 0;
+            },
+            sellOcoinTip(){
+                let qty = this.sellOcoinQty(false);
+                return loc('stock_ocoin_sell_tip',[fmt(qty), fmt(ocoinToMoney(qty))]);
+            },
+            sellOcoinMaxTip(){
+                let qty = this.sellOcoinQty(true);
+                return loc('stock_ocoin_sell_max_tip',[fmt(qty), fmt(ocoinToMoney(qty))]);
+            },
+            sellOcoin(){
+                this.doSellOcoin(this.sellOcoinQty(false));
+            },
+            sellOcoinMax(){
+                this.doSellOcoin(this.sellOcoinQty(true));
+            },
+            doSellOcoin(qty){
+                if (qty > 0){
+                    global.stocks.ocoin = Math.max(0, global.stocks.ocoin - qty);
+                    global.resource.Money.amount += ocoinToMoney(qty);
+                }
+            },
+            // --- Market orders on the selected stock ---
+            buyLots(all){
+                let res = this.cur;
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(all ? Infinity : keyMultiplier(), maxBuyLots(st, global.stocks.ocoin));
+                if (!(m > 0)){
+                    return;
+                }
+                // Walks up the ask side: each level only fills the lots queued there, the rest goes to a higher price.
+                let cost = executeBuy(st, m);
+                global.stocks.ocoin = Math.max(0, global.stocks.ocoin - cost);
+            },
+            sellLots(all){
+                let res = this.cur;
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let m = all ? st.lots : Math.min(keyMultiplier(), st.lots);
+                if (!(m > 0)){
+                    return;
+                }
+                global.stocks.ocoin += executeSell(st, m);
+            },
+            // --- Order-book depth: click level i to buy/sell everything from the best price through that level.
+            // Row 0 is the best ask/bid (aq/bq lots); each row after that is one more full LEVEL_STEP chunk (dA/dB),
+            // matching how buyQuote/sellQuote actually walk the book - the depth table's own qty column adds a
+            // little jitter per row for display so it doesn't look like the same number repeated, but the fill
+            // amount here always uses the real chunk size so the trade math stays exact.
+            askFillLots(i){
+                let res = this.cur;
+                if (!res){
+                    return 0;
+                }
+                let st = global.stocks.market[res];
+                return Math.floor(st.aq + i * st.dA);
+            },
+            bidFillLots(i){
+                let res = this.cur;
+                if (!res){
+                    return 0;
+                }
+                let st = global.stocks.market[res];
+                return Math.floor(st.bq + i * st.dB);
+            },
+            canFillAsk(i){
+                let res = this.cur;
+                if (!res){
+                    return false;
+                }
+                let st = global.stocks.market[res];
+                return Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin)) > 0;
+            },
+            canFillBid(i){
+                let res = this.cur;
+                if (!res){
+                    return false;
+                }
+                let st = global.stocks.market[res];
+                return Math.min(this.bidFillLots(i), st.lots) > 0;
+            },
+            askFillTip(i){
+                let res = this.cur;
+                if (!res){
+                    return '';
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin));
+                if (!(m > 0)){
+                    return loc('stock_order_err_funds');
+                }
+                let q = buyQuote(st, m);
+                return loc('stock_buy_tip',[fmt(m, 0), fmt(q.cost), fmt(q.avg), fmt(askPrice(st) * Math.exp(q.ap - st.ap))]);
+            },
+            bidFillTip(i){
+                let res = this.cur;
+                if (!res){
+                    return '';
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.bidFillLots(i), st.lots);
+                if (!(m > 0)){
+                    return loc('stock_order_err_holdings');
+                }
+                let q = sellQuote(st, m);
+                return loc('stock_sell_tip',[fmt(m, 0), fmt(q.proceeds), fmt(q.avg), fmt(bidPrice(st) * Math.exp(st.bp - q.bp))]);
+            },
+            fillAsk(i){
+                let res = this.cur;
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin));
+                if (!(m > 0)){
+                    return;
+                }
+                let cost = executeBuy(st, m);
+                global.stocks.ocoin = Math.max(0, global.stocks.ocoin - cost);
+            },
+            fillBid(i){
+                let res = this.cur;
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let m = Math.min(this.bidFillLots(i), st.lots);
+                if (!(m > 0)){
+                    return;
+                }
+                global.stocks.ocoin += executeSell(st, m);
+            },
+            // --- Limit / stop orders on the selected stock ---
+            fmtPrice(p){
+                return fmt(p);
+            },
+            setPriceMode(mode){
+                let f = global.stocks.form;
+                if (f.priceMode !== mode){
+                    f.priceMode = mode;
+                    this.resetPrice();
+                }
+            },
+            resetPrice(){
+                let res = this.cur;
+                if (!res){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let f = global.stocks.form;
+                if (f.priceMode === 'price'){
+                    f.price = +suggestPrice(st, f.type).toPrecision(4);
+                }
+                else {
+                    // A sensible default % on the correct side of the current quote for this order type
+                    f.pct = 5;
+                }
+                f.tpPrice = +(askPrice(st) * 1.1).toPrecision(4);
+                f.slPrice = +(askPrice(st) * 0.9).toPrecision(4);
+            },
+            // The actual price the form will use: resolves the % mode against the live book, same direction as
+            // suggestPrice (buy limit = below the ask, buy stop = above it, sell limit = above the bid, sell stop
+            // = below it), so entering the same % always means "that much further from the current quote".
+            effPrice(){
+                let res = this.cur;
+                let f = global.stocks.form;
+                if (f.priceMode === 'price'){
+                    return f.price;
+                }
+                if (!res){
+                    return 0;
+                }
+                let st = global.stocks.market[res];
+                let pct = f.pct || 0;
+                switch (f.type){
+                    case 'buyLimit': return askPrice(st) * (1 - pct / 100);
+                    case 'buyStop': return askPrice(st) * (1 + pct / 100);
+                    case 'sellLimit': return bidPrice(st) * (1 + pct / 100);
+                    default: return bidPrice(st) * (1 - pct / 100);
+                }
+            },
+            orderError(){
+                let res = this.cur;
+                let f = global.stocks.form;
+                if (!res){
+                    return 'type';
+                }
+                return validateOrder(global.stocks, res, f.type, this.effPrice(), f.lots) || '';
+            },
+            orderTip(){
+                let f = global.stocks.form;
+                if (!this.cur){
+                    return '';
+                }
+                let lots = Math.max(0, Math.floor(f.lots || 0));
+                return isBuyOrder(f.type)
+                    ? loc('stock_order_tip_buy',[fmt(lots, 0), fmt(lots * (this.effPrice() || 0))])
+                    : loc('stock_order_tip_sell',[fmt(lots, 0)]);
+            },
+            // What the chosen order type does (tooltip on the type dropdown)
+            typeHint(){
+                return loc(`stock_order_hint_${global.stocks.form.type}`);
+            },
+            // Only shown when the order cannot be placed yet
+            orderHint(){
+                let res = this.cur;
+                if (!res){
+                    return '';
+                }
+                let f = global.stocks.form;
+                let st = global.stocks.market[res];
+                let err = this.orderError();
+                if (err === 'side'){
+                    let ref = isBuyOrder(f.type) ? askPrice(st) : bidPrice(st);
+                    return loc(`stock_order_err_side_${f.type}`,[fmt(ref)]);
+                }
+                if (err !== ''){
+                    return loc(`stock_order_err_${err}`,[MAX_ORDERS]);
+                }
+                return '';
+            },
+            // Resolves the attach-to-buy TP/SL prices from the form, honoring price/% mode (base = the buy's own price)
+            bracketPrices(){
+                let f = global.stocks.form;
+                if (!isBuyOrder(f.type)){
+                    return { tpPrice: null, slPrice: null };
+                }
+                let buyPrice = this.effPrice();
+                let tpPrice = f.tpOn ? (f.tpMode === 'price' ? f.tpPrice : tpPriceFromPct(buyPrice, f.tpPct)) : null;
+                let slPrice = f.slOn ? (f.slMode === 'price' ? f.slPrice : slPriceFromPct(buyPrice, f.slPct)) : null;
+                return { tpPrice: tpPrice, slPrice: slPrice };
+            },
+            bracketErr(){
+                let f = global.stocks.form;
+                if (!isBuyOrder(f.type) || (!f.tpOn && !f.slOn)){
+                    return '';
+                }
+                let { tpPrice, slPrice } = this.bracketPrices();
+                let bad = validateBracket(this.effPrice(), tpPrice, slPrice);
+                if (bad === 'tp'){
+                    return loc('stock_bracket_err_tp');
+                }
+                if (bad === 'sl'){
+                    return loc('stock_bracket_err_sl');
+                }
+                return '';
+            },
+            place(){
+                if (this.orderError() !== '' || this.bracketErr() !== ''){
+                    return;
+                }
+                let f = global.stocks.form;
+                let res = this.cur;
+                let price = this.effPrice();
+                let bracket = isBuyOrder(f.type) && (f.tpOn || f.slOn) ? this.bracketPrices() : null;
+                let out = placeOrder(global.stocks, res, f.type, price, f.lots, bracket);
+                if (out.ok){
+                    messageQueue(loc('stock_msg_placed',[stockName(res), orderLabel(f.type), fmt(out.order.lots, 0), fmt(out.order.price)]), 'info', false, ['minor_events']);
+                }
+            },
+            cancel(id){
+                let res = this.cur;
+                if (res){
+                    cancelOrder(global.stocks, res, id);
+                }
+            },
+            // --- Take-profit / stop-loss on the lots you already hold ---
+            exitError(tpPrice, slPrice){
+                let res = this.cur;
+                let ex = global.stocks.exit;
+                if (!res || (!ex.tpOn && !ex.slOn)){
+                    return '';
+                }
+                let st = global.stocks.market[res];
+                let free = Math.max(0, st.lots - committedSellLots(st));
+                if (ex.tpOn && !(ex.tpLots >= 1)){
+                    return 'lots';
+                }
+                if (ex.slOn && !(ex.slLots >= 1)){
+                    return 'lots';
+                }
+                if (ex.tpOn && !(tpPrice > bidPrice(st))){
+                    return 'side';
+                }
+                if (ex.slOn && !(slPrice < bidPrice(st))){
+                    return 'side';
+                }
+                let sameSlice = ex.tpOn && ex.slOn && ex.tpLots === ex.slLots;
+                let needed = sameSlice ? ex.tpLots : (ex.tpOn ? ex.tpLots : 0) + (ex.slOn ? ex.slLots : 0);
+                if (needed > free){
+                    return 'holdings';
+                }
+                return '';
+            },
+            placeExit(){
+                let res = this.cur;
+                let ex = global.stocks.exit;
+                if (!res || (!ex.tpOn && !ex.slOn)){
+                    return;
+                }
+                let st = global.stocks.market[res];
+                let avg = st.lots > 0 ? st.spent / st.lots : 0;
+                let tpPrice = ex.tpOn ? (ex.tpMode === 'price' ? ex.tpPrice : tpPriceFromPct(avg, ex.tpPct)) : null;
+                let slPrice = ex.slOn ? (ex.slMode === 'price' ? ex.slPrice : slPriceFromPct(avg, ex.slPct)) : null;
+                if (this.exitError(tpPrice, slPrice) !== ''){
+                    return;
+                }
+                let sameSlice = ex.tpOn && ex.slOn && ex.tpLots === ex.slLots;
+                let placed = [];
+                if (sameSlice){
+                    let out = placeExitOrders(global.stocks, res, ex.tpLots, tpPrice, slPrice);
+                    if (out.ok){
+                        if (out.tp){ placed.push(loc('stock_take_profit')); }
+                        if (out.sl){ placed.push(loc('stock_stop_loss')); }
+                    }
+                }
+                else {
+                    if (ex.tpOn){
+                        let out = placeExitOrders(global.stocks, res, ex.tpLots, tpPrice, null);
+                        if (out.ok){ placed.push(loc('stock_take_profit')); }
+                    }
+                    if (ex.slOn){
+                        let out = placeExitOrders(global.stocks, res, ex.slLots, null, slPrice);
+                        if (out.ok){ placed.push(loc('stock_stop_loss')); }
+                    }
+                }
+                if (placed.length > 0){
+                    messageQueue(loc('stock_msg_exit_placed',[stockName(res), placed.join(' + ')]), 'info', false, ['minor_events']);
+                    ex.tpOn = false;
+                    ex.slOn = false;
+                }
+            }
+        }
+    });
+}
+
+export function drawStocks_s3($ctx){
+        if (!(global.stocks.form.price > 0)){
+        let first = liveStockDefs().filter(listed)[0];
+        if (first){
+            global.stocks.form.price = +suggestPrice(global.stocks.market[first.res], global.stocks.form.type).toPrecision(4);
+        }
+    }
+}

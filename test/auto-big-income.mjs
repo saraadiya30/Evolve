@@ -16,7 +16,7 @@ seedMathRandom(12345); setFixedNow(1735689600000);
 execGameLoops(5);
 const M = G.resource.Money, big = Number(bigArg), keep = Number(keepArg);
 G.settings.stockAutoOn = true; G.settings.stockAutoKeep = keep;
-M.amount = 0.1 * M.max;
+M.amount = Number(process.env.START || 0.1) * M.max;
 const traj = []; let ocoin0 = G.stocks.ocoin;
 for (let i = 0; i < Number(nArg); i++) { M.amount += big; M.delta += big; execGameLoops(1); if (i % 50 === 49) traj.push(Math.round(M.amount / M.max * 1000) / 10 + '%'); }
 const fin = M.amount / M.max;
