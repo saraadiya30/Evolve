@@ -2,7 +2,7 @@ import { webWorker } from './vars.js';
 import { timeScale } from './functions.js';
 import { doCallbacks } from './actions.js';
 import { stockFlags } from './stocks_core.js';
-import { applyStockBreakdown, stockAutoTrade } from './stocks.js';
+import { applyStockBreakdown } from './stocks.js';
 import { midLoop } from './main_g3.js';
 import { longLoop } from './main_g4.js';
 import { fastLoopCore } from './main_g2.js';
@@ -55,7 +55,4 @@ export function fastLoop(){
         stockFlags.prod = false;
     }
     applyStockBreakdown();
-    if (S.moneyTick !== null){
-        stockAutoTrade(S.moneyTick.delta, S.moneyTick.seconds, S.moneyClampLost + stockFlags.moneyLost);
-    }
 }

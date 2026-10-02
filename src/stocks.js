@@ -211,9 +211,12 @@ export function stockTick(){
     });
 }
 
-// Called every fast tick with the Money delta the game recorded for that tick (`delta`), how many seconds the tick lasted and
-// how much of that income the Money storage cap had already cut off (`lost`).
+// Called once per fast tick from diffCalc, BEFORE the Money rate for the panel is computed, with the Money delta the game
+// recorded for that tick (`delta`), how many seconds the tick lasted and how much of that income the Money storage cap had
+// already cut off (`lost`).
 // When auto-balance is on, income above the amount you keep becomes Ocoin and a shortfall is paid from Ocoin.
+// The conversion is applied to money.amount and money.delta in the same tick, so the Money/s that diffCalc then displays is
+// the final rate of this tick (income minus what was converted) and nothing is carried over into the next tick.
 export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0){
     let money = global.resource.Money;
     // Money is only displayed once currency is unlocked, so nothing happens during the early evolution stage
@@ -224,8 +227,8 @@ export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0){
         initStocks();
     }
     let s = global.stocks;
-    // The delta also contains what this feature added to it last tick; take that out to get the real income of this tick
-    let natural = delta - s.autoAdj;
+    // delta is the real income of this tick: this feature changes it only after reading it, within the same tick
+    let natural = delta;
     let flow = 0;
     let adj = 0;
     if (global.settings.stockAutoOn){
@@ -239,7 +242,7 @@ export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0){
             adj = out.money;
         }
     }
-    s.autoAdj = adj;
+    s.autoAdj = 0; // kept in the save for compatibility; the adjustment is no longer carried to the next tick
     // Smoothed per-second numbers for the status line (about 10 ticks)
     s.autoNat = s.autoNat * 0.9 + natural / seconds * 0.1;
     s.autoFlow = s.autoFlow * 0.9 + flow / seconds * 0.1;

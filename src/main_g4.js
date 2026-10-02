@@ -1,5 +1,6 @@
 import { astrologySign, astroVal } from './seasons.js';
-import { stockTick } from './stocks.js';
+import { stockTick, stockAutoTrade } from './stocks.js';
+import { stockFlags } from './stocks_core.js';
 import { global, seededRandom, save, webWorker, atrack, breakdown } from './vars.js';
 import { longLoop_s1, longLoop_s2, longLoop_s3 } from './ml_longLoop_1.js';
 import { eventList, events } from './events.js';
@@ -193,6 +194,8 @@ export function diffCalc(res,period){
 
     if (res === 'Money'){
         S.moneyTick = { delta: global.resource[res].delta, seconds: period / sec };
+        // Stock auto-balance first (it adjusts Money amount and delta), so the rate shown below is the final one of this tick
+        stockAutoTrade(S.moneyTick.delta, S.moneyTick.seconds, S.moneyClampLost + stockFlags.moneyLost);
     }
     global.resource[res].diff = +(global.resource[res].delta / (period / sec)).toFixed(2);
     global.resource[res].delta = 0;
