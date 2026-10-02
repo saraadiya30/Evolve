@@ -2,7 +2,7 @@ import { global, save, webWorker } from './vars.js';
 import { loc } from './locale.js';
 import { races } from './races.js';
 import { clearPopper, addATime } from './functions_f1.js';
-export { popover, clearPopper, gameLoop, loopTimers, addATime, exceededATimeThreshold, powerGrid, initMessageQueue, messageQueue, removeFromQueue, removeFromRQueue, calcQueueMax, calcRQueueMax, buildQueue, decodeStructId, tagEvent, resetResBuffer, modRes } from './functions_f1.js';
+export { popover, clearPopper, gameLoop, loopTimers, timeScale, TIME_ACCELERATION_FACTOR, addATime, exceededATimeThreshold, powerGrid, initMessageQueue, messageQueue, removeFromQueue, removeFromRQueue, calcQueueMax, calcRQueueMax, buildQueue, decodeStructId, tagEvent, resetResBuffer, modRes } from './functions_f1.js';
 export { genCivName, costMultiplier, spaceCostMultiplier, harmonyEffect, timeCheck, arpaTimeCheck, clearElement, vBind, timeFormat, powerModifier, powerCostMod, calcQuantumLevel, get_qlevel, darkEffect } from './functions_f2.js';
 import { masteryType } from './functions_f3.js';
 export { masteryType, challenge_multiplier, getResetConstants, calcPrestige, adjustCosts } from './functions_f3.js';

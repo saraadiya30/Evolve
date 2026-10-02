@@ -1,4 +1,5 @@
 import { webWorker } from './vars.js';
+import { timeScale } from './functions.js';
 import { doCallbacks } from './actions.js';
 import { stockFlags } from './stocks_core.js';
 import { applyStockBreakdown, stockAutoTrade } from './stocks.js';
@@ -17,9 +18,16 @@ export function execGameLoops(periods = 1){
     periods = Math.min(periods, maxCatchUp); 
 
     while (webWorker.s && periods--){
-        ++S.loopTick;
-        const doMid = (S.loopTick % webWorker.midRatio) === 0;
-        const doLong = (S.loopTick % webWorker.longRatio) === 0;
+        // While accelerated time is active one real tick is worth several ticks of game time: the fast loop runs once
+        // (its production is scaled in modRes), but the tick counter advances by the full amount so the mid loop and the
+        // long loop (game days) still come at the accelerated pace.
+        let doMid = false;
+        let doLong = false;
+        for (let step = timeScale(); step > 0; step--){
+            ++S.loopTick;
+            doMid = doMid || (S.loopTick % webWorker.midRatio) === 0;
+            doLong = doLong || (S.loopTick % webWorker.longRatio) === 0;
+        }
 
         // Always run a faster loop before a slower loop
         fastLoop();
@@ -38,6 +46,7 @@ export function execGameLoops(periods = 1){
 export function fastLoop(){
     S.moneyTick = null;
     S.moneyClampLost = 0;
+    stockFlags.moneyLost = 0;
     stockFlags.prod = true;
     try {
         fastLoopCore();
@@ -47,6 +56,6 @@ export function fastLoop(){
     }
     applyStockBreakdown();
     if (S.moneyTick !== null){
-        stockAutoTrade(S.moneyTick.delta, S.moneyTick.seconds, S.moneyClampLost);
+        stockAutoTrade(S.moneyTick.delta, S.moneyTick.seconds, S.moneyClampLost + stockFlags.moneyLost);
     }
 }

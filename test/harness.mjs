@@ -27,7 +27,7 @@ if (fixtureArg !== 'new') {
     global.localStorage.setItem('evolved', fixture.save);
 }
 
-const { global: gameState, seededRandom } = await import('../src/vars.js');
+const { global: gameState, seededRandom, atrack } = await import('../src/vars.js');
 const { execGameLoops } = await import('../src/main.js');
 
 // Reset seed & waktu LAGI setelah import, karena proses import vars.js/main.js sendiri
@@ -37,6 +37,10 @@ const { execGameLoops } = await import('../src/main.js');
 seedMathRandom(SEED);
 setFixedNow(FIXED_NOW);
 
+// Opsional: NO_ATIME=1 mematikan accelerated time (atrack.t) supaya hasilnya sebanding dengan baseline lama, yang dibuat
+// sebelum accelerated time memengaruhi nilai produksi per tick.
+if (process.env.NO_ATIME === '1') { atrack.t = 0; gameState.settings.at = 0; }
+console.log(`[harness] atrack.t=${atrack.t} settings.at=${gameState.settings.at}`);
 execGameLoops(periods);
 
 // --- Snapshot: ambil bagian state yang relevan, bulatkan angka desimal ---

@@ -147,6 +147,14 @@ export function gameLoop(act){
 // Computes the relative to default duration of a single loop (common for all three loop types).
 // Note that these values are not tied to the time_multiplier from fastLoop - the relative speed of time in the game
 // is controlled by loop lengths.
+// Speed of accelerated time (atrack.t > 0): game time runs this many times faster than real time.
+export const TIME_ACCELERATION_FACTOR = 2;
+
+// How many ticks of game time one real fast tick is worth right now (1 normally, 2 while accelerated time is active).
+export function timeScale(){
+    return atrack.t > 0 ? TIME_ACCELERATION_FACTOR : 1;
+}
+
 export function loopTimers(){
     // Here come any speed modifiers not related to accelerated time.
     let modifier = 1.0;
@@ -164,12 +172,16 @@ export function loopTimers(){
     // Long loop (game day) takes 5000ms without any modifiers.
     const baseLongTimer = webWorker.longRatio * webWorkerMainTimer;
     // The constant by which the time is accelerated when atrack.t > 0.
-    const timeAccelerationFactor = 2;
+    const timeAccelerationFactor = TIME_ACCELERATION_FACTOR;
 
     const aTimeMultiplier = atrack.t > 0 ? 1 / timeAccelerationFactor : 1;
     return {
         webWorkerMainTimer,
-        mainTimer: Math.ceil(webWorkerMainTimer * aTimeMultiplier),
+        // Accelerated time no longer shortens the tick interval: the loop keeps running at the normal rate and the
+        // production of each fast tick is multiplied instead (timeScale() in modRes), so 2x speed is not 2x the work.
+        mainTimer: webWorkerMainTimer,
+        // Real-time length of one game day while accelerated (used for the remaining-time estimate), still halved
+        // because the day counter advances `timeAccelerationFactor` ticks per real tick (see execGameLoops).
         longTimer: Math.ceil(baseLongTimer * aTimeMultiplier),
         baseLongTimer,
         timeAccelerationFactor,
@@ -634,6 +646,10 @@ export function modRes(res,val,notrack){
         global.resource[res].amount = 0;
         return false;
     }
+    // Accelerated time: everything the production loop adds or takes this tick is worth `timeScale()` ticks of game time
+    if (!notrack && stockFlags.prod){
+        val *= timeScale();
+    }
     // Stock portfolio bonus: only boosts income produced during the production loop (see fastLoop wrapper in main.js)
     if (val > 0 && !notrack && stockFlags.prod && global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
         val *= lotBonus(global.stocks.market[res].lots);
@@ -642,6 +658,10 @@ export function modRes(res,val,notrack){
     let success = true;
     let max = notrack ? global.resource[res].max : tmp_vars.resource[res].temp_max;
     if (count > max && max >= 0){
+        // Income Money yang terpotong kapasitas tetap tercatat di delta, jadi auto-convert stock harus tahu jumlahnya
+        if (res === 'Money' && !notrack && val > 0){
+            stockFlags.moneyLost += count - max;
+        }
         count = max;
     }
     else if (count < 0){

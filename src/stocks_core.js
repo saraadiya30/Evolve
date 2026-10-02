@@ -92,7 +92,7 @@ const EVENT_BOOK = {
 
 // Set to true by main.js only while the fast (production) loop runs, so the production bonus in modRes()
 // is not applied to manual gathering, refunds, etc.
-export const stockFlags = { prod: false };
+export const stockFlags = { prod: false, moneyLost: 0 }; // moneyLost: income Money yang sudah dipotong kapasitas di modRes tick ini
 
 // --- Market simulation ---------------------------------------------------------------------------------------------
 export function randNormal(rand = Math.random){

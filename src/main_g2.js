@@ -4,7 +4,7 @@ import { plasmidBonus, faithTempleCount, faithBonus } from './resources.js';
 import { loc } from './locale.js';
 import { traits, fathomCheck, planetTraits, races } from './races.js';
 import { govEffect } from './civics.js';
-import { calc_mastery, calcPillar, resetResBuffer, eventActive, easterEggBind, trickOrTreatBind } from './functions.js';
+import { calc_mastery, calcPillar, resetResBuffer, eventActive, easterEggBind, trickOrTreatBind, timeScale } from './functions.js';
 import { workerScale, jobScale, jobName } from './jobs.js';
 import { highPopAdjust } from './prod.js';
 import { govActive } from './governor.js';
@@ -509,11 +509,11 @@ export function fastLoopCore(){
             global.resource[res].amount = global.resource[res].max;
         }
         if (global['resource'][res].rate > 0 || (global['resource'][res].rate === 0 && global['resource'][res].max === -1)){
-            diffCalc(res,webWorker.mt);
+            diffCalc(res,webWorker.mt * timeScale());
         }
     });
     if(global.race['fasting']){
-        diffCalc(global.race.species,webWorker.mt);
+        diffCalc(global.race.species,webWorker.mt * timeScale());
     }
 
     if (global.settings.expose){

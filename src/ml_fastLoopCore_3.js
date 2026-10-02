@@ -1,5 +1,5 @@
 import { global, breakdown, p_on, support_on, int_on } from './vars.js';
-import { modRes, flib, messageQueue } from './functions.js';
+import { modRes, flib, messageQueue, timeScale } from './functions.js';
 import { traits, planetTraits, fathomCheck, biomes, racialTrait, servantTrait, blubberFill } from './races.js';
 import { govActive } from './governor.js';
 import { govEffect, garrisonSize, weaponTechModifer, armyRating } from './civics.js';
@@ -532,7 +532,7 @@ export function fastLoopCore_s6($ctx){
                 }
                 // Stock portfolio birth rate bonus: same flat/reversible pattern as the Morale and Power stock
                 // bonuses above - recomputed every roll from current holdings, so selling lots removes it again.
-                if (global.stocks && global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
+                if (global.stocks && global.stocks.market &&  global.stocks.market.Birthrate && global.stocks.market.Birthrate.lots > 0){
                     lowerBound += global.stocks.market.Birthrate.lots * BIRTH_BONUS_PER_LOT;
                 }
                 if (global.race['promiscuous']){
@@ -563,9 +563,15 @@ export function fastLoopCore_s6($ctx){
                 }
 
                 upperBound *= (3 - (2 ** $ctx.time_multiplier));
-                if(Math.rand(0, upperBound) <= lowerBound){
-                    global['resource'][global.race.species].amount++;
-                    global.civic[global.civic.d_job].workers++;
+                // Accelerated time: one real tick is worth several ticks, so the birth roll is made once per tick of game time
+                for (let roll = timeScale(); roll > 0; roll--){
+                    if (global['resource'][global.race.species].amount >= global['resource'][global.race.species].max){
+                        break;
+                    }
+                    if(Math.rand(0, upperBound) <= lowerBound){
+                        global['resource'][global.race.species].amount++;
+                        global.civic[global.civic.d_job].workers++;
+                    }
                 }
             }
         }

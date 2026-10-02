@@ -1061,15 +1061,8 @@ export function midLoop_s5($ctx){
         }
 
         Object.keys($ctx.caps).forEach(function (res){
-            let crate = global.resource[res].crates * create_value;
-            $ctx.caps[res] += crate;
-            let container = global.resource[res].containers * container_value;
-            $ctx.caps[res] += container;
-            if (res !== 'Money' && res !== global.race.species){
-                $ctx.caps[res] *= aetherStorageMult;
-            }
-            // Stock portfolio storage bonus: +1% storage per lot held of that resource's company, multiplicative
-            // like the Aether storage draw above (so it compounds with warehouses instead of competing with them).
+            // Stock portfolio storage bonus: +1% storage per lot held of that resource's company. Applied to the base storage
+            // only, BEFORE crates and containers are added, so it does not enlarge what crates/containers give.
             if (global.stocks && global.stocks.market && global.stocks.market[res] && global.stocks.market[res].lots > 0){
                 let mult = storageBonus(global.stocks.market[res].lots);
                 $ctx.caps[res] *= mult;
@@ -1080,6 +1073,13 @@ export function midLoop_s5($ctx){
                     // as a '%' bonus instead, same convention as the production bonus below in stocks.js.
                     breakdown.c[res][loc('stock_bonus_label')] = +((mult - 1) * 100).toFixed(2) + '%';
                 }
+            }
+            let crate = global.resource[res].crates * create_value;
+            $ctx.caps[res] += crate;
+            let container = global.resource[res].containers * container_value;
+            $ctx.caps[res] += container;
+            if (res !== 'Money' && res !== global.race.species){
+                $ctx.caps[res] *= aetherStorageMult;
             }
             if (breakdown.c[res]){
                 breakdown.c[res][loc('resource_Crates_plural')] = crate+'v';

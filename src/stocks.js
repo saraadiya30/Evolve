@@ -2,6 +2,7 @@ import { global, tmp_vars, sizeApproximation, breakdown } from './vars.js';
 import { loc } from './locale.js';
 import { messageQueue } from './functions.js';
 import { resource_values } from './resources.js';
+import { aetherFormat } from './resources_f5.js';
 import { LOT_BONUS, LEVEL_STEP, newStock, upgradeStock, stepMarket, settleAllOrders, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT } from './stocks_core.js';
 import { drawStocks_s1, drawStocks_s2, drawStocks_s3 } from './sec_drawStocks_1.js';
 
@@ -11,8 +12,13 @@ export const LEVEL_STEP_DISPLAY = LEVEL_STEP.toFixed(2).replace(/0+$/,'').replac
 export const CHART_W = 640;
 export const CHART_H = 300;
 
+// Satuan angka di stock market mengikuti satuan game (K, M, B, T, q, ...), bukan notasi SI (K, M, G, T).
+// Di bawah 1000 tetap pakai format lama supaya jumlah desimal (precision) tidak berubah.
 export function fmt(n, precision = 2){
-    return n ? sizeApproximation(n, precision) : '0';
+    if (!n){
+        return '0';
+    }
+    return Math.abs(n) >= 1000 ? aetherFormat(n) : sizeApproximation(n, precision);
 }
 
 export function signed(n){
