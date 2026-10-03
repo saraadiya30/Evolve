@@ -15,9 +15,9 @@ function sig(x, depth = 0) {
     const out = Object.keys(x).map(k => [k, sig(x[k], depth + 1)]);
     seen.delete(x); return out;
 }
-const T = await import('../src/tech.js'), E = await import('../src/edenic.js'), R = await import('../src/races.js'), A = await import('../src/actions.js');
-const P = await import('../src/portal.js'), S = await import('../src/space.js'), TP = await import('../src/truepath.js'), AC = await import('../src/achieve.js');
-const AR = await import('../src/arpa.js'), G = await import('../src/governor.js'), EV = await import('../src/events.js');
+const T = await import('../src/tech/tech.js'), E = await import('../src/edenic/edenic.js'), R = await import('../src/races/races.js'), A = await import('../src/actions/actions.js');
+const P = await import('../src/portal/portal.js'), S = await import('../src/space/space.js'), TP = await import('../src/truepath/truepath.js'), AC = await import('../src/achievements/achieve.js');
+const AR = await import('../src/arpa/arpa.js'), G = await import('../src/governor/governor.js'), EV = await import('../src/events/events.js');
 const out = {
     techs: sig(T.techList()), edenic: sig(E.edenicTech()), traits: sig(R.traits), races: sig(R.races), actions: sig(A.actions),
     fortress: sig(P.fortressTech()), monsters: sig(P.monsters), space: sig(S.spaceTech()), inter: sig(S.interstellarTech()), galaxy: sig(S.galaxyTech()),

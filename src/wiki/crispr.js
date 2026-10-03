@@ -1,6 +1,6 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { genePool } from './../arpa.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { genePool } from '../arpa/arpa.js';
 import { sideMenu } from './functions.js';
 
 export function crisprPage(content){

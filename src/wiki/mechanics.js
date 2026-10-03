@@ -1,15 +1,15 @@
-import { global } from './../vars.js';
-import { universeAffix } from './../achieve.js';
-import { loc } from './../locale.js';
-import { timeFormat, vBind, svgIcons, svgViewBox, calcGenomeScore, powerModifier } from './../functions.js';
-import { job_desc } from './../jobs.js';
-import { races, traits, planetTraits } from './../races.js';
-import { atomic_mass } from './../resources.js';
-import { universe_types } from './../space.js';
-import { swissKnife } from './../tech.js';
-import { actions, structName } from './../actions.js';
-import { astroVal, astrologySign } from './../seasons.js';
-import { shipAttackPower, sensorRange, shipCrewSize, shipPower } from './../truepath.js';
+import { global } from '../core/vars.js';
+import { universeAffix } from '../achievements/achieve.js';
+import { loc } from '../core/locale.js';
+import { timeFormat, vBind, svgIcons, svgViewBox, calcGenomeScore, powerModifier } from '../functions/functions.js';
+import { job_desc } from '../civics/jobs.js';
+import { races, traits, planetTraits } from '../races/races.js';
+import { atomic_mass } from '../resources/resources.js';
+import { universe_types } from '../space/space.js';
+import { swissKnife } from '../tech/tech.js';
+import { actions, structName } from '../actions/actions.js';
+import { astroVal, astrologySign } from '../systems/seasons.js';
+import { shipAttackPower, sensorRange, shipCrewSize, shipPower } from '../truepath/truepath.js';
 import { sideMenu, infoBoxBuilder, createRevealSection, createCalcSection, getSolarName } from './functions.js';
 
 export function mechanicsPage(content){

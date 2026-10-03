@@ -1,9 +1,9 @@
-import { global } from './../vars.js';
-import { universeAffix, alevel } from './../achieve.js';
-import { loc } from './../locale.js';
-import { vBind, challenge_multiplier, getResetConstants, calcPrestige, darkEffect } from './../functions.js';
-import { jobScale } from './../jobs.js';
-import { races, traits } from './../races.js';
+import { global } from '../core/vars.js';
+import { universeAffix, alevel } from '../achievements/achieve.js';
+import { loc } from '../core/locale.js';
+import { vBind, challenge_multiplier, getResetConstants, calcPrestige, darkEffect } from '../functions/functions.js';
+import { jobScale } from '../civics/jobs.js';
+import { races, traits } from '../races/races.js';
 import { infoBoxBuilder, sideMenu, createCalcSection } from './functions.js';
 
 export function pResPage(content){

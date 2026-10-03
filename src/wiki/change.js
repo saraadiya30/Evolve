@@ -1,5 +1,5 @@
-import {} from './../vars.js';
-import { clearElement } from './../functions.js';
+import {} from '../core/vars.js';
+import { clearElement } from '../functions/functions.js';
 
 export const changeList = [
     {

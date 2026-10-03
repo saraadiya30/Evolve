@@ -4,7 +4,7 @@
 import './env-setup.mjs';
 await import('../src/main.js'); // urutan load normal dulu (ada circular import)
 const oldM = await import('../src/truepath_orig_tmp.js');
-const newM = await import('../src/truepath.js');
+const newM = await import('../src/truepath/truepath.js');
 let diffs = 0;
 const bad = (m) => { diffs++; if (diffs <= 15) console.log('BEDA:', m); };
 function cmp(x, y, path) {
@@ -33,7 +33,7 @@ for (const f of ['tpStorageMultiplier', 'calcAIDrift', 'tauEnabled', 'syndicate'
     else if (newM[f].toString() !== oldM[f].toString()) bad('source berbeda: ' + f);
 }
 // perilaku fungsi pendukung (membaca global yang sama) di beberapa state
-const { global } = await import('../src/vars.js');
+const { global } = await import('../src/core/vars.js');
 let beh = 0;
 for (const t of [undefined, 1, 3, 4, 5]) for (const u of ['standard', 'heavy', 'micro']) {
     global.tech.tauceti = t; global.race.universe = u;

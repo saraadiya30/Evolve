@@ -1,7 +1,7 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { vBind } from './../functions.js';
-import { bloodPool } from './../arpa.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { vBind } from '../functions/functions.js';
+import { bloodPool } from '../arpa/arpa.js';
 import { sideMenu } from './functions.js';
 
 export function bloodPage(content){

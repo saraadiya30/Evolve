@@ -1,10 +1,10 @@
-import { global } from './../vars.js';
-import { races } from './../races.js';
-import { govTitle } from './../civics.js';
-import { housingLabel } from './../actions.js';
-import { clearElement, eventActive } from './../functions.js';
-import { loc } from './../locale.js';
-import { swissKnife } from './../tech.js';
+import { global } from '../core/vars.js';
+import { races } from '../races/races.js';
+import { govTitle } from '../civics/civics.js';
+import { housingLabel } from '../actions/actions.js';
+import { clearElement, eventActive } from '../functions/functions.js';
+import { loc } from '../core/locale.js';
+import { swissKnife } from '../tech/tech.js';
 import { sideMenu, infoBoxBuilder, getSolarName } from './functions.js';
 
 export function eventsPage(zone){

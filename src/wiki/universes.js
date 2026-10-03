@@ -1,6 +1,6 @@
-import { loc } from './../locale.js';
-import { universe_types } from './../space.js';
-import { darkEffect } from './../functions.js';
+import { loc } from '../core/locale.js';
+import { universe_types } from '../space/space.js';
+import { darkEffect } from '../functions/functions.js';
 import { infoBoxBuilder } from './functions.js';
 import { sideMenu } from './functions.js';
 

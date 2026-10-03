@@ -1,8 +1,8 @@
-import { global, sizeApproximation } from './../vars.js';
-import { loc } from './../locale.js';
-import { clearElement, vBind, adjustCosts } from './../functions.js';
-import { actions } from './../actions.js';
-import { planetName } from './../space.js';
+import { global, sizeApproximation } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { clearElement, vBind, adjustCosts } from '../functions/functions.js';
+import { actions } from '../actions/actions.js';
+import { planetName } from '../space/space.js';
 
 export function headerBoxBuilder(parent,args,box){
     if (!args.hasOwnProperty('h_level')){

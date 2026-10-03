@@ -1,9 +1,9 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { actions, wardenLabel } from './../actions.js';
-import { vBind } from './../functions.js';
-import { neg_roll_traits } from './../races.js';
-import { tradeRatio } from './../resources.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { actions, wardenLabel } from '../actions/actions.js';
+import { vBind } from '../functions/functions.js';
+import { neg_roll_traits } from '../races/races.js';
+import { tradeRatio } from '../config/trade.js';
 import { sideMenu, subSideMenu, infoBoxBuilder, getSolarName, createCalcSection } from './functions.js';
 
 export function challengesPage(content){

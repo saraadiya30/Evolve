@@ -4,9 +4,9 @@
 import './env-setup.mjs';
 await import('../src/main.js'); // urutan load normal dulu (ada circular import)
 const oldM = await import('../src/truepath_orig_tmp.js');
-const newM = await import('../src/truepath.js');
-const { global, p_on } = await import('../src/vars.js');
-const core = await import('../src/ship_core.js');
+const newM = await import('../src/truepath/truepath.js');
+const { global, p_on } = await import('../src/core/vars.js');
+const core = await import('../src/systems/ship_core.js');
 
 let s = 777001;
 const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };

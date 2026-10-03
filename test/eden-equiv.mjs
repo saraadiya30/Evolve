@@ -3,9 +3,9 @@
 import './env-setup.mjs';
 await import('../src/main.js'); // urutan load normal dulu (ada circular import)
 const oldM = await import('../src/edenic_orig_tmp.js');
-const newM = await import('../src/edenic.js');
-const { global } = await import('../src/vars.js');
-const core = await import('../src/edenic_core.js');
+const newM = await import('../src/edenic/edenic.js');
+const { global } = await import('../src/core/vars.js');
+const core = await import('../src/edenic/edenic_core.js');
 
 // --- struktur edenicModules: urutan key + tiap field + source tiap fungsi (toString) harus identik
 let sdiffs = 0;

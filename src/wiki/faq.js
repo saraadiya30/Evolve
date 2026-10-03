@@ -1,7 +1,7 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { clearElement } from './../functions.js';
-import { races } from './../races.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { clearElement } from '../functions/functions.js';
+import { races } from '../races/races.js';
 
 export function faqPage(){
     let content = $(`#content`);

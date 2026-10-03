@@ -1,8 +1,8 @@
-import { global, setGlobal, save } from './../vars.js';
-import { loc } from './../locale.js';
+import { global, setGlobal, save } from '../core/vars.js';
+import { loc } from '../core/locale.js';
 import {} from './init.js';
-import {} from './../achieve.js';
-import { vBind, clearElement, tagEvent } from './../functions.js';
+import {} from '../achievements/achieve.js';
+import { vBind, clearElement, tagEvent } from '../functions/functions.js';
 import { faqPage } from './faq.js';
 import { speciesPage } from './species.js';
 import { planetsPage } from './planets.js';

@@ -3,7 +3,7 @@
 import './env-setup.mjs';
 await import('../src/main.js'); // urutan load normal dulu (ada circular import)
 const oldM = await import('../src/tech_orig_tmp.js');
-const newM = await import('../src/tech.js');
+const newM = await import('../src/tech/tech.js');
 const a = oldM.techList(), b = newM.techList();
 const ka = Object.keys(a), kb = Object.keys(b);
 let diffs = 0;

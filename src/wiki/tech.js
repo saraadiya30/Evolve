@@ -1,11 +1,11 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { universeAffix } from './../achieve.js';
-import { actions, housingLabel } from './../actions.js';
-import { techList } from './../tech.js';
-import { checkControlling } from './../civics.js';
-import { races, traits } from './../races.js';
-import { getHalloween, svgIcons, svgViewBox } from './../functions.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { universeAffix } from '../achievements/achieve.js';
+import { actions, housingLabel } from '../actions/actions.js';
+import { techList } from '../tech/tech.js';
+import { checkControlling } from '../civics/civics.js';
+import { races, traits } from '../races/races.js';
+import { getHalloween, svgIcons, svgViewBox } from '../functions/functions.js';
 import { actionDesc, sideMenu, getSolarName } from './functions.js';
 
 const isHalloween = getHalloween();

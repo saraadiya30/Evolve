@@ -1,5 +1,5 @@
-import { loc } from './../locale.js';
-import { clearElement } from './../functions.js';
+import { loc } from '../core/locale.js';
+import { clearElement } from '../functions/functions.js';
 import { faqPage } from './faq.js';
 import { basicsPage } from './basics.js';
 import { mechanicsPage } from './mechanics.js';

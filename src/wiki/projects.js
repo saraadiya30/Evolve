@@ -1,7 +1,7 @@
-import { global, sizeApproximation } from './../vars.js';
-import { loc } from './../locale.js';
-import { vBind } from './../functions.js';
-import { arpaProjects, arpaAdjustCosts } from './../arpa.js';
+import { global, sizeApproximation } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { vBind } from '../functions/functions.js';
+import { arpaProjects, arpaAdjustCosts } from '../arpa/arpa.js';
 import { sideMenu } from './functions.js';
 
 const extraInformation = {

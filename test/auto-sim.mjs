@@ -8,7 +8,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const [fx = 'user-save-1', keepArg = 'off', per = '200'] = process.argv.slice(2);
 seedMathRandom(12345); setFixedNow(1735689600000);
 if (fx !== 'new') global.localStorage.setItem('evolved', JSON.parse(readFileSync(join(__dirname, 'fixtures', fx + '.json'), 'utf8')).save);
-const { global: G } = await import('../src/vars.js');
+const { global: G } = await import('../src/core/vars.js');
 const { execGameLoops } = await import('../src/main.js');
 seedMathRandom(12345); setFixedNow(1735689600000);
 execGameLoops(5); // warm up

@@ -2,7 +2,7 @@
 // Invarian: (1) Money akhirnya penuh kalau Keep > 0 dan income > Keep, berapa pun besar income;
 //           (2) selama belum penuh Money naik tepat Keep per tick; (3) Ocoin tidak pernah negatif / NaN;
 //           (4) lost=0 (default) berperilaku persis seperti versi lama.
-import { autoTradeStep, moneyToOcoin } from '../src/stocks_core.js';
+import { autoTradeStep, moneyToOcoin } from '../src/stocks/stocks_core.js';
 let s = 424242; const rnd = () => { s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 function oldStep(S, money, natural, keep) { // salinan versi sebelum perbaikan
     let out = { kind: 'none', money: 0, ocoin: 0 };

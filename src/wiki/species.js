@@ -1,9 +1,9 @@
-import { global } from './../vars.js';
-import { loc } from './../locale.js';
-import { clearElement, popover, getEaster, getHalloween, getTraitDesc } from './../functions.js';
-import { races, traits, genus_def, traitSkin } from './../races.js';
-import { ascendLab } from './../space.js';
-import { actions } from './../actions.js';
+import { global } from '../core/vars.js';
+import { loc } from '../core/locale.js';
+import { clearElement, popover, getEaster, getHalloween, getTraitDesc } from '../functions/functions.js';
+import { races, traits, genus_def, traitSkin } from '../races/races.js';
+import { ascendLab } from '../space/space.js';
+import { actions } from '../actions/actions.js';
 import { sideMenu } from './functions.js';
 import { customRaceMechanics } from './mechanics.js';
 

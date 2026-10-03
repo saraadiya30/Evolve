@@ -27,7 +27,7 @@ if (fixtureArg !== 'new') {
     global.localStorage.setItem('evolved', fixture.save);
 }
 
-const { global: gameState, seededRandom, atrack } = await import('../src/vars.js');
+const { global: gameState, seededRandom, atrack } = await import('../src/core/vars.js');
 const { execGameLoops } = await import('../src/main.js');
 
 // Reset seed & waktu LAGI setelah import, karena proses import vars.js/main.js sendiri

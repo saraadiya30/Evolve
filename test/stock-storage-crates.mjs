@@ -9,7 +9,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const fx = process.argv[2] || 'user-save-1';
 seedMathRandom(12345); setFixedNow(1735689600000);
 global.localStorage.setItem('evolved', JSON.parse(readFileSync(join(__dirname, 'fixtures', fx + '.json'), 'utf8')).save);
-const { global: G } = await import('../src/vars.js');
+const { global: G } = await import('../src/core/vars.js');
 const { execGameLoops } = await import('../src/main.js');
 seedMathRandom(12345); setFixedNow(1735689600000);
 execGameLoops(5);
@@ -17,10 +17,11 @@ const res = ['Stone','Copper','Iron','Lumber','Aluminium'].find(r => G.resource[
 if (!res) { console.log('tidak ada resource yang cocok di fixture'); process.exit(2); }
 const R = G.resource[res];
 R.crates = 10; R.containers = 10; G.settings.aetherStorage = 0;
-const run = (lots) => { G.stocks.market[res].lots = lots; for (let i = 0; i < 40; i++) execGameLoops(1); return R.max; };
+// Lot cuma memberi bonus storage kalau dialokasikan ke storage (storeLots); default-nya semua ke produksi
+const run = (lots) => { G.stocks.market[res].lots = lots; G.stocks.market[res].storeLots = lots; for (let i = 0; i < 40; i++) execGameLoops(1); return R.max; };
 const m0 = run(0), m100 = run(100);
 // kapasitas dari crates+containers = m0 - base; base tidak diketahui langsung, jadi dari breakdown: ambil nilai crates/containers
-const { crateValue, containerValue } = await import('../src/resources.js');
+const { crateValue, containerValue } = await import('../src/resources/resources.js');
 const extra = 10 * crateValue() + 10 * containerValue();
 const base = m0 - extra;
 const expect = base * 2 + extra;                // +100 lot = +100% pada base saja

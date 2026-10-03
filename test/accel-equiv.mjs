@@ -12,7 +12,7 @@ const [fx = 'user-save-1', nArg = '40', out = 'accel_out.json'] = process.argv.s
 const N = parseInt(nArg, 10), mode = process.env.MODE || 'new';
 seedMathRandom(12345); setFixedNow(1735689600000);
 global.localStorage.setItem('evolved', JSON.parse(readFileSync(join(__dirname, 'fixtures', fx + '.json'), 'utf8')).save);
-const { global: G, atrack } = await import('../src/vars.js');
+const { global: G, atrack } = await import('../src/core/vars.js');
 const { execGameLoops } = await import('../src/main.js');
 seedMathRandom(12345); setFixedNow(1735689600000);
 execGameLoops(8);                      // pemanasan, selaras dengan loopTick kelipatan
