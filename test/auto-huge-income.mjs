@@ -13,8 +13,8 @@ global.localStorage.setItem('evolved', JSON.parse(readFileSync(join(__dirname, '
 const { global: G, atrack, tmp_vars } = await import('../src/core/vars.js');
 const { execGameLoops } = await import('../src/main.js');
 const { modRes } = await import('../src/functions/functions.js');
-const { diffCalc } = await import('../src/main/main_g4.js');
-const { S } = await import('../src/main/main_state.js');
+const { diffCalc } = await import('../src/loops/long/long_loop_and_misc_helpers.js');
+const { S } = await import('../src/loops/loop_shared_state.js');
 const { stockFlags, moneyToOcoin } = await import('../src/stocks/stocks_core.js');
 seedMathRandom(12345); setFixedNow(1735689600000);
 execGameLoops(5);

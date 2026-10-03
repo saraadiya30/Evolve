@@ -1,7 +1,7 @@
-export { loadIndustry, defineIndustry, smelterFuelConfig, smelterUnlocked, addSmelter } from './industry_f1.js';
-export { luxGoodPrice } from './industry_f2.js';
-export { setupRituals, cancelRituals, replicator, manaCost, maxRitualNum, gridEnabled, setPowerGrid } from './industry_f3.js';
-export { gridDefs, clearGrids } from './industry_f4.js';
+export { loadIndustry, defineIndustry, smelterFuelConfig, smelterUnlocked, addSmelter } from './industry_core_and_smelter.js';
+export { luxGoodPrice } from './factory_droid_and_graphene_panels.js';
+export { setupRituals, cancelRituals, replicator, manaCost, maxRitualNum, gridEnabled, setPowerGrid } from './rituals_mining_and_replicator_panels.js';
+export { gridDefs, clearGrids } from './power_grid_definitions_and_drag.js';
 
 export const f_rate = {
     Lux: {

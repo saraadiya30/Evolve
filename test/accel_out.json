@@ -1,0 +1,361 @@
+{
+ "mode": "new",
+ "days": 4,
+ "res": {
+  "RNA": {
+   "gain": 0,
+   "diff": 0,
+   "max": 500
+  },
+  "DNA": {
+   "gain": 0,
+   "diff": 0,
+   "max": 460
+  },
+  "Money": {
+   "gain": -8166.719999999565,
+   "diff": -425.24,
+   "max": 897896
+  },
+  "protoplasm": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Slave": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Authority": {
+   "gain": 0,
+   "diff": 0,
+   "max": 80
+  },
+  "Mana": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Energy": {
+   "gain": 0,
+   "diff": 0,
+   "max": 100
+  },
+  "Sus": {
+   "gain": 0,
+   "diff": 0,
+   "max": 100
+  },
+  "Knowledge": {
+   "gain": 429.3162057664995,
+   "diff": 21.26,
+   "max": 71700
+  },
+  "Omniscience": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Zen": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Crates": {
+   "gain": 0,
+   "diff": 0,
+   "max": 317
+  },
+  "Containers": {
+   "gain": 0,
+   "diff": 0,
+   "max": 309
+  },
+  "Food": {
+   "gain": -3032.5400195270195,
+   "diff": -145.87,
+   "max": 1415190
+  },
+  "Lumber": {
+   "gain": 15785.43126561318,
+   "diff": 781.68,
+   "max": 3239732
+  },
+  "Chrysotile": {
+   "gain": 0,
+   "diff": 0,
+   "max": 9550
+  },
+  "Stone": {
+   "gain": 10392.028076783521,
+   "diff": 514.6,
+   "max": 3225190
+  },
+  "Crystal": {
+   "gain": 0,
+   "diff": 0,
+   "max": 10
+  },
+  "Useless": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Furs": {
+   "gain": 796.6379941420746,
+   "diff": 41.74,
+   "max": 1568780
+  },
+  "Copper": {
+   "gain": 299.9205365841335,
+   "diff": 15.68,
+   "max": 1513980
+  },
+  "Iron": {
+   "gain": 761.5440348712727,
+   "diff": 40.93,
+   "max": 23538780
+  },
+  "Aluminium": {
+   "gain": 1978.405615356507,
+   "diff": 97.92,
+   "max": 1513930
+  },
+  "Cement": {
+   "gain": 0,
+   "diff": 0,
+   "max": 100
+  },
+  "Coal": {
+   "gain": -211.99999999254942,
+   "diff": -10.6,
+   "max": 1490450
+  },
+  "Oil": {
+   "gain": -223.78919615570203,
+   "diff": -11.33,
+   "max": 13730
+  },
+  "Uranium": {
+   "gain": 0,
+   "diff": 0,
+   "max": 10
+  },
+  "Steel": {
+   "gain": 1974.854546525792,
+   "diff": 97.79,
+   "max": 1435650
+  },
+  "Titanium": {
+   "gain": 55,
+   "diff": 2.75,
+   "max": 1404370
+  },
+  "Alloy": {
+   "gain": 26.83226286041463,
+   "diff": 1.33,
+   "max": 1373050
+  },
+  "Polymer": {
+   "gain": 0,
+   "diff": 0,
+   "max": 50
+  },
+  "Iridium": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Helium_3": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Water": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Deuterium": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Neutronium": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Adamantite": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Infernite": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Elerium": {
+   "gain": 0,
+   "diff": 0,
+   "max": 1
+  },
+  "Nano_Tube": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Graphene": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Stanene": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Bolognium": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Vitreloy": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Orichalcum": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Asphodel_Powder": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Elysanite": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Unobtainium": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Materials": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Horseshoe": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Nanite": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Genes": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Soul_Gem": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Plywood": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Brick": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Wrought_Iron": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Sheet_Metal": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Mythril": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Aerogel": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Nanoweave": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Scarletite": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Quantium": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Thermite": {
+   "gain": 0,
+   "diff": 0,
+   "max": -1
+  },
+  "Corrupt_Gem": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Codex": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Cipher": {
+   "gain": 0,
+   "diff": 0,
+   "max": 0
+  },
+  "Demonic_Essence": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Blessed_Essence": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "Knockoff": {
+   "gain": 0,
+   "diff": 0,
+   "max": -2
+  },
+  "pterodacti": {
+   "gain": 1,
+   "diff": 0,
+   "max": 150
+  }
+ }
+}

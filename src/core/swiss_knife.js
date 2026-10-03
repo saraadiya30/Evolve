@@ -1,7 +1,7 @@
 import { global } from './vars.js';
 import { loc } from './locale.js';
 
-// Dipisah dari tech.js karena dipakai di level modul oleh techs_part2.js (title/desc dievaluasi saat load),
+// Dipisah dari tech.js karena dipakai di level modul oleh group_loader.js (title/desc dievaluasi saat load),
 // sehingga tidak boleh menunggu tech.js selesai dievaluasi. tech.js me-re-export biar importer lama tetap jalan.
 export function swissKnife(cheeseOnly,cheeseList){
     let cheeses = [

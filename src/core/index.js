@@ -2,8 +2,8 @@ import { global, save, webWorker } from './vars.js';
 import { loc } from './locale.js';
 import { vBind, flib, gameLoop, popover } from '../functions/functions.js';
 import { races } from '../races/races.js';
-import { loadTab_s1, loadTab_s2, loadTab_s3 } from '../sections/sec_loadTab_1.js';
-import { index_s1, index_s2 } from '../sections/sec_index_1.js';
+import { loadTab_s1, loadTab_s2, loadTab_s3 } from '../sections/loaders/load_tab_parts.js';
+import { index_s1, index_s2 } from '../sections/core/index_page_parts.js';
 
 export function mainVue(){
     vBind({
@@ -196,8 +196,6 @@ export function mainVue(){
             },
             notation(n){
                 switch (n){
-                    case 'si':
-                        return loc(`metric`);
                     case 'sci':
                         return loc(`scientific`);
                     case 'eng':

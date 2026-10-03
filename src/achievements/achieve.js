@@ -1,13 +1,13 @@
 import { set_alevel, set_ulevel } from '../core/vars.js';
 import { flib } from '../functions/functions.js';
 import { loc } from '../core/locale.js'
-import { perkList } from './ach_registry.js';
-import { perkListPart1 } from './ach_perks_1.js';
-import { perkListPart2 } from './ach_perks_2.js';
-import { perkListPart3 } from './ach_perks_3.js';
-import { universeLevel } from './achieve_g1.js';
-export { universeLevel, universeAffix, unlockAchieve, unlockFeat, setupStats, drawAchieve, challengeIcon, alevel, checkAchievements, checkAdept, checkBigAchievement, checkBigAchievementUniverse, drawPerks } from './achieve_g1.js';
-export { drawStats } from './achieve_g2.js';
+import { perkList } from './perks/registry.js';
+import { perkListPart1 } from './perks/mastery_to_escape_velocity.js';
+import { perkListPart2 } from './perks/endless_hunger_to_blood.js';
+import { perkListPart3 } from './perks/spire_to_grandmaster.js';
+import { universeLevel } from './achievement_unlock_check_and_draw.js';
+export { universeLevel, universeAffix, unlockAchieve, unlockFeat, setupStats, drawAchieve, challengeIcon, alevel, checkAchievements, checkAdept, checkBigAchievement, checkBigAchievementUniverse, drawPerks } from './achievement_unlock_check_and_draw.js';
+export { drawStats } from './stats_panel_draw.js';
 
 const achieve_list = {
     misc: [

@@ -5,11 +5,11 @@ import { housingLabel, wardenLabel, updateQueueNames, drawTech, drawCity } from 
 import { loc } from '../core/locale.js';
 import { jobScale } from '../civics/jobs.js';
 import { isStargateOn } from '../space/space.js';
-import { gov_tasks } from './gov_registry.js';
-import { gov_tasksPart1 } from './gov_tasks_1.js';
-import { gov_tasksPart2 } from './gov_tasks_2.js';
-import { gov_tasksPart3 } from './gov_tasks_3.js';
-import { drawnGovernOffice_s1, drawnGovernOffice_s2 } from '../sections/sec_drawnGovernOffice_1.js';
+import { gov_tasks } from './tasks/registry.js';
+import { gov_tasksPart1 } from './tasks/tax_to_trash.js';
+import { gov_tasksPart2 } from './tasks/mech.js';
+import { gov_tasksPart3 } from './tasks/replicate.js';
+import { drawnGovernOffice_s1, drawnGovernOffice_s2 } from '../sections/drawing/draw_govern_office_parts.js';
 
 export const gmen = {
     soldier: {

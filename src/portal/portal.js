@@ -1,24 +1,24 @@
 import { global } from '../core/vars.js';
 import { fortressModules } from './portal_registry.js';
-import { fortressModules_prtl_fortress } from './prt_fortress_prtl_fortress.js';
-import { fortressModules_prtl_badlands } from './prt_fortress_prtl_badlands.js';
-import { fortressModules_prtl_wasteland } from './prt_fortress_prtl_wasteland.js';
-import { fortressModules_prtl_pit } from './prt_fortress_prtl_pit.js';
-import { fortressModules_prtl_ruins } from './prt_fortress_prtl_ruins.js';
-import { fortressModules_prtl_gate } from './prt_fortress_prtl_gate.js';
-import { fortressModules_prtl_lake } from './prt_fortress_prtl_lake.js';
-import { fortressModules_prtl_spire } from './prt_fortress_prtl_spire.js';
+import { fortressModules_prtl_fortress } from './fortress/fortress.js';
+import { fortressModules_prtl_badlands } from './fortress/badlands.js';
+import { fortressModules_prtl_wasteland } from './fortress/wasteland.js';
+import { fortressModules_prtl_pit } from './fortress/pit.js';
+import { fortressModules_prtl_ruins } from './fortress/ruins.js';
+import { fortressModules_prtl_gate } from './fortress/gate.js';
+import { fortressModules_prtl_lake } from './fortress/lake.js';
+import { fortressModules_prtl_spire } from './fortress/spire.js';
 import { monsters } from './portal_registry.js';
-import { monstersPart1 } from './prt_monsters_1.js';
-import { monstersPart2 } from './prt_monsters_2.js';
-export { spireCreep, towerPrice, soulForgeSoldiers, fortressTech, renderFortress, checkHellRequirements, buildFortress } from './portal_f1.js';
-export { bloodwar } from './portal_f2.js';
-export { hellguard, checkSkillPointAssignments, rankDesc, hellSupression, mechCost, bossResists } from './portal_f3.js';
-export { drawMechLab, buildMechQueue, mechDesc, validWeapons, validEquipment } from './portal_f4.js';
-export { mechSize, clearMechDrag, updateMechbay, genSpireFloor, terrainEffect, mechCollect } from './portal_f5.js';
-export { mechWeaponPower, mechRating, drawHellObservations } from './portal_f6.js';
-export { checkWarlordAchieve } from './portal_f7.js';
-export { warlordSetup } from './portal_f8.js';
+import { monstersPart1 } from './monsters/fire_elm_to_lich.js';
+import { monstersPart2 } from './monsters/ape_to_skeleton_pack.js';
+export { spireCreep, towerPrice, soulForgeSoldiers, fortressTech, renderFortress, checkHellRequirements, buildFortress } from './hell/fortress_and_spire_defense.js';
+export { bloodwar } from './hell/bloodwar_panel.js';
+export { hellguard, checkSkillPointAssignments, rankDesc, hellSupression, mechCost, bossResists } from './mech/hellguard_and_mech_costs.js';
+export { drawMechLab, buildMechQueue, mechDesc, validWeapons, validEquipment } from './mech/mech_lab.js';
+export { mechSize, clearMechDrag, updateMechbay, genSpireFloor, terrainEffect, mechCollect } from './mech/mechbay_and_spire_floor.js';
+export { mechWeaponPower, mechRating, drawHellObservations } from './mech/mech_rating_and_hell_analysis_charts.js';
+export { checkWarlordAchieve } from './hell/hell_reports_and_warlord_achievement.js';
+export { warlordSetup } from './hell/warlord_setup.js';
 
 Object.assign(fortressModules, {
     "prtl_fortress": fortressModules_prtl_fortress,

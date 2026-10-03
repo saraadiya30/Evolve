@@ -1,11 +1,10 @@
 import { global } from '../core/vars.js';
 import { loc } from '../core/locale.js';
 import { govActive } from '../governor/governor.js';
-import { drawTech } from  '../actions/actions.js';
-export { defineGovernment, defineGarrison, commisionGarrison, govRelationFactor, govTitle, foreignGov, checkControlling } from './civics_f1.js';
-export { govCivics, mercCost, buildGarrison } from './civics_f2.js';
-export { describeSoldier, armorCalc } from './civics_f3.js';
-export { weaponTechModifer, soldierDeath, armyRating, garrisonSize } from './civics_f4.js';
+export { defineGovernment, defineGarrison, commisionGarrison, govRelationFactor, govTitle, foreignGov, checkControlling } from './military/government_garrison_and_espionage_defs.js';
+export { govCivics, mercCost, buildGarrison } from './military/espionage_taxes_and_mercenaries.js';
+export { describeSoldier, armorCalc } from './military/soldier_breakdown_and_war_campaign.js';
+export { weaponTechModifer, soldierDeath, armyRating, garrisonSize } from './military/loot_army_rating_and_mad.js';
 
 export const government_desc = (function(type){
     let desc = {

@@ -1665,8 +1665,9 @@ if (!global.settings.hasOwnProperty('showPowerGrid')){
     global.settings['showPowerGrid'] = global.hasOwnProperty('tech') && global.tech.hasOwnProperty('high_tech') && global.tech.high_tech >= 2 ? true : false;
 }
 
-if (!global.settings['affix']){
-    global.settings['affix'] = 'si';
+if (!global.settings['affix'] || global.settings['affix'] === 'si'){
+    // Notasi SI (K M G T P ...) sudah dihapus; save lama otomatis pindah ke single letter
+    global.settings['affix'] = 'sln';
 }
 
 if (!global['special']){
@@ -2086,8 +2087,7 @@ export function resizeGame(){
     }
 }
 
-var affix_list = {
-    si: ['K','M','G','T','P','E','Z','Y'],
+export const affix_list = {
     sln: ['K','M','B','t','q','Q','s','S']
 };
 // Number formatting options, in the user's default locale
@@ -2141,15 +2141,15 @@ export function sizeApproximation(value, precision = 1, precise = false, exact =
     else {
         const oomMod3 = oom % 3;
         const dispShort = oom === 4; // Reduce significant figures from 4 to 3 for numbers below 100,000
-        const forceSI = global.settings.affix !== 'eng' && oom >= 27;
-        // Reduce displayed order of magnitude to the nearest multiple of 3, except for SI mode
-        if (global.settings.affix !== 'sci' && !forceSI){
+        const forceExponent = global.settings.affix !== 'eng' && oom >= 27;
+        // Reduce displayed order of magnitude to the nearest multiple of 3, except for scientific mode
+        if (global.settings.affix !== 'sci' && !forceExponent){
             oom -= oomMod3;
         }
 
         let affix;
-        if (global.settings.affix === 'sci' || global.settings.affix === 'eng' || forceSI){
-            // Manually build SI suffix to guarantee that the 'e' is lowercase for aesthetic preference
+        if (global.settings.affix === 'sci' || global.settings.affix === 'eng' || forceExponent){
+            // Manually build exponent suffix to guarantee that the 'e' is lowercase for aesthetic preference
             affix = 'e' + oom;
         } else {
             // Get the string suffix from the configured lookup table

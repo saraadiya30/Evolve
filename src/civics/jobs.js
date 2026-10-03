@@ -7,9 +7,9 @@ import { planetName } from '../space/space.js';
 import { hellSupression } from '../portal/portal.js';
 import { asphodelResist } from '../edenic/edenic.js';
 import { actions, templeCount } from '../actions/actions.js';
-import { workerScale, jobScale, jobName, teamsterCap, farmerValue } from './jobs_g1.js';
-export { defineJobs, workerScale, jobScale, setJobName, jobName, loadServants, teamsterCap, craftsmanCap, limitCraftsmen, farmerValue } from './jobs_g1.js';
-export { loadFoundry } from './jobs_g2.js';
+import { workerScale, jobScale, jobName, teamsterCap, farmerValue } from './jobs/job_definitions_and_caps.js';
+export { defineJobs, workerScale, jobScale, setJobName, jobName, loadServants, teamsterCap, craftsmanCap, limitCraftsmen, farmerValue } from './jobs/job_definitions_and_caps.js';
+export { loadFoundry } from './jobs/foundry_panel.js';
 
 export const job_desc = {
     unemployed: function(servant){

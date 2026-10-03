@@ -1,16 +1,16 @@
 import { global, save, webWorker } from '../core/vars.js';
 import { loc } from '../core/locale.js';
 import { races } from '../races/races.js';
-import { clearPopper, addATime } from './functions_f1.js';
-export { popover, clearPopper, gameLoop, loopTimers, timeScale, TIME_ACCELERATION_FACTOR, addATime, exceededATimeThreshold, powerGrid, initMessageQueue, messageQueue, removeFromQueue, removeFromRQueue, calcQueueMax, calcRQueueMax, buildQueue, decodeStructId, tagEvent, resetResBuffer, modRes } from './functions_f1.js';
-export { genCivName, costMultiplier, spaceCostMultiplier, harmonyEffect, timeCheck, arpaTimeCheck, clearElement, vBind, timeFormat, powerModifier, powerCostMod, calcQuantumLevel, get_qlevel, darkEffect } from './functions_f2.js';
-import { masteryType } from './functions_f3.js';
-export { masteryType, challenge_multiplier, getResetConstants, calcPrestige, adjustCosts } from './functions_f3.js';
-export { popCost, svgIcons, svgViewBox, getBaseIcon, drawIcon, drawPet, easterEgg, easterEggBind, trickOrTreat, trickOrTreatBind, format_emblem, binary_limit_test, fibonacci, randomKey, sLevel } from './functions_f4.js';
-import { hoovedRename, rName } from './functions_f5.js';
-export { calcGenomeScore, updateResetStats, deepClone, flib, eventActive, getEaster, getHalloween, shrineBonusActive, getShrineBonus, hoovedRename } from './functions_f5.js';
-export { getTraitDesc } from './functions_f6.js';
-import { S } from './functions_f_state.js';
+import { clearPopper, addATime } from './game_loop_timing_and_queues.js';
+export { popover, clearPopper, gameLoop, loopTimers, timeScale, TIME_ACCELERATION_FACTOR, addATime, exceededATimeThreshold, powerGrid, initMessageQueue, messageQueue, removeFromQueue, removeFromRQueue, calcQueueMax, calcRQueueMax, buildQueue, decodeStructId, tagEvent, resetResBuffer, modRes } from './game_loop_timing_and_queues.js';
+export { genCivName, costMultiplier, spaceCostMultiplier, harmonyEffect, timeCheck, arpaTimeCheck, clearElement, vBind, timeFormat, powerModifier, powerCostMod, calcQuantumLevel, get_qlevel, darkEffect } from './cost_multiplier_time_and_power_utils.js';
+import { masteryType } from './prestige_and_cost_adjusters.js';
+export { masteryType, challenge_multiplier, getResetConstants, calcPrestige, adjustCosts } from './prestige_and_cost_adjusters.js';
+export { popCost, svgIcons, svgViewBox, getBaseIcon, drawIcon, drawPet, easterEgg, easterEggBind, trickOrTreat, trickOrTreatBind, format_emblem, binary_limit_test, fibonacci, randomKey, sLevel } from './icons_easter_eggs_and_cost_adjusters.js';
+import { hoovedRename, rName } from './reset_stats_seasonal_events_and_trait_values.js';
+export { calcGenomeScore, updateResetStats, deepClone, flib, eventActive, getEaster, getHalloween, shrineBonusActive, getShrineBonus, hoovedRename } from './reset_stats_seasonal_events_and_trait_values.js';
+export { getTraitDesc } from './trait_description.js';
+import { S } from './functions_shared_state.js';
 
 S.popperRef = false;
 

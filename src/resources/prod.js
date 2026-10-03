@@ -2,7 +2,7 @@ import { global } from '../core/vars.js';
 import { traits, fathomCheck } from '../races/races.js';
 import { govEffect } from '../civics/civics.js';
 import { teamsterCap } from '../civics/jobs.js';
-import { production_p1, production_p2 } from '../sections/sec_production_1.js';
+import { production_p1, production_p2 } from '../sections/core/production_parts.js';
 
 export function highPopAdjust(v){
     if (global.race['high_pop']){

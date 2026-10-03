@@ -1,15 +1,14 @@
-import { global, save, webWorker, intervals, keyMap, resizeGame, breakdown, power_generated, p_on, support_on, int_on, set_qlevel } from './core/vars.js';
+import { global, save, webWorker, intervals, keyMap, resizeGame, power_generated, p_on, support_on, int_on, set_qlevel } from './core/vars.js';
 import { loc } from './core/locale.js';
 import { challengeIcon } from './achievements/achieve.js';
 import { gameLoop, vBind, popover, flib, initMessageQueue, messageQueue, calc_mastery, calcQueueMax, calcRQueueMax, buildQueue, powerGrid, loopTimers, calcQuantumLevel, drawPet } from './functions/functions.js';
 import { races, traits, orbitLength, biomes, planetTraits, shapeShift } from './races/races.js';
 import { defineResources } from './resources/resources.js';
 import { defineJobs } from './civics/jobs.js';
-import { gridDefs, replicator, setupRituals } from './industry/industry.js';
+import { gridDefs, setupRituals } from './industry/industry.js';
 import { govEffect } from './civics/civics.js';
 import { drawEvolution, updateQueueNames, planetGeology, start_cataclysm } from './actions/actions.js';
 import { genPlanets, setUniverse, universe_types } from './space/space.js';
-import { events } from './events/events.js';
 import { govActive } from './governor/governor.js';
 import { swissKnife } from './tech/tech.js';
 import { index, mainVue, initTabs, loadTab } from './core/index.js';
@@ -17,11 +16,11 @@ import { setWeather, seasonDesc } from './systems/seasons.js';
 import { getTopChange } from './wiki/change.js';
 import { enableDebug } from './core/debug.js';
 import { MORALE_BONUS_PER_LOT } from './stocks/stocks_core.js';
-import { S } from './main/main_state.js';
-import { execGameLoops } from './main/main_g1.js';
-export { execGameLoops } from './main/main_g1.js';
-import { resourceAlt } from './main/main_g4.js';
-export { buildGene, steelCheck, spyCaught } from './main/main_g4.js';
+import { S } from './loops/loop_shared_state.js';
+import { execGameLoops } from './loops/game_loop_runner.js';
+export { execGameLoops } from './loops/game_loop_runner.js';
+import { resourceAlt } from './loops/long/long_loop_and_misc_helpers.js';
+export { buildGene, steelCheck, spyCaught } from './loops/long/long_loop_and_misc_helpers.js';
 
 {
     $(document).ready(function() {
@@ -361,8 +360,6 @@ popover('morale',
                     let democracy = 1 + (govEffect.democracy()[0] / 100);
                     value /= democracy;
                 }
-
-                let label = {  }
 
                 obj.popper.append(`<p class="modal_bd"><span>${loc(`morale_${morale}`)}</span> <span class="has-text-${type}"> ${+(value).toFixed(1)}%</span></p>`)
 

@@ -33,7 +33,7 @@ function run(label, call, expect){
 run('produksi biasa, bonus 100%', () => modRes(res, 10), 20);
 run('trade route (noStockBonus)  ', () => modRes(res, 10, false, true), 10);
 
-const src = readFileSync(join(__dirname, '..', 'src/loops/ml_fastLoopCore_1.js'), 'utf8');
+const src = readFileSync(join(__dirname, '..', 'src/loops/fast/unlocks_weather_power_and_military.js'), 'utf8');
 const imp = /modRes\(res,routes \* \$ctx\.time_multiplier \* rate, false, true\);/.test(src);
 const exp = /modRes\('Money', -\(price \* \$ctx\.time_multiplier\), false, true\);/.test(src);
 console.log(`blok trade route mengirim flag: impor=${imp} ekspor=${exp}`);

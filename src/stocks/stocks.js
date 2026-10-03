@@ -2,9 +2,9 @@ import { global, tmp_vars, sizeApproximation, breakdown } from '../core/vars.js'
 import { loc } from '../core/locale.js';
 import { messageQueue } from '../functions/functions.js';
 import { resource_values } from '../config/trade.js';
-import { aetherFormat } from '../resources/resources_f5.js';
+import { aetherFormat } from '../resources/alchemy_aether_format_and_faith.js';
 import { LOT_BONUS, productionLots, LEVEL_STEP, newStock, upgradeStock, stepMarket, settleAllOrders, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT } from './stocks_core.js';
-import { drawStocks_s1, drawStocks_s2, drawStocks_s3 } from '../sections/sec_drawStocks_1.js';
+import { drawStocks_s1, drawStocks_s2, drawStocks_s3 } from '../sections/drawing/draw_stocks_parts.js';
 
 export const LEVEL_STEP_DISPLAY = LEVEL_STEP.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
 
@@ -230,16 +230,13 @@ export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0, sta
     // delta is the real income of this tick: this feature changes it only after reading it, within the same tick
     let natural = delta;
     let flow = 0;
-    let adj = 0;
     if (global.settings.stockAutoOn){
         let out = autoTradeStep(s, money, natural, global.settings.stockAutoKeep * seconds, lost, start);
         if (out.kind === 'convert'){
             flow = out.money;
-            adj = -out.money;
         }
         else if (out.kind === 'topup'){
             flow = -out.money;
-            adj = out.money;
         }
     }
     s.autoAdj = 0; // kept in the save for compatibility; the adjustment is no longer carried to the next tick

@@ -3,11 +3,11 @@ import { global } from '../core/vars.js';
 
 // Dipindah dari races.js: dipakai saat LOAD oleh file bagian (races parts), jadi tidak boleh bergantung pada body races.js.
 
-export const date = new Date();
+const date = new Date();
 
-export const easter = getEaster();
+const easter = getEaster();
 
-export const hallowed = getHalloween();
+const hallowed = getHalloween();
 
 export function altRace(race,set){
     if (global.settings.boring){

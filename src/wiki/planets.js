@@ -83,7 +83,7 @@ function infoForFeature(planetFeatures, content) {
     return content;
 }
 
-export function formatBonusNumber(num, style) {
+function formatBonusNumber(num, style) {
     let modRes = num - 1 * (style === 'percent' || style === 'inverted' ? 1 : 0);
     if (style === 'inverted' || style === 'inverted-decimal'){
         modRes *= -1;

@@ -5,10 +5,10 @@ import { garrisonSize, armyRating } from '../civics/civics.js';
 import { tradeRatio } from '../config/trade.js';
 import { soldierDeath } from '../civics/civics.js';
 import { govActive } from '../governor/governor.js';
-import { events } from './ev_registry.js';
-import { eventsPart1 } from './ev_events_1.js';
-import { eventsPart2 } from './ev_events_2.js';
-import { eventsPart3 } from './ev_events_3.js';
+import { events } from './definitions/registry.js';
+import { eventsPart1 } from './definitions/dna_replication_to_scandal.js';
+import { eventsPart2 } from './definitions/spy_to_rumor.js';
+import { eventsPart3 } from './event_pet.js';
 
 Object.assign(events,
     eventsPart1,

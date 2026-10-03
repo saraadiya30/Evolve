@@ -2,13 +2,13 @@
 // this file must NOT import anything, so any module can pull from it without circular imports.
 //
 // The creep gene (ARPA CRISPR perk) used to be hardcoded as 0.01 / 0.002 in TWO separate cost
-// functions in functions_f2.js (costMultiplier and spaceCostMultiplier) and again in the perk
-// description text in ach_perks_2.js. Changing the balance meant editing all of them by hand.
+// functions in cost_multiplier_time_and_power_utils.js (costMultiplier and spaceCostMultiplier) and again in the perk
+// description text in endless_hunger_to_blood.js. Changing the balance meant editing all of them by hand.
 
 // Reduction of the cost multiplier per level of the creep gene.
 export const CREEP_GENE_PER_LEVEL = 0.01;
 // Same, for races with the no_crispr trait.
-export const CREEP_GENE_PER_LEVEL_NO_CRISPR = 0.002;
+const CREEP_GENE_PER_LEVEL_NO_CRISPR = 0.002;
 
 // Total multiplier reduction from the creep gene at the given level.
 // Pure helper: returns 0 when the gene is missing/0, same as the old if/else-if chains.

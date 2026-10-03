@@ -1,4 +1,4 @@
-import { global, p_on, support_on, active_rituals } from '../core/vars.js';
+import { global, p_on, support_on, active_rituals, affix_list } from '../core/vars.js';
 import { calc_mastery, calcPillar, darkEffect } from '../functions/functions.js';
 import { traits } from '../races/races.js';
 import { templeCount, actions } from '../actions/actions.js';
@@ -7,12 +7,12 @@ import { syndicate } from '../truepath/truepath.js';
 import { govEffect } from '../civics/civics.js';
 import { highPopAdjust, teamster } from './prod.js';
 import { loc } from '../core/locale.js';
-export { craftCost, initResourceTabs, drawResourceTab, defineResources, tradeSummery } from './resources_f1.js';
-export { setResourceName, marketItem, galaxyOffers } from './resources_f2.js';
-export { galacticTrade, containerItem, tradeSellPrice, tradeBuyPrice, craftingPopover } from './resources_f3.js';
-export { crateGovHook, unlockCrates, unlockContainers, crateValue, containerValue, loadEjector, loadSupply } from './resources_f4.js';
-import { faithTempleCount, faithBonus, templePlasmidBonus } from './resources_f5.js';
-export { loadAlchemy, initAether, faithTempleCount, faithBonus, templePlasmidBonus } from './resources_f5.js';
+export { craftCost, initResourceTabs, drawResourceTab, defineResources, tradeSummery } from './resource_tabs_and_definitions.js';
+export { setResourceName, marketItem, galaxyOffers } from './special_resources_market_item_and_galaxy_trade.js';
+export { galacticTrade, containerItem, tradeSellPrice, tradeBuyPrice, craftingPopover } from './crate_container_assignment_and_trade_prices.js';
+export { crateGovHook, unlockCrates, unlockContainers, crateValue, containerValue, loadEjector, loadSupply } from './market_storage_crates_and_containers.js';
+import { faithTempleCount, faithBonus, templePlasmidBonus } from './alchemy_aether_format_and_faith.js';
+export { loadAlchemy, initAether, faithTempleCount, faithBonus, templePlasmidBonus } from './alchemy_aether_format_and_faith.js';
 
 export const atomic_mass = {
     Food: 4.355,
@@ -452,7 +452,7 @@ export const craftingRatio = (function(){
     }
 })();
 
-export const aether_big_affix = ['K','M','B','T','q','Q','s','S'];
+export const aether_big_affix = affix_list.sln;
 export const aether_small_affix = ['m','μ','n','p','f','a','z','y'];
 
 export const spatialReasoning = (function(){

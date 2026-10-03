@@ -22,8 +22,8 @@ if (process.env.FIXTURE) {
 await import('../src/main.js'); // urutan load normal dulu (ada circular import)
 const [mod, ...exprs] = process.argv.slice(2);
 const orig = mod.replace(/\.js$/, '_orig_tmp.js');
-const oldM = await import('../src/' + orig);
-const newM = await import('../src/' + mod);
+const oldM = await import('../src' + orig);
+const newM = await import('../src' + mod);
 let diffs = 0;
 const bad = (m) => { diffs++; if (diffs <= 15) console.log('BEDA:', m); };
 function cmp(x, y, path, seen = new Set()) {

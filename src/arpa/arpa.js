@@ -4,13 +4,13 @@ import { wardenLabel, structName } from '../actions/actions.js';
 import { drawMechLab } from '../portal/portal.js';
 import { govActive } from '../governor/governor.js';
 import { loc } from '../core/locale.js';
-import { genePool } from './arp_registry.js';
-import { genePoolPart1 } from './arp_genes_1.js';
-import { genePoolPart2 } from './arp_genes_2.js';
-import { genePoolPart3 } from './arp_genes_3.js';
-import { roid_eject_type, payBloodPrice, monument_costs, costMultiplier } from './arpa_g1.js';
-export { arpa, payCrispr, payBloodPrice, drawGenes, drawBlood, checkGeneRequirements, checkBloodRequirements, gainGene, gainBlood, arpaAdjustCosts, clearGeneticsDrag, dragGeneticsList, genetics, sequenceLabs, bindTrait } from './arpa_g1.js';
-export { blood, buildArpa, arpaProjectCosts, updateTrades } from './arpa_g2.js';
+import { genePool } from './genes/registry.js';
+import { genePoolPart1 } from './genes/genetic_memory_to_geographer.js';
+import { genePoolPart2 } from './genes/architect_to_blood_sacrifice.js';
+import { genePoolPart3 } from './genes/essence_absorber.js';
+import { roid_eject_type, payBloodPrice, monument_costs, costMultiplier } from './arpa_crispr_blood_and_costs.js';
+export { arpa, payCrispr, payBloodPrice, drawGenes, drawBlood, checkGeneRequirements, checkBloodRequirements, gainGene, gainBlood, arpaAdjustCosts, clearGeneticsDrag, dragGeneticsList, genetics, sequenceLabs, bindTrait } from './arpa_crispr_blood_and_costs.js';
+export { blood, buildArpa, arpaProjectCosts, updateTrades } from './arpa_project_building.js';
 
 export const arpaProjects = {
     lhc: {

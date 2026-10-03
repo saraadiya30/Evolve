@@ -26,7 +26,7 @@ export function speciesPage(zone){
     }
 }
 
-export function customPage(content) {
+function customPage(content) {
     customRaceMechanics(content,true);
     let lab = $(`<div class="infoBox wide"></div>`);
     content.append(lab);

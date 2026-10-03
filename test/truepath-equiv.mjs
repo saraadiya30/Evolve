@@ -17,7 +17,7 @@ function cmp(x, y, path) {
     }
     if (x !== y && !(Number.isNaN(x) && Number.isNaN(y))) bad(`nilai ${path}: ${x} vs ${y}`);
 }
-// drawShips sengaja baru di-export (dipakai tp_tau_home.js); selain itu daftar ekspor harus sama
+// drawShips sengaja baru di-export (dipakai home.js); selain itu daftar ekspor harus sama
 const ko = Object.keys(oldM).sort(), kn = Object.keys(newM).filter(k => k !== 'drawShips').sort();
 if (!Object.keys(newM).includes('drawShips')) bad('drawShips tidak ter-export');
 if (ko.join('|') !== kn.join('|')) bad(`daftar ekspor: lama [${ko}] vs baru [${kn}]`);

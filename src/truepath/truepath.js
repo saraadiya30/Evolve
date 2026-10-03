@@ -1,21 +1,20 @@
-import { races } from '../races/races.js';
 import { outerTruth, tauCetiModules } from './truepath_registry.js';
-import { outerTitan } from './tp_outer_titan.js';
-import { outerEnceladus } from './tp_outer_enceladus.js';
-import { outerTriton } from './tp_outer_triton.js';
-import { outerKuiper } from './tp_outer_kuiper.js';
-import { outerEris } from './tp_outer_eris.js';
-import { tauStar } from './tp_tau_star.js';
-import { tauHome } from './tp_tau_home.js';
-import { tauRed } from './tp_tau_red.js';
-import { tauGas } from './tp_tau_gas.js';
-import { tauRoid } from './tp_tau_roid.js';
-import { tauGas2 } from './tp_tau_gas2.js';
-export { outerTruthTech, tauCetiTech, checkPathRequirements, renderTauCeti, drawShipYard, buildTPShipQueue, TPShipDesc, shipCrewSize, shipPower, shipAttackPower, shipSpeed, shipFuelUse, shipCosts, clearShipDrag } from './truepath_f1.js';
-export { drawShips, syndicate, sensorRange, tritonWar, erisWar, setOrbits, genXYcoord, jumpGateShutdown } from './truepath_f2.js';
-export { loneSurvivor } from './truepath_f3.js';
-export { drawMap } from './truepath_f4.js';
-import { S } from './truepath_f_state.js';
+import { outerTitan } from './outer_solar/titan.js';
+import { outerEnceladus } from './outer_solar/enceladus.js';
+import { outerTriton } from './outer_solar/triton.js';
+import { outerKuiper } from './outer_solar/kuiper.js';
+import { outerEris } from './outer_solar/eris.js';
+import { tauStar } from './tau_ceti/star.js';
+import { tauHome } from './tau_ceti/home.js';
+import { tauRed } from './tau_ceti/red.js';
+import { tauGas } from './tau_ceti/gas.js';
+import { tauRoid } from './tau_ceti/roid.js';
+import { tauGas2 } from './tau_ceti/gas2.js';
+export { outerTruthTech, tauCetiTech, checkPathRequirements, renderTauCeti, drawShipYard, buildTPShipQueue, TPShipDesc, shipCrewSize, shipPower, shipAttackPower, shipSpeed, shipFuelUse, shipCosts, clearShipDrag } from './tau_ceti_tech_and_shipyard.js';
+export { drawShips, syndicate, sensorRange, tritonWar, erisWar, setOrbits, genXYcoord, jumpGateShutdown } from './ships_orbits_and_wars.js';
+export { loneSurvivor } from './lone_survivor_and_positions.js';
+export { drawMap } from './solar_map.js';
+import { S } from './truepath_shared_state.js';
 
 // Urutan key = urutan region lama.
 Object.assign(outerTruth, {
@@ -34,7 +33,7 @@ Object.assign(tauCetiModules, {
     tau_gas2: tauGas2
 });
 
-export { tpStorageMultiplier, calcAIDrift, tauEnabled } from './tp_support.js';
+export { tpStorageMultiplier, calcAIDrift, tauEnabled } from './support.js';
 
 export const shipyardRanks = {
     // Lower number -> higher in the auto-sorted list

@@ -1,13 +1,13 @@
 import { global } from '../core/vars.js';
 import { drawTech } from '../actions/actions.js';
-import { techsPart1 } from './techs_part1.js';
-import { techsPart2 } from './techs_part2.js';
-import { techsPart3 } from './techs_part3.js';
-import { techsPart4 } from './techs_part4.js';
-import { techsPart5 } from './techs_part5.js';
-import { techsPart6 } from './techs_part6.js';
-import { techsPart7 } from './techs_part7.js';
-import { techsPart8 } from './techs_part8.js';
+import { techsPart1 } from './logic/club_to_elysis_process/group_loader.js';
+import { techsPart2 } from './logic/smelting_to_tourism/group_loader.js';
+import { techsPart3 } from './logic/xeno_tourism_to_breeder_reactor/group_loader.js';
+import { techsPart4 } from './logic/mine_conveyor_to_cement/group_loader.js';
+import { techsPart5 } from './logic/rebar_to_infusion_confirm/group_loader.js';
+import { techsPart6 } from './logic/stabilize_blackhole_to_protocol66a/group_loader.js';
+import { techsPart7 } from './logic/terraforming_tp_to_outer_tau_survey/group_loader.js';
+import { techsPart8 } from './logic/alien_research_to_ultimate_corruption/group_loader.js';
 import { techData } from './techs_data.js';
 
 // Logika/teks dinamis dari semua bagian, urutan entri dipertahankan.

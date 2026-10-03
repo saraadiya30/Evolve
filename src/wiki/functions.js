@@ -224,7 +224,7 @@ export function actionDesc(info, c_action, extended, isStruct){
     }
 }
 
-export function bindScroll(elm, target){
+function bindScroll(elm, target){
     elm.click(function(){
         window.location.hash = `#${target}`;
         document.getElementById(target).scrollIntoView({

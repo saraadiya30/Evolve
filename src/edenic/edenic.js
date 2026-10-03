@@ -2,9 +2,9 @@ import { global } from '../core/vars.js';
 import { checkRequirements } from '../space/space.js';
 import { mechRating } from '../portal/portal.js';
 import { asphodelResistCalc, mechStationCalc, mechStationRunning } from './edenic_core.js';
-import { edenicModules } from './edenic_registry.js';
-import { edenAsphodel } from './edenic_asphodel.js';
-import { edenElysium } from './edenic_elysium.js';
+import { edenicModules } from './edenic_modules_registry.js';
+import { edenAsphodel } from './asphodel/asphodel.js';
+import { edenElysium } from './elysium/elysium.js';
 import { edenIsle } from './edenic_isle.js';
 import { edenPalace } from './edenic_palace.js';
 
