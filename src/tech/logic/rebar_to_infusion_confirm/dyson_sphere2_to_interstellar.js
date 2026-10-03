@@ -6,7 +6,7 @@ import { unlockAchieve } from '../../../achievements/achieve.js';
 import { races } from '../../../races/races.js';
 import { messageQueue } from '../../../functions/functions.js';
 import { govTitle } from '../../../civics/civics.js';
-import { uniteEffect } from './group_loader.js';
+import { uniteEffect } from '../group_loaders.js';
 
 // Bagian dari techsPart5 (23 entri: dyson_sphere2 .. interstellar), dipisah dari group_loader.js. Urutan entri sama persis.
 export const techsPart5Part3 = {

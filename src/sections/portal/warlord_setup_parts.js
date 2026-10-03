@@ -6,7 +6,7 @@ import { addSmelter } from '../../industry/industry.js';
 import { loadFoundry } from '../../civics/jobs.js';
 import { renderFortress } from '../../portal/hell/fortress_and_spire_defense.js';
 
-// Bagian dari warlordSetup (warlord_setup.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
+// Bagian dari warlordSetup (bloodwar_and_warlord_setup.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
 
 export function warlordSetup_s1($ctx){
         global.tech['aerogel'] = 1;

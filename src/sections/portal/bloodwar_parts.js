@@ -12,7 +12,7 @@ import { actions, drawTech } from '../../actions/actions.js';
 import { asphodelResist } from '../../edenic/edenic.js';
 import { purgeReports } from '../../portal/hell/hell_reports_and_warlord_achievement.js';
 
-// Bagian dari bloodwar (bloodwar_panel.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
+// Bagian dari bloodwar (bloodwar_and_warlord_setup.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
 
 export function bloodwar_s1($ctx){
         $ctx.day_report = {

@@ -3,7 +3,7 @@ import { vBind, clearElement, popover } from '../functions/functions.js';
 import { setAction } from '../actions/actions.js';
 import { checkRequirements } from '../space/space.js';
 import { loc } from '../core/locale.js';
-import { edenicModules } from './edenic_modules_registry.js';
+import { edenicModules } from './registry.js';
 
 export function renderEdenic(){
     if (!global.settings.tabLoad && (global.settings.civTabs !== 1 || global.settings.spaceTabs !== 7)){

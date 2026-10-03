@@ -5,7 +5,7 @@ import { incrementStruct } from '../../space/space.js';
 import { renderEdenic } from '../edenic_render.js';
 import { armyRating } from '../../civics/civics.js';
 import { messageQueue, spaceCostMultiplier, powerCostMod } from '../../functions/functions.js';
-import { edenicModules } from '../edenic_modules_registry.js';
+import { edenicModules } from '../registry.js';
 import { jobScale } from '../../civics/jobs.js';
 import { addSmelter } from '../../industry/industry.js';
 import { spatialReasoning } from '../../resources/resources.js';

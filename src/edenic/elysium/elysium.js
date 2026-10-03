@@ -1,6 +1,6 @@
 import { seededRandom } from '../../core/vars.js';
 import { armorCalc } from '../../civics/civics.js';
-import { edenElysium } from '../eden_regions_registry.js';
+import { edenElysium } from '../registry.js';
 import { edenElysiumPart1 } from './info_to_scout_elysium.js';
 import { edenElysiumPart2 } from './fire_support_base_to_eternal_bank.js';
 import { edenElysiumPart3 } from './archive_to_eden_cement.js';

@@ -1,4 +1,4 @@
-import { edenAsphodel } from '../eden_regions_registry.js';
+import { edenAsphodel } from '../registry.js';
 import { edenAsphodelPart1 } from './info_to_research_station.js';
 import { edenAsphodelPart2 } from './warehouse_to_bliss_den.js';
 import { edenAsphodelPart3 } from './rectory_to_corruptor.js';

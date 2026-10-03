@@ -6,7 +6,7 @@ import { payCosts, powerOnNewStruct, actions } from '../../actions/actions.js';
 import { incrementStruct } from '../../space/space.js';
 import { traits } from '../../races/races.js';
 import { spatialReasoning } from '../../resources/resources.js';
-import { edenicModules } from '../edenic_modules_registry.js';
+import { edenicModules } from '../registry.js';
 
 // Bagian dari edenAsphodel (2 entri: rectory .. corruptor), dipisah dari asphodel.js. Urutan entri sama persis.
 export const edenAsphodelPart3 = {

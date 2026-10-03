@@ -12,13 +12,12 @@ import { monsters } from './portal_registry.js';
 import { monstersPart1 } from './monsters/fire_elm_to_lich.js';
 import { monstersPart2 } from './monsters/ape_to_skeleton_pack.js';
 export { spireCreep, towerPrice, soulForgeSoldiers, fortressTech, renderFortress, checkHellRequirements, buildFortress } from './hell/fortress_and_spire_defense.js';
-export { bloodwar } from './hell/bloodwar_panel.js';
+export { bloodwar, warlordSetup } from './hell/bloodwar_and_warlord_setup.js';
 export { hellguard, checkSkillPointAssignments, rankDesc, hellSupression, mechCost, bossResists } from './mech/hellguard_and_mech_costs.js';
 export { drawMechLab, buildMechQueue, mechDesc, validWeapons, validEquipment } from './mech/mech_lab.js';
 export { mechSize, clearMechDrag, updateMechbay, genSpireFloor, terrainEffect, mechCollect } from './mech/mechbay_and_spire_floor.js';
 export { mechWeaponPower, mechRating, drawHellObservations } from './mech/mech_rating_and_hell_analysis_charts.js';
 export { checkWarlordAchieve } from './hell/hell_reports_and_warlord_achievement.js';
-export { warlordSetup } from './hell/warlord_setup.js';
 
 Object.assign(fortressModules, {
     "prtl_fortress": fortressModules_prtl_fortress,
