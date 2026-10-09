@@ -141,7 +141,7 @@ export function drawStocks_s1($ctx){
     main.append($(`<div class="stk-line"><span>{{ d.holdText }}</span><span :class="d.plClass">{{ d.plText }}</span></div>`));
     // Lots are split between the production bonus and the storage bonus (one or the other per lot). Not for the special
     // stocks (Morale/Power/Birthrate), which have their own flat bonus per lot.
-    main.append($(`<div v-if="d.canAlloc" class="stk-line"><span>{{ d.allocText }}</span><span><span>{{ d.allocLabel }}</span> <input type="number" min="0" step="1" :max="d.lots" :value="d.storeLots" @change="setStore(d.res, $event.target.value)" style="width:5rem;margin:0 .25rem;${inputStyle}"><button class="button" @click="setStore(d.res, 0)">{{ d.allocProdLabel }}</button><button class="button" @click="setStore(d.res, d.lots)">{{ d.allocStoreLabel }}</button></span></div>`));
+    main.append($(`<div v-if="d.canAlloc" class="stk-line"><span>{{ d.allocText }}</span><span><span role="button" class="sub" @click="shiftStore(d.res, 1)" :aria-label="d.allocProdLess"><span>&laquo;</span></span><span class="current">{{ d.allocProdLabel }} {{ d.prodLots }}</span><span role="button" class="add" @click="shiftStore(d.res, -1)" :aria-label="d.allocProdMore"><span>&raquo;</span></span></span><span><span role="button" class="sub" @click="shiftStore(d.res, -1)" :aria-label="d.allocStoreLess"><span>&laquo;</span></span><span class="current">{{ d.allocStoreLabel }} {{ d.storeLots }}</span><span role="button" class="add" @click="shiftStore(d.res, 1)" :aria-label="d.allocStoreMore"><span>&raquo;</span></span></span></div>`));
     // Take-profit / stop-loss for the lots you already hold. Each side covers only the lots you type in - not
     // necessarily all of them - and can be a price or a % away from your average cost.
     let exitPanel = $(`<div v-if="d.res && (d.lots > d.exitFree || true) && d.lots > 0" class="stk-sub"></div>`);
@@ -337,9 +337,13 @@ export function drawStocks_s2($ctx){
                     canAlloc: !isSpecial(res) && st.lots > 0,
                     storeLots: storageLots(st),
                     allocText: loc('stock_alloc_text',[fmt(productionLots(st), 0), +(productionLots(st) * LOT_BONUS * 100).toFixed(2), fmt(storageLots(st), 0), +(storageLots(st) * STORAGE_BONUS * 100).toFixed(2)]),
-                    allocLabel: loc('stock_alloc_label'),
-                    allocProdLabel: loc('stock_alloc_all_prod'),
-                    allocStoreLabel: loc('stock_alloc_all_store'),
+                    prodLots: productionLots(st),
+                    allocProdLabel: loc('stock_alloc_prod'),
+                    allocStoreLabel: loc('stock_alloc_store'),
+                    allocProdLess: loc('stock_alloc_prod_less'),
+                    allocProdMore: loc('stock_alloc_prod_more'),
+                    allocStoreLess: loc('stock_alloc_store_less'),
+                    allocStoreMore: loc('stock_alloc_store_more'),
                     holdText: isSpecial(res)
                         ? loc('stock_hold_special',[fmt(st.lots, 0), fmt(st.lots * specialBonusPerLot(res)), loc(`stock_stat_${res}`)])
                         : loc('stock_hold',[fmt(st.lots, 0), +(productionLots(st) * LOT_BONUS * 100).toFixed(2), loc(`resource_${res}_name`)]),
@@ -513,10 +517,11 @@ export function drawStocks_s2($ctx){
             toggleAuto(){
                 global.settings.stockAutoOn = !global.settings.stockAutoOn;
             },
-            setStore(res, value){
+            // dir: +1 moves lots from production to storage, -1 moves them back; one keyMultiplier chunk per click.
+            shiftStore(res, dir){
                 let st = global.stocks && global.stocks.market && global.stocks.market[res];
                 if (st && !isSpecial(res)){
-                    setStorageLots(st, value);
+                    setStorageLots(st, storageLots(st) + dir * keyMultiplier());
                 }
             },
             clampKeep(){
