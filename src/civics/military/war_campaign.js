@@ -1,12 +1,10 @@
 // Isi: soldierBreakdown(), describeSoldier(), battleAssessment(), war_campaign(), armorCalc(), looters()
-import { global, seededRandom } from '../../core/vars.js';
-import { traits } from '../../core/registries.js';
-import { biomes } from '../../races/races.js';
-import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
+import { global } from '../../core/vars.js';
+import { traits, hooks } from '../../core/registries.js';
+import { biomes } from '../../races/planet_data.js';
 import { loc } from '../../core/locale.js';
 import { eventActive } from '../../functions/event_dates.js';
-import { jobScale } from '../jobs/job_scale.js';
-import { armyRating, garrisonSize } from './army_rating.js';
+import { garrisonSize } from './garrison.js';
 import { war_campaign_s1, war_campaign_s2, war_campaign_s3 } from '../../sections/stages/war_campaign_parts.js';
 
 // Fungsi-fungsi dipindah dari civics.js (urutan sumber dipertahankan). civics.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
@@ -14,7 +12,7 @@ import { war_campaign_s1, war_campaign_s2, war_campaign_s3 } from '../../section
 
 export function soldierBreakdown(type){
     let scale = global.race['hivemind'] ? traits.hivemind.vars()[0] : 1;
-    let data = armyRating(scale,type,0,true);
+    let data = hooks.armyRating(scale,type,0,true);
 
     let desc = `<div class="soldierEvaluation"><div class="head">${loc(`civics_garrison_soldier_rating`)}</div>`;
     data.forEach(function(d){
@@ -33,7 +31,7 @@ export function soldierBreakdown(type){
 }
 
 export function describeSoldier(){
-    let rating = armyRating(garrisonSize(),'hunting');
+    let rating = hooks.armyRating(garrisonSize(),'hunting');
 
     let loot_args = [];
     if ((!global.race['herbivore'] || global.race['carnivore']) && !global.race['artifical']) {
@@ -69,7 +67,7 @@ export function battleAssessment(gov){
         ){
         return loc('civics_garrison_no_spy');
     }
-    let army = armyRating(global.civic.garrison.raid,'army');
+    let army = hooks.armyRating(global.civic.garrison.raid,'army');
     let enemy = 0;
     switch(global.civic.garrison.tactic){
         case 0:
@@ -116,54 +114,3 @@ export function war_campaign(gov){
         war_campaign_s3($ctx);
 }
 
-export function armorCalc(dead){
-    let armor = 0;
-    if (global.race['scales']){
-        armor += traits.scales.vars()[0];
-    }
-    if (global.tech['armor']){
-        armor += global.tech['armor'];
-    }
-    if (global.race['high_pop']){
-        armor += Math.floor(seededRandom(0, armor * traits.high_pop.vars()[0],true));
-    }
-    if (global.race['armored']){
-        let armored = traits.armored.vars()[0] / 100;
-        armor += Math.floor(dead * armored);
-    }
-    let fathom = fathomCheck('tortoisan');
-    if (fathom > 0){
-        let armored = traits.armored.vars(1)[0] / 100 * fathom;
-        armor += Math.floor(dead * armored);
-    }
-    return armor;
-}
-
-export function looters(){
-    let cap = 0;
-    let looting = global.civic.garrison.raid;
-    switch(global.civic.garrison.tactic){
-        case 0:
-            cap = 5;
-            break;
-        case 1:
-            cap = 10;
-            break;
-        case 2:
-            cap = 25;
-            break;
-        case 3:
-            cap = 50;
-            break;
-        case 4:
-            cap = 999;
-            break;
-    }
-    if (global.race['high_pop']){
-        cap = jobScale(cap);
-    }
-    if (looting > cap){
-        looting = cap;
-    }
-    return looting;
-}

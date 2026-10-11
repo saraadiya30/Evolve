@@ -3,7 +3,7 @@ import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod, powerModifier, darkEffect } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { messageQueue } from '../../functions/message_log.js';
-import { races, traits } from '../../core/registries.js';
+import { races, traits, hooks } from '../../core/registries.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { unlockContainers } from '../../resources/market_storage.js';
 import { limitCraftsmen } from '../../civics/jobs/job_definitions.js';
@@ -19,11 +19,10 @@ import { casinoEffect } from '../../actions/challenge/challenge_rules.js';
 import { housingLabel, structName, initStruct } from '../../actions/core/structure_ui.js';
 import { int_fuel_adjust } from '../../space/planet_generation.js';
 import { incrementStruct } from '../../space/space_requirements.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
 import { loc } from '../../core/locale.js';
 import { tauCetiModules } from '../../core/registries.js';
-import { drawShips } from '../ship_orbits.js';
 import { tpStorageMultiplier, tauEnabled, wom_recycle } from '../support.js';
 
 // Region 'tau_home' dari tauCetiModules (dipisah dari truepath.js). Isi/urutan entri sama persis; digabung via core/registries.js di truepath.js.
@@ -125,7 +124,7 @@ export const tauHome = {
                         global.civic[global.civic.d_job].workers -= hired;
                         global.civic.pit_miner.workers += hired;
                     }
-                    drawShips();
+                    hooks.drawShips();
                     return true;
                 }
                 return false;

@@ -6,7 +6,6 @@ import { techs } from './tech_list.js';
 
 
 
-export { swissKnife } from '../core/swiss_knife.js';
 
 
 

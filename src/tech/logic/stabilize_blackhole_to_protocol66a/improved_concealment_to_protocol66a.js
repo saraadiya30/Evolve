@@ -7,7 +7,7 @@ import { universeAffix } from '../../../functions/universe_utils.js';
 import { messageQueue } from '../../../functions/message_log.js';
 import { clearPopper } from '../../../functions/popover.js';
 import { calcPrestige } from '../../../functions/prestige_calc.js';
-import { planetName } from '../../../space/planet_generation.js';
+import { planetName } from '../../../space/planet_name.js';
 import { aiApocalypse } from '../../../resets/reset_terraform_ai_matrix_retirement_eden.js';
 
 // Bagian dari techsPart6 (18 entri: improved_concealment .. protocol66a), dipisah dari group_loader.js. Urutan entri sama persis.

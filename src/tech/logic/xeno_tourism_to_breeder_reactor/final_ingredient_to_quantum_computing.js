@@ -4,16 +4,12 @@ import { calcPrestige } from '../../../functions/prestige_calc.js';
 import { messageQueue } from '../../../functions/message_log.js';
 import { checkAffordable, payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { descension } from '../../../resets/reset_vacuum_collapse_ascend_descension_apotheosis.js';
-import { arpa } from '../../../arpa/arpa_projects.js';
 import { traitCostMod } from '../../../races/trait_logic/racial_traits.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
-import { defineGovernor } from '../../../governor/governor.js';
-import { setPowerGrid } from '../../../industry/industry_panels.js';
 import { defineIndustry } from '../../../industry/industry_smelter.js';
 import { unlockFeat, unlockAchieve } from '../../../achievements/achievement_logic.js';
-import { govTitle } from '../../../civics/military/government_definitions.js';
+import { govTitle } from '../../../civics/military/gov_calc.js';
 
 // Bagian dari techsPart3 (20 entri: final_ingredient .. quantum_computing), dipisah dari group_loader.js. Urutan entri sama persis.
 export const techsPart3Part2 = {
@@ -78,7 +74,7 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            arpa('Genetics');
+            hooks.arpa('Genetics');
         }
     },
     crispr: {
@@ -97,8 +93,8 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            arpa('Genetics');
-            arpa('Crispr');
+            hooks.arpa('Genetics');
+            hooks.arpa('Crispr');
         }
     },
     shotgun_sequencing: {
@@ -116,7 +112,7 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            arpa('Genetics');
+            hooks.arpa('Genetics');
         }
     },
     de_novo_sequencing: {
@@ -134,7 +130,7 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            arpa('Genetics');
+            hooks.arpa('Genetics');
         }
     },
     dna_sequencer: {
@@ -152,7 +148,7 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            arpa('Genetics');
+            hooks.arpa('Genetics');
         }
     },
     rapid_sequencing: {
@@ -192,7 +188,7 @@ export const techsPart3Part2 = {
         },
         post(){
             if (global.race['terrifying']){
-                defineGovernor();
+                hooks.defineGovernor();
             }
         }
     },
@@ -211,7 +207,7 @@ export const techsPart3Part2 = {
                 global.city['powered'] = true;
                 initStruct(actions.city.coal_power);
                 global.settings.showPowerGrid = true;
-                setPowerGrid();
+                hooks.setPowerGrid();
                 return true;
             }
             return false;
@@ -252,7 +248,7 @@ export const techsPart3Part2 = {
         },
         post(){
             defineIndustry();
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     industrialization: {
@@ -271,7 +267,7 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     electronics: {
@@ -329,7 +325,7 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            arpa('Physics');
+            hooks.arpa('Physics');
         }
     },
     rocketry: {
@@ -351,7 +347,7 @@ export const techsPart3Part2 = {
             return false;
         },
         post(){
-            arpa('Physics');
+            hooks.arpa('Physics');
         }
     },
     robotics: {

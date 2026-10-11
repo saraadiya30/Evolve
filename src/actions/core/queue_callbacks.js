@@ -1,16 +1,13 @@
 // Isi: resDragQueue(), attachQueuePopovers(), bananaPerk(), bank_vault(), start_cataclysm(), doCallbacks()
 import { global, p_on, callback_queue } from '../../core/vars.js';
 import { clearPopper, popover } from '../../functions/popover.js';
-import { actions } from '../../core/registries.js';
+import { actions, hooks } from '../../core/registries.js';
 import { traits } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
-import { workerScale } from '../../civics/jobs/job_definitions.js';
-import { govActive } from '../../governor/governor.js';
-import { callback_repeat } from '../actions.js';
-import { resQueue } from '../evolution/simulation_ai.js';
-import { actionDesc } from './action_costs.js';
-import { sentience } from '../evolution/sentience_stage.js';
+import { workerScale } from '../../civics/jobs/worker_scale.js';
+import { govActive } from '../../governor/gov_active.js';
+import { callback_repeat } from '../action_lists.js';
 
 // Fungsi-fungsi dipindah dari actions.js (urutan sumber dipertahankan). actions.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -22,7 +19,7 @@ export function resDragQueue(){
             let order = global.r_queue.queue;
             order.splice(e.newDraggableIndex, 0, order.splice(e.oldDraggableIndex, 1)[0]);
             global.r_queue.queue = order;
-            resQueue();
+            hooks.resQueue();
         }
     });
     attachQueuePopovers();
@@ -39,7 +36,7 @@ function attachQueuePopovers(){
 
         popover(id,function(){ return undefined; },{
             in: function(obj){
-                actionDesc(obj.popper,c_action,global[segments[0]][segments[1]],false);
+                hooks.actionDesc(obj.popper,c_action,global[segments[0]][segments[1]],false);
             },
             out: function(){
                 clearPopper(id);
@@ -115,7 +112,7 @@ export function bank_vault(){
 export function start_cataclysm(){
     if (global.race['start_cataclysm']){
         delete global.race['start_cataclysm'];
-        sentience();
+        hooks.sentience();
     }
 }
 

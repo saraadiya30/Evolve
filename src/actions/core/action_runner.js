@@ -1,20 +1,17 @@
 // Isi: drawTech(), addAction(), setAction(), runAction(), postBuild()
 import { global, keyMultiplier, callback_queue, keyMap } from '../../core/vars.js';
-import { actions } from '../../core/registries.js';
+import { actions, hooks } from '../../core/registries.js';
 import { clearElement } from '../../functions/dom_helpers.js';
 import { trickOrTreat } from '../../functions/icons_easter_eggs.js';
 import { buildQueue } from '../../functions/queues.js';
 import { clearPopper } from '../../functions/popover.js';
 import { loc } from '../../core/locale.js';
-import { gainGene, gainBlood } from '../../arpa/arpa_projects.js';
 import { renderSpace } from '../../space/space_requirements.js';
 import { renderFortress } from '../../portal/hell/fortress_defense.js';
-import { renderTauCeti } from '../../truepath/tau_ceti_shipyard.js';
 import { renderEdenic } from '../../edenic/edenic_render.js';
-import { checkTechPath, checkOldTech, checkTechQualifications, checkTechRequirements, gainTech, drawCity } from '../challenge/challenge_rules.js';
+import { checkTechQualifications } from '../challenge/tech_qualifications.js';
+import { checkTechPath, checkOldTech, checkTechRequirements } from '../challenge/tech_requirements.js';
 import { removeAction, checkAffordable, updateDesc } from './action_costs.js';
-import { resQueue } from '../evolution/simulation_ai.js';
-import { drawEvolution } from '../evolution/evolution_screen.js';
 import { setAction_s1, setAction_s2 } from '../../sections/core/set_action_parts.js';
 // Functions extracted from actions.js (source order preserved). actions.js still re-exports the previously exported names.
 
@@ -165,7 +162,7 @@ export function runAction(c_action,action,type){
         switch (action){
             case 'tech':
                 if (!(global.settings.qKey && keyMap.q) && checkTechRequirements(type,false) && c_action.action({isQueue: false})){
-                    gainTech(type);
+                    hooks.gainTech(type);
                     if (c_action['post']){
                         callback_queue.set([c_action, 'post'], []);
                     }
@@ -182,7 +179,7 @@ export function runAction(c_action,action,type){
                             }
                             if (!queued){
                                 global.r_queue.queue.push({ id: c_action.id, action: action, type: type, label: typeof c_action.title === 'string' ? c_action.title : c_action.title(), cna: false, time: 0, bres: false, req: true });
-                                resQueue();
+                                hooks.resQueue();
                                 drawTech();
                             }
                         }
@@ -193,10 +190,10 @@ export function runAction(c_action,action,type){
             case 'blood':
                 if (c_action.action({isQueue: false})){
                     if (action === 'genes'){
-                        gainGene(type);
+                        hooks.gainGene(type);
                     }
                     else {
-                        gainBlood(type);
+                        hooks.gainBlood(type);
                     }
                     if (c_action['post']){
                         callback_queue.set([c_action, 'post'], []);
@@ -307,14 +304,14 @@ export function postBuild(c_action,action,type){
     if (c_action['grant'] || c_action['refresh']){
         removeAction(c_action.id);
         if (global.race.species === 'protoplasm'){
-            drawEvolution();
+            hooks.drawEvolution();
         }
         else {
-            drawCity();
+            hooks.drawCity();
             drawTech();
             renderSpace();
             renderFortress();
-            renderTauCeti();
+            hooks.renderTauCeti();
             renderEdenic();
         }
     }

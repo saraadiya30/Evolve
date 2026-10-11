@@ -8,7 +8,7 @@ import { messageQueue } from '../../functions/message_log.js';
 import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
 import { spatialReasoning } from '../../resources/resources.js';
-import { govTitle } from '../../civics/military/government_definitions.js';
+import { govTitle } from '../../civics/military/gov_calc.js';
 import { production } from '../../resources/prod.js';
 import { loadFoundry } from '../../civics/jobs/foundry_panel.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';

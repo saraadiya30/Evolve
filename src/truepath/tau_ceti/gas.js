@@ -2,7 +2,7 @@ import { global } from '../../core/vars.js';
 import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
 import { flib } from '../../functions/run_stats_helpers.js';
-import { races } from '../../core/registries.js';
+import { races, hooks } from '../../core/registries.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { production } from '../../resources/prod.js';
@@ -11,11 +11,10 @@ import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 import { initStruct } from '../../actions/core/structure_ui.js';
 import { incrementStruct } from '../../space/space_requirements.js';
-import { planetName } from '../../space/planet_generation.js';
+import { planetName } from '../../space/planet_name.js';
 import { defineIndustry, addSmelter } from '../../industry/industry_smelter.js';
 import { loc } from '../../core/locale.js';
 import { tauCetiModules } from '../../core/registries.js';
-import { renderTauCeti } from '../tau_ceti_shipyard.js';
 import { wom_recycle } from '../support.js';
 
 // Region 'tau_gas' dari tauCetiModules (dipisah dari truepath.js). Isi/urutan entri sama persis; digabung via core/registries.js di truepath.js.
@@ -245,7 +244,7 @@ export const tauGas = {
             post(){
                 if (global.tech.tau_roid === 3){
                     global.tech.tau_roid = 4;
-                    renderTauCeti();
+                    hooks.renderTauCeti();
                     drawTech();
                 }
             }
@@ -292,7 +291,7 @@ export const tauGas = {
             post(){
                 if (global.tech.tau_whale === 1){
                     global.tech.tau_whale = 2;
-                    renderTauCeti();
+                    hooks.renderTauCeti();
                 }
             }
         },

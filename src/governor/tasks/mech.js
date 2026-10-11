@@ -3,7 +3,7 @@ import { global } from '../../core/vars.js';
 import { checkHellRequirements } from '../../portal/hell/fortress_defense.js';
 import { mechCost } from '../../portal/mech/mech_cost.js';
 import { mechSize } from '../../portal/mech/mechbay.js';
-import { validWeapons, validEquipment } from '../../portal/mech/mech_lab.js';
+import { validWeapons, validEquipment } from '../../portal/mech/mech_valid.js';
 
 // Part of gov_tasks split (1 entry: mech through mech), extracted from governor.js. Entry order preserved.
 export const gov_tasksPart2 = {

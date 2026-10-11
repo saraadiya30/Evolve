@@ -1,9 +1,8 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { global } from '../../../core/vars.js';
-import { defineGovernor } from '../../../governor/governor.js';
 import { vBind } from '../../../functions/dom_helpers.js';
 import { unlockAchieve } from '../../../achievements/achievement_logic.js';
 
@@ -87,7 +86,7 @@ export const techsPart4Part3 = {
             return false;
         },
         post(){
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     ceremonial_dagger: {
@@ -163,7 +162,7 @@ export const techsPart4Part3 = {
             return false;
         },
         post(){
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     signing_bonus: {

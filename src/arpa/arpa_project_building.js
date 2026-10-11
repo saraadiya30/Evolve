@@ -8,8 +8,9 @@ import { loc } from '../core/locale.js';
 import { updateQueueNames } from '../actions/core/structure_ui.js';
 import { drawTech } from '../actions/core/action_runner.js';
 import { renderSpace } from '../space/space_requirements.js';
-import { arpaProjects } from './arpa.js';
-import { drawGenes, drawBlood, checkRequirements, arpaAdjustCosts, payArpaCosts, pick_monument, physics } from './arpa_projects.js';
+import { arpaProjects } from '../core/registries.js';
+import { drawGenes, drawBlood, checkRequirements, payArpaCosts, pick_monument, physics } from './arpa_projects.js';
+import { arpaAdjustCosts } from './arpa_costs.js';
 
 // Fungsi-fungsi dipindah dari arpa.js (urutan sumber dipertahankan). arpa.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 

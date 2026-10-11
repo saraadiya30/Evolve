@@ -1,11 +1,10 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct, updateQueueNames } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { drawTech } from '../../../actions/core/action_runner.js';
 import { global } from '../../../core/vars.js';
 import { defineIndustry } from '../../../industry/industry_smelter.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
 import { loadFoundry } from '../../../civics/jobs/foundry_panel.js';
 import { vBind } from '../../../functions/dom_helpers.js';
 
@@ -52,7 +51,7 @@ export const techsPart2Part1 = {
         },
         post(){
             defineIndustry();
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     blast_furnace: {
@@ -234,7 +233,7 @@ export const techsPart2Part1 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     coal_mining: {
@@ -253,7 +252,7 @@ export const techsPart2Part1 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     storage: {

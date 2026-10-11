@@ -1,13 +1,13 @@
 import { global, support_on, p_on, seededRandom } from '../../core/vars.js';
 import { loc } from '../../core/locale.js';
-import { races, traits } from '../../core/registries.js';
+import { races, traits, hooks } from '../../core/registries.js';
 import { actions } from '../../core/registries.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 import { housingLabel } from '../../actions/core/structure_ui.js';
 import { checkControlling } from '../../civics/military/government_definitions.js';
-import { armyRating, garrisonSize, soldierDeath } from '../../civics/military/army_rating.js';
+import { garrisonSize, soldierDeath } from '../../civics/military/garrison.js';
 import { unlockAchieve } from '../../achievements/achievement_logic.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { slaveLoss } from '../event_helpers.js';
 import { pillaged, tax_revolt } from '../events.js';
 
@@ -145,7 +145,7 @@ export const eventsPart1 = {
             return !global.race['truepath'] && !global.race['cataclysm'] && (global.civic.foreign.gov0.hstl > 60 || global.civic.foreign.gov1.hstl > 60 || global.civic.foreign.gov2.hstl > 60) ? true : false;
         },
         effect(){
-            let army = armyRating(garrisonSize(),'army',global.civic.garrison.wounded);
+            let army = hooks.armyRating(garrisonSize(),'army',global.civic.garrison.wounded);
             let eAdv = global.tech['high_tech'] ? global.tech['high_tech'] + 1 : 1;
             let enemy = Math.rand(25,50) * eAdv;
 
@@ -199,7 +199,7 @@ export const eventsPart1 = {
             return !global.race['truepath'] && global.civic.foreign.gov0.hstl > 80 && global.civic.foreign.gov1.hstl > 80 && global.civic.foreign.gov2.hstl > 80 ? true : false;
         },
         effect(){
-            let army = armyRating(garrisonSize(),'army',global.civic.garrison.wounded);
+            let army = hooks.armyRating(garrisonSize(),'army',global.civic.garrison.wounded);
             let eAdv = global.tech['high_tech'] ? global.tech['high_tech'] + 1 : 1;
             let enemy = (global.civic.foreign.gov0.mil + global.civic.foreign.gov1.mil + global.civic.foreign.gov2.mil) * eAdv;
 

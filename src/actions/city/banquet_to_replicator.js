@@ -1,20 +1,19 @@
 import { loc } from '../../core/locale.js';
 import { global, sizeApproximation, support_on, p_on, gal_on } from '../../core/vars.js';
 import { payCosts, dirt_adjust } from '../core/action_costs.js';
-import { drawCity } from '../challenge/challenge_rules.js';
 import { wardenLabel } from '../core/structure_ui.js';
 import { powerOnNewStruct } from '../evolution/planet_setup.js';
 import { incrementStruct, piracy } from '../../space/space_requirements.js';
 import { isStargateOn } from '../../space/terraform_lab.js';
-import { races, traits } from '../../core/registries.js';
-import { planetTraits } from '../../races/races.js';
+import { races, traits, hooks } from '../../core/registries.js';
+import { planetTraits } from '../../races/planet_data.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { costMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod, powerModifier } from '../../functions/power_modifiers.js';
 import { shrineBonusActive, getShrineBonus, flib } from '../../functions/run_stats_helpers.js';
-import { workerScale } from '../../civics/jobs/job_definitions.js';
+import { workerScale } from '../../civics/jobs/worker_scale.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { faithTempleCount } from '../../resources/aether_alchemy.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
@@ -178,7 +177,7 @@ export const actions_cityPart4 = {
                         global.city['banquet'].on = 1;
                     }
                     global.city['banquet'].count = 1; //banquet hall can be powered on once at most
-                    drawCity();
+                    hooks.drawCity();
                     return true;
                 }
                 return false;

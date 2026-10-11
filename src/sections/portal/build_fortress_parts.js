@@ -3,10 +3,11 @@ import { clearElement, vBind } from '../../functions/dom_helpers.js';
 import { timeFormat } from '../../functions/time_format.js';
 import { popover } from '../../functions/popover.js';
 import { loc } from '../../core/locale.js';
-import { fortressData, soulForgeSoldiers, fortressDefenseRating } from '../../portal/hell/fortress_defense.js';
+import { fortressData, fortressDefenseRating } from '../../portal/hell/fortress_data.js';
+import { soulForgeSoldiers } from '../../portal/hell/soul_forge.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { mercCost } from '../../civics/military/government_operations.js';
-import { garrisonSize } from '../../civics/military/army_rating.js';
+import { mercCost } from '../../civics/military/merc_cost.js';
+import { garrisonSize } from '../../civics/military/garrison.js';
 import { drawHellObservations } from '../../portal/mech/mech_analysis.js';
 
 // Bagian dari buildFortress (fortress_defense.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.

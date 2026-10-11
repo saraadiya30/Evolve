@@ -4,7 +4,7 @@ import { messageQueue } from '../functions/message_log.js';
 import { resource_values } from '../config/constants.js';
 import { aetherFormat } from '../resources/aether_alchemy.js';
 import { LOT_BONUS, productionLots, LEVEL_STEP, newStock, upgradeStock, stepMarket, settleAllOrders, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT } from './stocks_core.js';
-import { drawStocks_s1, drawStocks_s2, drawStocks_s3 } from '../sections/drawing/draw_stocks_parts.js';
+import { hooks } from '../core/registries.js';
 
 export const LEVEL_STEP_DISPLAY = LEVEL_STEP.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
 
@@ -270,7 +270,7 @@ export function suggestPrice(st, type){
 
 export function drawStocks(){
     const $ctx = {};
-    drawStocks_s1($ctx);
-        drawStocks_s2($ctx);
-        drawStocks_s3($ctx);
+    hooks.drawStocks_s1($ctx);
+        hooks.drawStocks_s2($ctx);
+        hooks.drawStocks_s3($ctx);
 }

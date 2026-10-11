@@ -2,7 +2,7 @@ import { global, sizeApproximation } from '../../core/vars.js';
 import { loc } from '../../core/locale.js';
 import { vBind, clearElement } from '../../functions/dom_helpers.js';
 import { traits } from '../../core/registries.js';
-import { newGraph, drawGraph } from '../../portal/mech/mech_analysis.js';
+import { newGraph, drawGraph } from '../../portal/mech/hell_graphs.js';
 
 // Bagian dari drawHellAnalysis (mech_analysis.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
 

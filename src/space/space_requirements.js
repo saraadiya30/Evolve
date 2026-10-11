@@ -5,13 +5,13 @@ import { clearElement, vBind } from '../functions/dom_helpers.js';
 import { popover } from '../functions/popover.js';
 import { global, p_on, gal_on } from '../core/vars.js';
 import { loc } from '../core/locale.js';
-import { galaxyProjects, spaceProjects, interstellarProjects } from '../core/registries.js';
+import { galaxyProjects, spaceProjects, interstellarProjects, hooks } from '../core/registries.js';
 import { traits, races } from '../core/registries.js';
 import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL } from '../config/constants.js';
-import { syndicate } from '../truepath/ship_orbits.js';
-import { setAction } from '../actions/core/action_runner.js';
+import { syndicate } from '../truepath/orbit_math.js';
 import { gatewayArmada, structDefinitions } from './space.js';
-import { armada } from './planet_generation.js';
+import { armada } from './armada.js';
+import { checkRequirements } from './check_requirements.js';
 
 // Fungsi-fungsi dipindah dari space.js (urutan sumber dipertahankan). space.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -225,33 +225,6 @@ export function checkSpaceRequirements(era,region,action){
     }
 }
 
-export function checkRequirements(action_set,region,action){
-    let path = global.race['truepath'] ? 'truepath' : 'standard';
-    if (action_set[region][action].hasOwnProperty('path') && !action_set[region][action].path.includes(path)){
-        return false;
-    }
-    let isMet = true;
-    Object.keys(action_set[region][action].reqs).forEach(function (req){
-        if (!global.tech[req] || global.tech[req] < action_set[region][action].reqs[req]){
-            isMet = false;
-        }
-    });
-    if (isMet && action_set[region][action].hasOwnProperty('condition') && !action_set[region][action].condition()){
-        isMet = false;
-    }
-    if (isMet && action_set[region][action].hasOwnProperty('not_trait')){
-        for (let trait of action_set[region][action].not_trait){
-            if (global.race[trait]){
-                isMet = false;
-            }
-        }
-    }
-    if (isMet && action_set[region][action].grant && (global.tech[action_set[region][action].grant[0]] && global.tech[action_set[region][action].grant[0]] >= action_set[region][action].grant[1])){
-        isMet = false;
-    }
-    return isMet;
-}
-
 export function renderSpace(){
     if (!global.settings.tabLoad && global.settings.civTabs !== 1){
         return;
@@ -378,7 +351,7 @@ function space(zone){
             Object.keys(spaceProjects[region]).forEach(function (tech){
                 if (tech !== 'info' && checkRequirements(spaceProjects,region,tech)){
                     let c_action = spaceProjects[region][tech];
-                    setAction(c_action,zone === 'inner' ? 'space' : 'outerSol',tech);
+                    hooks.setAction(c_action,zone === 'inner' ? 'space' : 'outerSol',tech);
                 }
             });
         }
@@ -429,7 +402,7 @@ export function deepSpace(){
             Object.keys(interstellarProjects[region]).forEach(function (tech){
                 if (tech !== 'info' && checkRequirements(interstellarProjects,region,tech)){
                     let c_action = interstellarProjects[region][tech];
-                    setAction(c_action,'interstellar',tech);
+                    hooks.setAction(c_action,'interstellar',tech);
                 }
             });
         }
@@ -577,7 +550,7 @@ export function galaxySpace(){
             Object.keys(galaxyProjects[region]).forEach(function (tech){
                 if (tech !== 'info' && checkRequirements(galaxyProjects,region,tech)){
                     let c_action = galaxyProjects[region][tech];
-                    setAction(c_action,'galaxy',tech);
+                    hooks.setAction(c_action,'galaxy',tech);
                 }
             });
         }

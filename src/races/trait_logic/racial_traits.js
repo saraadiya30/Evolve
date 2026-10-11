@@ -1,9 +1,8 @@
 // Isi: setJType(), customRace(), racialTrait(), servantTrait(), randomMinorTrait(), checkPurgatory(), checkAltPurgatory(), setPurgatory(), getPurgatory(), purgeLumber(), releaseResource(), adjustFood(), traitCostMod()
-import { races, traits } from '../../core/registries.js';
+import { races, traits, hooks } from '../../core/registries.js';
 import { global, active_rituals, seededRandom, power_generated } from '../../core/vars.js';
-import { govActive } from '../../governor/governor.js';
-import { govEffect } from '../../civics/civics.js';
-import { armyRating } from '../../civics/military/army_rating.js';
+import { govActive } from '../../governor/gov_active.js';
+import { govEffect } from '../../civics/gov_effect.js';
 import { OCULAR_POWER_TELEKINESIS_BASE } from '../../config/constants.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { loadFoundry } from '../../civics/jobs/foundry_panel.js';
@@ -11,11 +10,11 @@ import { teamster } from '../../resources/prod.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { removeFromQueue, removeFromRQueue } from '../../functions/queues.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
-import { checkTechQualifications } from '../../actions/challenge/challenge_rules.js';
+import { checkTechQualifications } from '../../actions/challenge/tech_qualifications.js';
 import { actions } from '../../core/registries.js';
 import { loc } from '../../core/locale.js';
 import { setResourceName } from '../../resources/special_resources.js';
-import { planetTraits, biomes } from '../races.js';
+import { planetTraits, biomes } from '../planet_data.js';
 import { fathomCheck } from './fathom_check.js';
 
 // Fungsi-fungsi dipindah dari races.js (urutan sumber dipertahankan). races.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
@@ -297,7 +296,7 @@ export function racialTrait(workers,type){
     }
     if ((global.race['living_tool'] || global.race['tusk']) && type === 'miner'){
         const balance = global.race['hivemind'] ? traits.hivemind.vars()[0] : 1;
-        let tusk = global.race['tusk'] ? 1 + ((traits.tusk.vars()[0] / 100) * (armyRating(jobScale(balance),'army',0) / balance / 100)) : 1;
+        let tusk = global.race['tusk'] ? 1 + ((traits.tusk.vars()[0] / 100) * (hooks.armyRating(jobScale(balance),'army',0) / balance / 100)) : 1;
         let lt = global.race['living_tool'] ? 1 + traits.living_tool.vars()[0] * (global.tech['science'] && global.tech.science > 0 ? global.tech.science * 0.12 : 0) : 1;
         modifier *= lt > tusk ? lt : tusk;
     }

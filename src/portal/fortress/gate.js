@@ -8,11 +8,10 @@ import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { incrementStruct } from '../../space/space_requirements.js';
-import { traits } from '../../core/registries.js';
+import { traits, hooks } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { production } from '../../resources/prod.js';
 import { fortressModules } from '../../core/registries.js';
-import { hellSupression } from '../mech/hellguard.js';
 import { towerSize } from '../portal.js';
 import { towerPrice, renderFortress } from '../hell/fortress_defense.js';
 
@@ -31,7 +30,7 @@ export const fortressModules_prtl_gate = {
                 return desc;
             },
             filter(v,type){
-                let sup = hellSupression('gate');
+                let sup = hooks.hellSupression('gate');
                 switch (type){
                     case 'army':
                         return Math.round(sup.rating);

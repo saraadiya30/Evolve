@@ -4,7 +4,7 @@ import { loc } from '../../core/locale.js';
 import { orbitLength } from '../../races/trait_logic/trait_ranks.js';
 import { clearElement, vBind } from '../../functions/dom_helpers.js';
 import { popover } from '../../functions/popover.js';
-import { jobName } from '../../civics/jobs/job_definitions.js';
+import { jobName } from '../../civics/jobs/job_name.js';
 import { unlockAchieve } from '../../achievements/achievement_logic.js';
 
 // Fungsi-fungsi dipindah dari portal.js (urutan sumber dipertahankan). portal.js tetap mengekspor ulang nama yang tadinya ter-ekspor.

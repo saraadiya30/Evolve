@@ -1,12 +1,11 @@
 import { global, p_on } from '../../core/vars.js';
-import { biomes } from '../../races/races.js';
-import { traits } from '../../core/registries.js';
+import { biomes } from '../../races/planet_data.js';
+import { traits, hooks } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
-import { govActive } from '../../governor/governor.js';
-import { govRelationFactor } from '../../civics/military/government_definitions.js';
+import { govActive } from '../../governor/gov_active.js';
+import { govRelationFactor } from '../../civics/military/gov_calc.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { hellSupression } from '../../portal/mech/hellguard.js';
 import { flib } from '../../functions/run_stats_helpers.js';
 
 // Bagian dari production (prod.js): satu switch raksasa dipecah per kelompok case (tiap case berakhir dengan return).
@@ -222,7 +221,7 @@ export function production_p1(id, val, wiki){
         }
         case 'infernite_mine':
         {
-            let sup = hellSupression('gate', 0, wiki);
+            let sup = hooks.hellSupression('gate', 0, wiki);
             return 0.5 * sup.supress;
         }
         case 'water_freighter':

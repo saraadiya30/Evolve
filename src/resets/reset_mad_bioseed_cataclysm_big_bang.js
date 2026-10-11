@@ -4,7 +4,7 @@ import { calcPrestige } from '../functions/prestige_calc.js';
 import { updateResetStats } from '../functions/run_stats_helpers.js';
 import { unlockAchieve, unlockFeat, checkAchievements } from '../achievements/achievement_logic.js';
 import { races } from '../core/registries.js';
-import { planetTraits } from '../races/races.js';
+import { planetTraits } from '../races/planet_data.js';
 import { grandDeathTour } from './reset_extras.js';
 import { resetCommon } from './reset_terraform_ai_matrix_retirement_eden.js';
 

@@ -1,24 +1,22 @@
 // Isi: lootModify(), weaponTechModifer(), soldierDeath(), armyRating(), garrisonSize(), defineMad()
-import { global, p_on } from '../../core/vars.js';
+import { global } from '../../core/vars.js';
 import { jobScale } from '../jobs/job_scale.js';
 import { traits } from '../../core/registries.js';
-import { biomes, planetTraits } from '../../races/races.js';
+import { biomes, planetTraits } from '../../races/planet_data.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
-import { blubberFill } from '../../races/powers/psychic_powers.js';
 import { racialTrait } from '../../races/trait_logic/racial_traits.js';
 import { darkEffect } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { popover } from '../../functions/popover.js';
 import { calcPrestige } from '../../functions/prestige_calc.js';
-import { templeCount } from '../../actions/core/action_costs.js';
+import { templeCount } from '../../functions/temple_count.js';
 import { astrologySign, astroVal } from '../../functions/astrology.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { OCULAR_POWER_DISINTEGRATION_BASE, OCULAR_POWER_WOUND_BASE } from '../../config/constants.js';
-import { soulForgeSoldiers } from '../../portal/hell/fortress_defense.js';
 import { loc } from '../../core/locale.js';
 import { warhead } from '../../resets/reset_mad_bioseed_cataclysm_big_bang.js';
-import { govEffect } from '../civics.js';
-import { looters } from './war_campaign.js';
+import { govEffect } from '../gov_effect.js';
+import { looters } from './war_calc.js';
 
 // Fungsi-fungsi dipindah dari civics.js (urutan sumber dipertahankan). civics.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -81,16 +79,6 @@ export function weaponTechModifer(){
         weapon_tech += global.tech.military >= 11 ? 2 : 1;
     }
     return weapon_tech;
-}
-
-export function soldierDeath(v){
-    let killed = v;
-    if (killed > global.civic.garrison.workers){
-        killed = global.civic.garrison.workers;
-    }
-    global.civic.garrison.workers -= killed;
-    global.stats.died += killed;
-    blubberFill(killed);
 }
 
 export function armyRating(val,type,wound,analysis){
@@ -342,22 +330,6 @@ export function armyRating(val,type,wound,analysis){
     if (analysis){ return data; }
     if (army <= 0 && val > 0){ army = 0.01; }
     return army;
-}
-
-export function garrisonSize(max, args = {}){
-    if (!global.civic.garrison){
-        return 0;
-    }
-    let type = max ? 'max' : 'workers';
-    let fortress = global.portal['fortress'] ? global.portal.fortress.garrison : 0;
-    let fob = global.space['fob'] && !args['nofob'] ? global.space.fob.troops : 0;
-    let pillbox = global.eden['pillbox'] && !args['nopill'] ? global.eden.pillbox.staffed : 0;
-    let troops = global.civic.garrison[type] - global.civic.garrison.crew - fortress - fob - pillbox;
-    if (global.race['warlord'] && p_on['soul_forge'] && !args['no_forge']){
-        let forge = soulForgeSoldiers();
-        if (troops >= forge){ troops -= forge; }
-    }
-    return troops;
 }
 
 export function defineMad(){

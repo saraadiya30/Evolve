@@ -1,7 +1,7 @@
 import { checkBigAchievement, checkBigAchievementUniverse, unlockAchieve, unlockFeat } from '../../achievements/achievement_logic.js';
 import { alevel } from '../../achievements/achievement_helpers.js';
 import { universeAffix } from '../../functions/universe_utils.js';
-import { achievements } from '../../achievements/achieve.js';
+import { achievements } from '../../core/registries.js';
 import { global } from '../../core/vars.js';
 import { piracy } from '../../space/space_requirements.js';
 import { eventActive } from '../../functions/event_dates.js';

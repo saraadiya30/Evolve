@@ -1,9 +1,9 @@
 import { global, seededRandom, tmp_vars, save, webWorker } from '../../core/vars.js';
 import { simulation, cataclysm, aiStart } from '../../actions/evolution/simulation_ai.js';
 import { setJType, randomMinorTrait } from '../../races/trait_logic/racial_traits.js';
-import { races, traits } from '../../core/registries.js';
+import { races, traits, hooks } from '../../core/registries.js';
 import { setTraitRank, combineTraits, renderSupernatural, basicRace } from '../../races/trait_logic/trait_ranks.js';
-import { neg_roll_traits } from '../../races/races.js';
+import { neg_roll_traits } from '../../races/planet_data.js';
 import { genus_def } from '../../races/genus_def.js';
 import { setImitation, shapeShift } from '../../races/trait_logic/trait_changes.js';
 import { altRace } from '../../races/race_helpers.js';
@@ -14,16 +14,16 @@ import { messageQueue } from '../../functions/message_log.js';
 import { clearPopper, popover } from '../../functions/popover.js';
 import { calcGenomeScore, flib } from '../../functions/run_stats_helpers.js';
 import { eventActive, getHalloween } from '../../functions/event_dates.js';
-import { calcPillar, calc_mastery } from '../../functions/functions.js';
+import { calcPillar } from '../../functions/functions.js';
+import { calc_mastery } from '../../functions/calc_mastery.js';
 import { actions } from '../../core/registries.js';
 import { checkAdept } from '../../achievements/achievement_logic.js';
 import { alevel } from '../../achievements/achievement_helpers.js';
 import { loc } from '../../core/locale.js';
-import { defineResources, initResourceTabs, tradeSummery } from '../../resources/resource_tabs.js';
 import { containerItem } from '../../resources/crate_assignment.js';
 import { marketItem } from '../../resources/special_resources.js';
 import { resource_values } from '../../config/constants.js';
-import { registerTech, drawCity } from '../../actions/challenge/challenge_rules.js';
+import { registerTech } from '../../actions/challenge/challenge_rules.js';
 import { addAction } from '../../actions/core/action_runner.js';
 import { universe_affixes } from '../../functions/universe_utils.js';
 import { defineJobs } from '../../civics/jobs/job_definitions.js';
@@ -32,7 +32,6 @@ import { buildGarrison } from '../../civics/military/government_operations.js';
 import { loneSurvivor } from '../../truepath/lone_survivor.js';
 import { warlordSetup } from '../../portal/hell/warlord_setup.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
-import { arpa } from '../../arpa/arpa_projects.js';
 import { loadTab } from '../../core/index.js';
 
 // Part of sentience stage, mechanically split: shared variables across parts are in $ctx.
@@ -262,7 +261,7 @@ export function sentience_s1($ctx){
     }
 
     clearElement($('#resources'));
-    defineResources();
+    hooks.defineResources();
     if (!global.race['kindling_kindred'] && !global.race['smoldering']){
         global.resource.Lumber.display = true;
     }
@@ -617,15 +616,15 @@ export function sentience_s2($ctx){
     }
 
     if (global.settings.tabLoad){
-        drawCity();
+        hooks.drawCity();
         clearElement($(`#r_civics`));
         defineGovernment();
         defineGarrison();
         buildGarrison($('#c_garrison'),false);
         foreignGov();
         defineIndustry();
-        initResourceTabs('market');
-        initResourceTabs('storage');
+        hooks.initResourceTabs('market');
+        hooks.initResourceTabs('storage');
 
         if (tmp_vars.hasOwnProperty('resource')){
             Object.keys(tmp_vars.resource).forEach(function(name){
@@ -644,11 +643,11 @@ export function sentience_s2($ctx){
                 }
             });
         }
-        tradeSummery();
+        hooks.tradeSummery();
 
-        arpa('Genetics');
-        arpa('Crispr');
-        arpa('Blood');
+        hooks.arpa('Genetics');
+        hooks.arpa('Crispr');
+        hooks.arpa('Blood');
     }
     else {
         loadTab('mTabCivil');

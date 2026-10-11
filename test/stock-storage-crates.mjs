@@ -21,7 +21,7 @@ R.crates = 10; R.containers = 10; G.settings.aetherStorage = 0;
 const run = (lots) => { G.stocks.market[res].lots = lots; G.stocks.market[res].storeLots = lots; for (let i = 0; i < 40; i++) execGameLoops(1); return R.max; };
 const m0 = run(0), m100 = run(100);
 // kapasitas dari crates+containers = m0 - base; base tidak diketahui langsung, jadi dari breakdown: ambil nilai crates/containers
-const { crateValue, containerValue } = await import('../src/resources/resources.js');
+const { crateValue, containerValue } = await import('../src/resources/crate_value.js');
 const extra = 10 * crateValue() + 10 * containerValue();
 const base = m0 - extra;
 const expect = base * 2 + extra;                // +100 lot = +100% pada base saja

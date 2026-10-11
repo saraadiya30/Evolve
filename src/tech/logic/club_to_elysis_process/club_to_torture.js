@@ -2,9 +2,8 @@ import { loc } from '../../../core/locale.js';
 import { global } from '../../../core/vars.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct, housingLabel } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { messageQueue } from '../../../functions/message_log.js';
-import { drawResourceTab } from '../../../resources/resource_tabs.js';
 
 // Bagian dari techsPart1 (24 entri: club .. torture), dipisah dari group_loader.js. Urutan entri sama persis.
 export const techsPart1Part1 = {
@@ -104,7 +103,7 @@ export const techsPart1Part1 = {
         },
         post(){
             if (global.race['banana'] && !global.race['terrifying']){
-                drawResourceTab('market');
+                hooks.drawResourceTab('market');
             }
         }
     },

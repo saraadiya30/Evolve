@@ -13,7 +13,7 @@ seedMathRandom(12345); setFixedNow(1735689600000);
 global.localStorage.setItem('evolved', JSON.parse(readFileSync(join(__dirname, 'fixtures', fx + '.json'), 'utf8')).save);
 const { global: G, tmp_vars, atrack } = await import('../src/core/vars.js');
 const { execGameLoops } = await import('../src/main.js');
-const { modRes } = await import('../src/functions/functions.js');
+const { modRes } = await import('../src/functions/resource_mod.js');
 const { stockFlags } = await import('../src/stocks/stocks_core.js');
 seedMathRandom(12345); setFixedNow(1735689600000);
 execGameLoops(5);
@@ -33,7 +33,7 @@ function run(label, call, expect){
 run('produksi biasa, bonus 100%', () => modRes(res, 10), 20);
 run('trade route (noStockBonus)  ', () => modRes(res, 10, false, true), 10);
 
-const src = readFileSync(join(__dirname, '..', 'src/loops/fast/fast_loop_unlocks_weather.js'), 'utf8');
+const src = readFileSync(join(__dirname, '..', 'src/loops/fast/fast_loop_trade.js'), 'utf8');
 const imp = /modRes\(res,routes \* \$ctx\.time_multiplier \* rate, false, true\);/.test(src);
 const exp = /modRes\('Money', -\(price \* \$ctx\.time_multiplier\), false, true\);/.test(src);
 console.log(`blok trade route mengirim flag: impor=${imp} ekspor=${exp}`);

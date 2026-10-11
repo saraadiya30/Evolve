@@ -2,7 +2,7 @@ import { clearSavedMessages, global, seededRandom, save, webWorker, clearStates 
 import { tagEvent } from '../functions/analytics.js';
 import { calcPrestige } from '../functions/prestige_calc.js';
 import { updateResetStats } from '../functions/run_stats_helpers.js';
-import { planetTraits } from '../races/races.js';
+import { planetTraits } from '../races/planet_data.js';
 import { races } from '../core/registries.js';
 import { unlockAchieve, checkAchievements, unlockFeat } from '../achievements/achievement_logic.js';
 import { grandDeathTour, trackWomling } from './reset_extras.js';

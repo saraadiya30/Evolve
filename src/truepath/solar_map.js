@@ -1,9 +1,9 @@
 import { global } from '../core/vars.js';
-import { actions } from '../core/registries.js';
-import { spacePlanetStats } from './truepath.js';
-import { genXYcoord, syndicate } from './ship_orbits.js';
-import { xShift, xPosition } from './lone_survivor.js';
+import { actions} from  '../core/registries.js';
+import { genXYcoord, syndicate } from './orbit_math.js';
+import { xShift, xPosition } from './orbit_math.js';
 import { S_truepath as S } from '../core/registries.js';
+import { spacePlanetStats } from './truepath_data.js';
 
 // Fungsi-fungsi dipindah dari truepath.js (urutan sumber dipertahankan). truepath.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 

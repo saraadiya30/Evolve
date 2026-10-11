@@ -12,6 +12,10 @@ export const genePool = {};
 export const events = {};
 
 export const gov_tasks = {};
+export const gov_traits = {};
+
+export const arpaProjects = {};
+export const bloodPool = {};
 
 export const edenElysium = {};
 export const edenAsphodel = {};
@@ -43,3 +47,9 @@ export const techsPart8 = {};
 export const S_functions = {};
 export const S_loops = {};
 export const S_truepath = {};
+
+export const achievements = {};
+
+// Fungsi lintas-lapisan yang dipanggil lapisan bawah lewat hooks.nama(), diisi registerHooks() (registrations.js).
+// Dipakai supaya lapisan bawah tidak meng-import implementasinya (itu yang membuat circular import).
+export const hooks = {};

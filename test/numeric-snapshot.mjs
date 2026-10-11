@@ -16,7 +16,7 @@ const UPDATE = process.argv.includes('--update');
 
 await import('../src/main.js'); // urutan load normal dulu (ada circular import)
 const eden = await import('../src/edenic/edenic.js');
-const ship = await import('../src/truepath/truepath.js');
+const ship = { ...(await import('../src/truepath/ship_stats.js')), ...(await import('../src/truepath/ship_desc.js')) };
 const { global, p_on } = await import('../src/core/vars.js');
 
 const prng = (seed) => {

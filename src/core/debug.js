@@ -2,17 +2,16 @@ import { global, breakdown } from './vars.js';
 import { deepClone } from './object_utils.js';
 import { adjustCosts } from '../functions/cost_adjusters.js';
 import { messageQueue } from '../functions/message_log.js';
-import { races, traits } from './registries.js';
-import { craftCost } from '../resources/resource_tabs.js';
-import { atomic_mass } from '../resources/resources.js';
+import { races, traits, hooks } from './registries.js';
+import { craftCost } from '../resources/craft_cost.js';
+import { atomic_mass } from '../resources/atomic_mass.js';
 import { tradeBuyPrice, tradeSellPrice } from '../resources/crate_assignment.js';
 import { tradeRatio } from '../config/constants.js';
 import { actions } from './registries.js';
 import { checkAffordable } from '../actions/core/action_costs.js';
 import { fuel_adjust, int_fuel_adjust } from '../space/planet_generation.js';
-import { shipCosts } from '../truepath/tau_ceti_shipyard.js';
+import { shipCosts } from '../truepath/ship_desc.js';
 import { f_rate } from '../industry/industry.js';
-import { armyRating } from '../civics/military/army_rating.js';
 import { alevel } from '../achievements/achievement_helpers.js';
 import { loc } from './locale.js';
 
@@ -28,7 +27,7 @@ export function enableDebug(){
             f_rate: deepClone(f_rate),
             checkAffordable: deepClone(checkAffordable),
             adjustCosts: deepClone(adjustCosts),
-            armyRating: deepClone(armyRating),
+            armyRating: deepClone(hooks.armyRating),
             tradeBuyPrice: deepClone(tradeBuyPrice),
             tradeSellPrice: deepClone(tradeSellPrice),
             fuel_adjust: deepClone(fuel_adjust),

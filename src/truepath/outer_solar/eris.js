@@ -3,14 +3,15 @@ import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { messageQueue } from '../../functions/message_log.js';
-import { armyRating } from '../../civics/military/army_rating.js';
 import { production } from '../../resources/prod.js';
 import { payCosts } from '../../actions/core/action_costs.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
-import { fuel_adjust, planetName } from '../../space/planet_generation.js';
+import { fuel_adjust } from '../../space/planet_generation.js';
+import { planetName } from '../../space/planet_name.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { loc } from '../../core/locale.js';
-import { syndicate } from '../ship_orbits.js';
+import { syndicate } from '../orbit_math.js';
+import { hooks } from '../../core/registries.js';
 
 // Region 'spc_eris' dari outerTruth (dipisah dari truepath.js). Isi/urutan entri sama persis; digabung via core/registries.js di truepath.js.
 export const outerEris = {
@@ -116,7 +117,7 @@ export const outerEris = {
                 Elerium(offset){ return spaceCostMultiplier('shock_trooper', offset, 350, 1.225); },
             },
             effect(){
-                let rating = Math.round(armyRating(1,'army',0) * syndicate('spc_eris'));
+                let rating = Math.round(hooks.armyRating(1,'army',0) * syndicate('spc_eris'));
                 let desc = `<div class="has-text-caution">${loc('space_used_support',[planetName().eris])}</div>`;
                 if (global.space['digsite'] && global.space.digsite.count === 100){
                     desc = `<div>${loc(`space_lander_effect3`,[production('shock_trooper'),global.resource.Cipher.name])}</div>`;

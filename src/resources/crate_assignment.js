@@ -1,6 +1,6 @@
 // Contains: galacticTrade(), unassignCrate(), assignCrate(), unassignContainer(), assignContainer(), containerItem(), tradeSellPrice(), tradeBuyPrice(), craftingPopover(), breakdownPopover()
 import { clearElement, vBind } from '../functions/dom_helpers.js';
-import { calc_mastery } from '../functions/functions.js';
+import { calc_mastery } from '../functions/calc_mastery.js';
 import { popover } from '../functions/popover.js';
 import { trickOrTreat, easterEgg } from '../functions/icons_easter_eggs.js';
 import { global, keyMultiplier, breakdown, sizeApproximation } from '../core/vars.js';
@@ -10,8 +10,8 @@ import { fathomCheck } from '../races/trait_logic/fathom_check.js';
 import { production } from './prod.js';
 import { craftingRatio } from './resources.js';
 import { tradeRatio } from '../config/constants.js';
-import { galaxyOffers } from './special_resources.js';
-import { crateValue, containerValue } from './market_storage.js';
+import { galaxyOffers } from './galaxy_offers.js';
+import { crateValue, containerValue } from './crate_value.js';
 
 // Functions extracted from resources.js (source order preserved). resources.js still re-exports the previously exported names.
 

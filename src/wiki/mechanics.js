@@ -8,15 +8,15 @@ import { svgIcons, svgViewBox } from '../functions/icons_easter_eggs.js';
 import { calcGenomeScore } from '../functions/run_stats_helpers.js';
 import { job_desc } from '../civics/jobs.js';
 import { races, traits } from '../core/registries.js';
-import { planetTraits } from '../races/races.js';
-import { atomic_mass } from '../resources/resources.js';
+import { planetTraits } from '../races/planet_data.js';
+import { atomic_mass } from '../resources/atomic_mass.js';
 import { universe_types } from '../space/space.js';
 import { swissKnife } from '../core/swiss_knife.js';
 import { actions } from '../core/registries.js';
 import { structName } from '../actions/core/structure_ui.js';
 import { astroVal, astrologySign } from '../functions/astrology.js';
-import { shipAttackPower, shipCrewSize, shipPower } from '../truepath/tau_ceti_shipyard.js';
-import { sensorRange } from '../truepath/ship_orbits.js';
+import { shipAttackPower, shipCrewSize, shipPower } from '../truepath/ship_stats.js';
+import { sensorRange } from '../truepath/orbit_math.js';
 import { sideMenu, infoBoxBuilder, createRevealSection, createCalcSection, getSolarName } from './functions.js';
 
 export function mechanicsPage(content){

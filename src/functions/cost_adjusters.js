@@ -1,7 +1,7 @@
 import { global } from '../core/vars.js';
-import { govEffect } from '../civics/civics.js';
+import { govEffect } from '../civics/gov_effect.js';
 import { traits } from '../core/registries.js';
-import { govActive } from '../governor/governor.js';
+import { govActive } from '../governor/gov_active.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
 
 // Fungsi-fungsi dipindah dari functions.js (urutan sumber dipertahankan). functions.js tetap mengekspor ulang nama yang tadinya ter-ekspor.

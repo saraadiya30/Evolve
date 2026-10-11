@@ -6,7 +6,7 @@ import { getEaster, getHalloween } from '../functions/event_dates.js';
 import { getTraitDesc } from '../functions/trait_description.js';
 import { races, traits } from '../core/registries.js';
 import { genus_def } from '../races/genus_def.js';
-import { traitSkin } from '../races/trait_logic/trait_ranks.js';
+import { traitSkin } from '../races/trait_logic/trait_skin.js';
 import { ascendLab } from '../space/ascend_lab.js';
 import { actions } from '../core/registries.js';
 import { sideMenu } from './functions.js';

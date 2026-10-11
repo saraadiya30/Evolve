@@ -1,173 +1,21 @@
 // Isi: armada(), house_adjust(), iron_adjust(), swarm_adjust(), fuel_adjust(), int_fuel_adjust(), zigguratBonus(), planetName(), genPlanets(), setUniverse()
-import { global, keyMultiplier, support_on, p_on } from '../core/vars.js';
+import { global, support_on, p_on } from '../core/vars.js';
 import { loc } from '../core/locale.js';
 import { get_qlevel } from '../functions/quantum_level.js';
 import { darkEffect } from '../functions/power_modifiers.js';
 import { vBind, clearElement } from '../functions/dom_helpers.js';
 import { popover, clearPopper } from '../functions/popover.js';
 import { eventActive } from '../functions/event_dates.js';
-import { garrisonSize } from '../civics/military/army_rating.js';
-import { describeSoldier } from '../civics/military/war_campaign.js';
-import { galaxyProjects } from '../core/registries.js';
-import { actionDesc, templeCount } from '../actions/core/action_costs.js';
+import { templeCount } from '../functions/temple_count.js';
 import { setPlanet } from '../actions/evolution/planet_setup.js';
-import { planetTraits, genusVars } from '../races/races.js';
-import { traits, races } from '../core/registries.js';
+import { planetTraits } from '../races/planet_data.js';
+import { traits } from '../core/registries.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
 import { universeAffix } from '../functions/universe_utils.js';
-import { gatewayArmada, universe_types } from './space.js';
+import { universe_types } from './space.js';
 
 // Fungsi-fungsi dipindah dari space.js (urutan sumber dipertahankan). space.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
-
-export function armada(parent,id){
-    if (global.tech['piracy'] && !global.race['truepath']){
-
-        let header = $(`<div id="h${id}" class="armHead"><h3 class="has-text-warning">${loc('galaxy_armada')}</h3></div>`);
-        parent.append(header);
-
-        let soldier_title = global.tech['world_control'] ? loc('civics_garrison_peacekeepers') : loc('civics_garrison_soldiers');
-        header.append($(`<span>|</span>`));
-        header.append($(`<span class="has-text-caution"><span class="soldier">${soldier_title}</span> <span>{{ g.workers | stationed }} / {{ g.max | s_max }}</span></span>`));
-        header.append($(`<span>|</span>`));
-        header.append($(`<span class="has-text-caution"><span class="crew1">${loc('job_crew_mil')}</span> <span>{{ g.crew }}</span></span>`));
-        header.append($(`<span>|</span>`));
-        header.append($(`<span class="has-text-success"><span class="crew2">${loc('job_crew_civ')}</span> <span>{{ c.workers }} / {{ c.max }}</span></span>`));
-
-        vBind({
-            el: `#h${id}`,
-            data: {
-                g: global.civic.garrison,
-                c: global.civic.crew,
-            },
-            filters: {
-                stationed(v){
-                    return garrisonSize();
-                },
-                s_max(v){
-                    return garrisonSize(true);
-                }
-            }
-        });
-
-        ['soldier','crew1','crew2'].forEach(function(k){
-            popover(`h${id}${k}`, function(){
-                    switch(k){
-                        case 'soldier':
-                            return describeSoldier();
-                        case 'crew1':
-                            return loc('civics_garrison_crew_desc');
-                        case 'crew2':
-                            return loc('job_crew_desc');
-                    }
-                },
-                {
-                    elm: `#h${id} span.${k}`
-                }
-            );
-        });
-
-        let fleet = $(`<div id="${id}" class="fleet"></div>`);
-        parent.append(fleet);
-
-        let cols = [];
-        // One column per ship type plus an extra column for labels
-        for (let i = 0; i < gatewayArmada.length + 1; i++){
-            let col = $(`<div class="area"></div>`);
-            cols.push(col);
-            fleet.append(col);
-        }
-
-        cols[0].append($(`<span></span>`));
-        cols[0].append($(`<span id="armadagateway" class="has-text-danger">${galaxyProjects.gxy_gateway.info.name}</span>`));
-
-        for (let i = 0; i < gatewayArmada.length; i++){
-            const ship = gatewayArmada[i];
-            if (global.galaxy.hasOwnProperty(ship)){
-                cols[i+1].append($(`<span id="armada${ship}" class="ship has-text-advanced">${galaxyProjects.gxy_gateway[ship].title}</span>`));
-                cols[i+1].append($(`<span class="ship">{{ gateway.${ship} }}</span>`));
-            }
-        }
-
-        Object.keys(global.galaxy.defense).forEach(function (area){
-            let r = area.substring(4);
-            if (global.settings.space[r] && r !== 'gateway'){
-
-                let region = $(`<span id="armada${r}" class="has-text-caution">${typeof galaxyProjects[area].info.name === 'string' ? galaxyProjects[area].info.name : galaxyProjects[area].info.name()}</span>`);
-                cols[0].append(region);
-
-                for (let i = 0; i < gatewayArmada.length; i++){
-                    const ship = gatewayArmada[i];
-                    if (global.galaxy.hasOwnProperty(ship)){
-                        let shipSpan = $(`<span class="ship"></span>`);
-                        let sub = $(`<span role="button" aria-label="remove ${ship}" class="sub has-text-danger" @click="sub('${area}','${ship}')"><span>&laquo;</span></span>`);
-                        let count = $(`<span class="current">{{ ${r}.${ship} }}</span>`);
-                        let add = $(`<span role="button" aria-label="add ${ship}" class="add has-text-success" @click="add('${area}','${ship}')"><span>&raquo;</span></span>`);
-                        cols[i+1].append(shipSpan);
-                        shipSpan.append(sub);
-                        shipSpan.append(count);
-                        shipSpan.append(add);
-                    }
-                }
-
-            }
-        });
-
-        vBind({
-            el: `#${id}`,
-            data: {
-                stargate: global.galaxy.defense.gxy_stargate,
-                gateway: global.galaxy.defense.gxy_gateway,
-                gorddon: global.galaxy.defense.gxy_gorddon,
-                alien1: global.galaxy.defense.gxy_alien1,
-                alien2: global.galaxy.defense.gxy_alien2,
-                chthonian: global.galaxy.defense.gxy_chthonian,
-                t: global.tech
-            },
-            methods: {
-                sub(area,ship){
-                    if (global.galaxy.defense[area][ship] > 0){
-                        let ship_change = keyMultiplier();
-                        if (ship_change > global.galaxy.defense[area][ship]) {
-                            ship_change = global.galaxy.defense[area][ship];
-                        }
-                        global.galaxy.defense.gxy_gateway[ship] += ship_change;
-                        global.galaxy.defense[area][ship] -= ship_change;
-                    }
-                },
-                add(area,ship){
-                    if (global.galaxy.defense.gxy_gateway[ship] > 0){
-                        let ship_change = keyMultiplier();
-                        if (ship_change > global.galaxy.defense.gxy_gateway[ship]) {
-                            ship_change = global.galaxy.defense.gxy_gateway[ship];
-                        }
-                        global.galaxy.defense.gxy_gateway[ship] -= ship_change;
-                        global.galaxy.defense[area][ship] += ship_change;
-                    }
-                }
-            }
-        });
-
-        Object.keys(global.galaxy.defense).forEach(function (area){
-            let r = area.substring(4);
-            if (global.settings.space[r]){
-                popover(`armada${r}`,function(){
-                    return `<div>${typeof galaxyProjects[area].info.desc === 'string' ? galaxyProjects[area].info.desc : galaxyProjects[area].info.desc()}</div>`;
-                });
-            }
-        });
-
-        for (let i = 0; i < gatewayArmada.length; i++){
-            const ship = gatewayArmada[i];
-            if (global.galaxy.hasOwnProperty(ship)){
-                popover(`armada${ship}`,function(obj){
-                    actionDesc(obj.popper, galaxyProjects.gxy_gateway[ship], global.galaxy[ship]);
-                    return undefined;
-                });
-            }
-        }
-    }
-}
 
 export function house_adjust(res){
     if (global.tech['space_housing']){
@@ -270,36 +118,6 @@ export function zigguratBonus(){
         bonus += (templeCount(true) * global.civic.colonist.workers * zig);
     }
     return bonus;
-}
-
-export function planetName(){
-    let type = races[global.race.species].type === 'hybrid' ? global.race.maintype : races[global.race.species].type;
-    let names = {
-        red: races[global.race.species].solar.red,
-        hell: races[global.race.species].solar.hell,
-        gas: races[global.race.species].solar.gas,
-        gas_moon: races[global.race.species].solar.gas_moon,
-        dwarf: races[global.race.species].solar.dwarf,
-        titan: genusVars[type].solar.titan,
-        enceladus: genusVars[type].solar.enceladus,
-        triton: genusVars[type].solar.triton,
-        eris: genusVars[type].solar.eris,
-    };
-    if (global.race.species === 'custom'){
-        for (let p of ['titan','enceladus','triton','eris']){
-            if (global.custom.race0.hasOwnProperty(p)){
-                names[p] = global.custom.race0[p];
-            }
-        }
-    }
-    if (global.race.species === 'hybrid'){
-        for (let p of ['titan','enceladus','triton','eris']){
-            if (global.custom.race1.hasOwnProperty(p)){
-                names[p] = global.custom.race1[p];
-            }
-        }
-    }
-    return names;
 }
 
 export function genPlanets(){

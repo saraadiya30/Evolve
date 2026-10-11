@@ -3,7 +3,7 @@ import { global, sizeApproximation, p_on } from '../../core/vars.js';
 import { shrineBonusActive, getShrineBonus } from '../../functions/run_stats_helpers.js';
 import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerModifier, powerCostMod } from '../../functions/power_modifiers.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { traits, races } from '../../core/registries.js';
 import { traitCostMod } from '../../races/trait_logic/racial_traits.js';
 import { absorbRace } from '../../actions/evolution/simulation_ai.js';
@@ -13,10 +13,10 @@ import { payCosts } from '../../actions/core/action_costs.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
 import { storageMultipler, casinoEffect } from '../../actions/challenge/challenge_rules.js';
 import { buildTemplate } from '../../actions/evolution/evolution_screen.js';
-import { garrisonSize } from '../../civics/military/army_rating.js';
+import { garrisonSize } from '../../civics/military/garrison.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { spatialReasoning } from '../../resources/resources.js';
-import { jobName } from '../../civics/jobs/job_definitions.js';
+import { jobName } from '../../civics/jobs/job_name.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { addSmelter, defineIndustry } from '../../industry/industry_smelter.js';
 import { production } from '../../resources/prod.js';
@@ -24,7 +24,8 @@ import { fortressModules } from '../../core/registries.js';
 import { checkSkillPointAssignments, rankDesc } from '../mech/hellguard.js';
 import { genSpireFloor } from '../mech/mechbay.js';
 import { checkWarlordAchieve } from '../hell/hell_reports.js';
-import { soulForgeSoldiers, renderFortress } from '../hell/fortress_defense.js';
+import { renderFortress } from '../hell/fortress_defense.js';
+import { soulForgeSoldiers } from '../hell/soul_forge.js';
 
 // Region 'prtl_wasteland' dari fortressModules (dipisah dari portal.js). Isi sama persis; digabung via core/registries.js di portal.js.
 export const fortressModules_prtl_wasteland = {

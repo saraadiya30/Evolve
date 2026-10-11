@@ -1,11 +1,10 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { messageQueue } from '../../../functions/message_log.js';
 import { global } from '../../../core/vars.js';
-import { planetName } from '../../../space/planet_generation.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
+import { planetName } from '../../../space/planet_name.js';
 
 // Bagian dari techsPart3 (21 entri: lake_threat .. breeder_reactor), dipisah dari group_loader.js. Urutan entri sama persis.
 export const techsPart3Part4 = {
@@ -276,7 +275,7 @@ export const techsPart3Part4 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     uranium_storage: {

@@ -1,29 +1,25 @@
 // Isi: cleanAddTrait(), cleanRemoveTrait(), setImitation(), shapeShift()
 import { global, power_generated, save, webWorker } from '../../core/vars.js';
-import { traits, races } from '../../core/registries.js';
+import { traits, races, hooks } from '../../core/registries.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
 import { setJobName } from '../../civics/jobs/job_definitions.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { setResourceName } from '../../resources/special_resources.js';
-import { drawResourceTab } from '../../resources/resource_tabs.js';
 import { gameLoop } from '../../functions/game_loop_timing.js';
 import { removeFromRQueue, removeFromQueue } from '../../functions/queues.js';
-import { calc_mastery } from '../../functions/functions.js';
+import { calc_mastery } from '../../functions/calc_mastery.js';
 import { clearElement, vBind } from '../../functions/dom_helpers.js';
 import { loc } from '../../core/locale.js';
-import { defineGovernor, removeTask } from '../../governor/governor.js';
+import { removeTask } from '../../governor/gov_utils.js';
 import { initStruct } from '../../actions/core/structure_ui.js';
 import { actions } from '../../core/registries.js';
-import { drawCity } from '../../actions/challenge/challenge_rules.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 import { buildGarrison } from '../../civics/military/government_operations.js';
 import { unlockAchieve } from '../../achievements/achievement_logic.js';
-import { arpa } from '../../arpa/arpa_projects.js';
 import { renderEdenic } from '../../edenic/edenic_render.js';
 import { genus_def } from '../genus_def.js';
 import { purgeLumber, releaseResource, adjustFood, setPurgatory, checkPurgatory } from './racial_traits.js';
 import { basicRace, renderSupernatural, combineTraits, setTraitRank } from './trait_ranks.js';
-import { renderPsychicPowers } from '../powers/power_panels.js';
 
 // Fungsi-fungsi dipindah dari races.js (urutan sumber dipertahankan). races.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -77,7 +73,7 @@ export function cleanAddTrait(trait){
                 global.city.surfaceDwellers.length = traits.unfathomable.vars()[0];
             }
             if (global.race['psychic']){
-                renderPsychicPowers();
+                hooks.renderPsychicPowers();
             }
             break;
         case 'flier':
@@ -137,7 +133,7 @@ export function cleanAddTrait(trait){
                     global.resource.Slave.display = true;
                 }
                 if (global.tech['slaves'] >= 2) {
-                    defineGovernor();
+                    hooks.defineGovernor();
                 }
             }
             break;
@@ -145,7 +141,7 @@ export function cleanAddTrait(trait){
             checkPurgatory('tech','sacrifice');
             if (global.tech['mining']) {
                 initStruct(actions.city.s_alter);
-                defineGovernor();
+                hooks.defineGovernor();
             }
             break;
         case 'magnificent':
@@ -173,7 +169,7 @@ export function cleanAddTrait(trait){
             removeTask('spy');
             removeTask('spyop');
             removeTask('combo_spy');
-            defineGovernor();
+            hooks.defineGovernor();
             break;
         case 'noble':
             if (global.civic.taxes.tax_rate < 10) {
@@ -198,7 +194,7 @@ export function cleanAddTrait(trait){
             if (!global.race.hasOwnProperty('shoecnt')){
                 global.race['shoecnt'] = 0;
             }
-            defineGovernor();
+            hooks.defineGovernor();
             break;
         case 'slow':
             save.setItem('evolved',LZString.compressToUTF16(JSON.stringify(global)));
@@ -356,7 +352,7 @@ export function cleanRemoveTrait(trait,rank){
         case 'unfathomable':
             adjustFood();
             if (global.race['psychic']){
-                renderPsychicPowers();
+                hooks.renderPsychicPowers();
             }
             break;
         case 'flier':
@@ -393,7 +389,7 @@ export function cleanRemoveTrait(trait,rank){
             if (global.tech['trade']){
                 global.settings.showMarket = true;
                 global.city.market.active = true;
-                drawResourceTab('market');
+                hooks.drawResourceTab('market');
             }
             break;
         case 'slaver':
@@ -405,7 +401,7 @@ export function cleanRemoveTrait(trait,rank){
             global.resource.Slave.max = 0;
             global.resource.Slave.display = false;
             removeTask('slave');
-            defineGovernor();
+            hooks.defineGovernor();
             break;
         case 'cannibalize':
             removeFromQueue(['city-s_alter']);
@@ -413,7 +409,7 @@ export function cleanRemoveTrait(trait,rank){
             setPurgatory('tech','sacrifice');
             delete global.city['s_alter'];
             removeTask('sacrifice');
-            defineGovernor();
+            hooks.defineGovernor();
             break;
         case 'magnificent':
             removeFromQueue(['city-shrine']);
@@ -428,7 +424,7 @@ export function cleanRemoveTrait(trait,rank){
             removeFromQueue(['city-horseshoe', 'space-horseshoe']);
             global.resource.Horseshoe.display = false;
             removeTask('horseshoe');
-            defineGovernor();
+            hooks.defineGovernor();
             break;
         case 'slow':
             save.setItem('evolved',LZString.compressToUTF16(JSON.stringify(global)));
@@ -660,8 +656,8 @@ export function shapeShift(genus,setup,forceClean){
     combineTraits();
     if(genus || !setup || forceClean){
         //redraws for mimic heat or avian removing buildings or techs
-        arpa('Genetics');
-        drawCity();
+        hooks.arpa('Genetics');
+        hooks.drawCity();
         renderEdenic();
         drawTech();
     }

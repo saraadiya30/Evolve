@@ -3,11 +3,11 @@ import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
 import { actions } from '../../../core/registries.js';
 import { global, save } from '../../../core/vars.js';
-import { planetName } from '../../../space/planet_generation.js';
+import { planetName } from '../../../space/planet_name.js';
 import { unlockAchieve } from '../../../achievements/achievement_logic.js';
 import { races } from '../../../core/registries.js';
 import { messageQueue } from '../../../functions/message_log.js';
-import { govTitle } from '../../../civics/military/government_definitions.js';
+import { govTitle } from '../../../civics/military/gov_calc.js';
 import { uniteEffect } from '../group_loaders.js';
 
 // Bagian dari techsPart5 (23 entri: dyson_sphere2 .. interstellar), dipisah dari group_loader.js. Urutan entri sama persis.

@@ -1,7 +1,7 @@
 import { global } from '../core/vars.js';
 import { loc } from '../core/locale.js';
 import { vBind } from '../functions/dom_helpers.js';
-import { bloodPool } from '../arpa/arpa.js';
+import { bloodPool } from '../core/registries.js';
 import { sideMenu } from './functions.js';
 
 export function bloodPage(content){

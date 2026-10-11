@@ -9,17 +9,15 @@ import { payCosts } from '../../actions/core/action_costs.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
 import { initStruct } from '../../actions/core/structure_ui.js';
 import { drawTech } from '../../actions/core/action_runner.js';
-import { actions } from '../../core/registries.js';
+import { actions, hooks } from '../../core/registries.js';
 import { bank_vault } from '../../actions/core/queue_callbacks.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { loadTab } from '../../core/index.js';
-import { defineGovernor } from '../../governor/governor.js';
 import { renderEdenic } from '../../edenic/edenic_render.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { fortressModules } from '../../core/registries.js';
 import { spireCreep, renderFortress } from '../hell/fortress_defense.js';
 import { genSpireFloor, updateMechbay } from '../mech/mechbay.js';
-import { drawMechLab } from '../mech/mech_lab.js';
 import { bossResists } from '../mech/hellguard.js';
 
 // Region 'prtl_spire' dari fortressModules (dipisah dari portal.js). Isi sama persis; digabung via core/registries.js di portal.js.
@@ -383,8 +381,8 @@ export const fortressModules_prtl_spire = {
                     global.settings.showMechLab = true;
                     if (global.portal.mechbay.count === 1){
                         messageQueue(loc('portal_mechbay_unlocked'),'info',false,['progress','hell']);
-                        drawMechLab();
-                        defineGovernor();
+                        hooks.drawMechLab();
+                        hooks.defineGovernor();
                     }
                     return true;
                 }

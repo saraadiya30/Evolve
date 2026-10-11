@@ -7,15 +7,14 @@ import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { calcPrestige } from '../../functions/prestige_calc.js';
-import { armyRating } from '../../civics/military/army_rating.js';
-import { traits } from '../../core/registries.js';
+import { traits, hooks } from '../../core/registries.js';
 import { incrementStruct, astrialProjection } from '../../space/space_requirements.js';
 import { ascendLab } from '../../space/ascend_lab.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { descension } from '../../resets/reset_vacuum_collapse_ascend_descension_apotheosis.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { production } from '../../resources/prod.js';
-import { soulForgeSoldiers } from '../hell/fortress_defense.js';
+import { soulForgeSoldiers } from '../hell/soul_forge.js';
 
 // Region 'prtl_pit' dari fortressModules (dipisah dari portal.js). Isi sama persis; digabung via core/registries.js di portal.js.
 export const fortressModules_prtl_pit = {
@@ -54,7 +53,7 @@ export const fortressModules_prtl_pit = {
             cost: {
                 Money(){ return 10000000; },
                 HellArmy(){
-                    return Math.round(650 / armyRating(1,'hellArmy'));
+                    return Math.round(650 / hooks.armyRating(1,'hellArmy'));
                 },
                 Cement(){ return 10000000; },
                 Adamantite(){ return 1250000; },

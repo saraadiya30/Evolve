@@ -8,7 +8,7 @@ import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { renderEdenic } from '../edenic_render.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 
 // Bagian dari edenAsphodel (6 entri: warehouse .. bliss_den), dipisah dari asphodel.js. Urutan entri sama persis.

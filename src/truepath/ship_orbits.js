@@ -1,24 +1,26 @@
 // Isi: drawShips(), calcLandingPoint(), syndicate(), sensorRange(), tritonWar(), erisWar(), setOrbits(), genXYcoord(), transferWindow(), jumpGateShutdown()
-import { global, support_on, p_on } from '../core/vars.js';
+import { global, support_on } from '../core/vars.js';
 import { clearElement, vBind } from '../functions/dom_helpers.js';
 import { deepClone } from '../core/object_utils.js';
 import { clearPopper, popover } from '../functions/popover.js';
 import { spaceTech } from '../space/space_requirements.js';
 import { loc } from '../core/locale.js';
 import { orbitLength } from '../races/trait_logic/trait_ranks.js';
-import { traits } from '../core/registries.js';
+import { traits, hooks } from '../core/registries.js';
 import { actions } from '../core/registries.js';
 import { initStruct } from '../actions/core/structure_ui.js';
 import { jobScale } from '../civics/jobs/job_scale.js';
 import { job_desc } from '../civics/jobs.js';
-import { garrisonSize, armyRating, soldierDeath } from '../civics/military/army_rating.js';
-import { removeTask, defineGovernor } from '../governor/governor.js';
+import { garrisonSize, soldierDeath } from '../civics/military/garrison.js';
+import { removeTask } from '../governor/gov_utils.js';
 import { nf_resources } from '../industry/industry.js';
 import { cancelRituals } from '../industry/industry_panels.js';
 import { tauCetiModules } from '../core/registries.js';
-import { spacePlanetStats } from './truepath.js';
-import { clearShipDrag, shipyardShipCompare, updateCosts, shipCrewSize, shipSpeed, shipAttackPower, shipFuelUse, dragShipList } from './tau_ceti_shipyard.js';
-import { xShift, xPosition } from './lone_survivor.js';
+import { clearShipDrag, shipyardShipCompare, updateCosts, dragShipList } from './tau_ceti_shipyard.js';
+import { shipCrewSize, shipSpeed, shipAttackPower, shipFuelUse } from './ship_stats.js';
+import { xShift, xPosition } from './orbit_math.js';
+import { spacePlanetStats } from './truepath_data.js';
+import { genXYcoord, sensorRange, syndicate } from './orbit_math.js';
 
 // Fungsi-fungsi dipindah dari truepath.js (urutan sumber dipertahankan). truepath.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -273,132 +275,6 @@ function calcLandingPoint(ship, planet) {
     return genXYcoord(planet);
 }
 
-export function syndicate(region,extra){
-    if (!global.tech['isolation'] && global.tech['syndicate'] && global.race['truepath'] && global.space['syndicate'] && global.space.syndicate.hasOwnProperty(region)){
-        let divisor = 1000;
-
-        let rival = 0;
-        if (global.civic.foreign.gov3.hstl < 10){
-            rival = 250 - (25 * global.civic.foreign.gov3.hstl);
-        }
-        else if (global.civic.foreign.gov3.hstl > 60){
-            rival = (-13 * (global.civic.foreign.gov3.hstl - 60));
-        }
-
-        switch (region){
-            case 'spc_home':
-            case 'spc_moon':
-            case 'spc_red':
-            case 'spc_hell':
-                divisor = 1250 + rival;
-                break;
-            case 'spc_gas':
-            case 'spc_gas_moon':
-            case 'spc_belt':
-                divisor = 1020 + rival;
-                break;
-            case 'spc_titan':
-            case 'spc_enceladus':
-                divisor = actions.space[region].info.syndicate_cap();
-                break;
-            case 'spc_triton':
-            case 'spc_kuiper':
-            case 'spc_eris':
-                divisor = actions.space[region].info.syndicate_cap();
-                break;
-        }
-
-        let piracy = global.space.syndicate[region];
-        if (global.race['chicken']){
-            piracy *= 1 + (traits.chicken.vars()[1] / 100);
-            piracy = Math.round(piracy);
-        }
-        if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.f){
-            piracy *= 1 - (traits.ocular_power.vars()[1] / 500);
-            piracy = Math.round(piracy);
-        }
-        let patrol = 0;
-        let sensor = 0;
-        let overkill = 0;
-        if (global.space.hasOwnProperty('shipyard') && global.space.shipyard.hasOwnProperty('ships')){
-            global.space.shipyard.ships.forEach(function(ship){
-                if (ship.location === region && ship.transit === 0 && ship.fueled){
-                    let rating = shipAttackPower(ship);
-                    patrol += ship.damage > 0 ? Math.round(rating * (100 - ship.damage) / 100) : rating;
-                    sensor += sensorRange(ship);
-                }
-            });
-
-            if (region === 'spc_enceladus' && Math.min(support_on['operating_base'],p_on['operating_base']) > 0){
-                let active = Math.min(support_on['operating_base'],p_on['operating_base']);
-                patrol += active * 50;
-            }
-            else if (region === 'spc_titan' && p_on['sam'] > 0){
-                patrol += p_on['sam'] * 25;
-            }
-            else if (region === 'spc_triton' && p_on['fob'] > 0){
-                patrol += 500;
-                sensor += 10;
-            }
-
-            if (sensor > 100){
-                sensor = Math.round((sensor - 100) / ((sensor - 100) + 200) * 100) + 100;
-            }
-
-            patrol = Math.round(patrol * ((sensor + 25) / 125));
-            if (patrol > piracy){
-                overkill = patrol - piracy;
-            }
-            piracy = piracy - patrol > 0 ? piracy - patrol : 0;
-        }
-
-        if (extra){
-            return {
-                p: 1 - +(piracy / divisor).toFixed(4),
-                r: piracy,
-                s: sensor,
-                o: overkill,
-            };
-        }
-        return 1 - +(piracy / divisor).toFixed(4);
-    }
-
-    if (extra){
-        return { p: 1, r: 0, s: 0, o: 0 };
-    }
-    return 1;
-}
-
-export function sensorRange(s){
-    let hf = 1;
-    switch (s.class){
-        case 'corvette':
-        case 'frigate':
-            hf = 2;
-            break;
-        case 'destroyer':
-        case 'cruiser':
-            hf = 1.5;
-            break;
-        case 'explorer':
-            hf = 5;
-            break;
-        default:
-            hf = 1;
-            break;
-    }
-    switch (s.sensor){
-        case 'visual':
-            return 1;
-        case 'radar':
-            return 10 * hf;
-        case 'lidar':
-            return 18 * hf;
-        case 'quantum':
-            return 32 * hf;
-    }
-}
-
 export function tritonWar(){
     if (global.space['fob']){
         if (global.space.fob.enemy <= 1000){
@@ -410,7 +286,7 @@ export function tritonWar(){
 
         let wounded = global.civic.garrison.wounded - garrisonSize();
         if (wounded < 0){ wounded = 0; }
-        let defense = armyRating(global.space.fob.troops,'army',wounded);
+        let defense = hooks.armyRating(global.space.fob.troops,'army',wounded);
 
         let died = Math.rand(0,wounded + 1);
         soldierDeath(died);
@@ -446,7 +322,7 @@ export function tritonWar(){
         {
             let wounded = global.civic.garrison.wounded - garrisonSize();
             if (wounded < 0){ wounded = 0; }
-            let danger = global.space.fob.enemy - armyRating(global.space.fob.troops,'army',wounded);
+            let danger = global.space.fob.enemy - hooks.armyRating(global.space.fob.troops,'army',wounded);
             if (danger <= 0 && global.space.crashed_ship.count < 100){
                 global.space.crashed_ship.count++;
             }
@@ -467,7 +343,7 @@ export function erisWar(){
             global.space.digsite.enemy += Math.rand(25,upper);
         }
 
-        let offense = armyRating(support_on['shock_trooper'],'army',0);
+        let offense = hooks.armyRating(support_on['shock_trooper'],'army',0);
         if (support_on['tank']){
             offense += support_on['tank'] * 100;
         }
@@ -479,29 +355,6 @@ export function erisWar(){
 
         global.space.digsite.count = Math.floor(100 - global.space.digsite.enemy / 100);
     }
-}
-
-export function setOrbits(){
-    if (!global.space['position']){
-        global.space['position'] = {};
-    }
-    Object.keys(spacePlanetStats).forEach(function(o){
-        if (!global.space.position.hasOwnProperty(o)){
-            global.space.position[o] = Math.rand(0,360);
-        }
-    });
-    global.space.position.spc_home = global.space.position.spc_moon;
-    global.space.position.spc_gas_moon = global.space.position.spc_gas;
-    global.space.position.spc_titan = global.space.position.spc_enceladus;
-    global.space.position.spc_saturn = global.space.position.spc_titan;
-    global.space.position.spc_neptune = global.space.position.spc_triton;
-}
-
-export function genXYcoord(planet){
-    let cx = xPosition(+(Math.cos(global.space.position[planet] * (Math.PI / 180))).toFixed(5) * spacePlanetStats[planet].dist, planet);
-    let cy = +(Math.sin(global.space.position[planet] * (Math.PI / 180))).toFixed(5) * spacePlanetStats[planet].dist;
-    cx += xShift(planet);
-    return {x: cx, y: cy};
 }
 
 function transferWindow(p1,p2){
@@ -646,7 +499,7 @@ export function jumpGateShutdown(){
     removeTask('spy');
     removeTask('spyop');
     removeTask('combo_spy');
-    defineGovernor();
+    hooks.defineGovernor();
 
     clearElement($(`#infoTimer`));
     global.race['inactive'] = inactive;

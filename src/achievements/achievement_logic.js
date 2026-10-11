@@ -1,35 +1,18 @@
 // Isi: universeLevel(), universeAffix(), unlockAchieve(), unlockFeat(), setupStats(), drawAchieve(), challengeIcon(), alevel(), checkAchievements(), checkAdept(), checkBigAchievement(), checkBigAchievementUniverse(), drawPerks()
 import { global, set_alevel, set_ulevel } from '../core/vars.js';
 import { messageQueue } from '../functions/message_log.js';
-import { calc_mastery } from '../functions/functions.js';
+import { calc_mastery } from '../functions/calc_mastery.js';
 import { clearElement, vBind } from '../functions/dom_helpers.js';
 import { getBaseIcon, format_emblem, sLevel, svgViewBox, svgIcons, easterEgg, trickOrTreat } from '../functions/icons_easter_eggs.js';
 import { loc } from '../core/locale.js';
-import { checkAchievements_s1, checkAchievements_s2 } from '../sections/core/check_achievements_parts.js';
-import { perkList } from '../core/registries.js';
-import { achievements, feats } from './achieve.js';
+import { perkList, hooks } from '../core/registries.js';
+import { feats } from './feats.js';
+import { achievements } from '../core/registries.js';
 import { drawStats } from './stats_panel_draw.js';
 import { universeAffix } from '../functions/universe_utils.js';
 import { alevel } from './achievement_helpers.js';
 
 // Fungsi-fungsi dipindah dari achieve.js (urutan sumber dipertahankan). achieve.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
-
-
-export function universeLevel(universe){
-    universe = universe || global.race.universe;
-    let affix = universeAffix(universe);
-    let lvl = 0;
-    let ulvl = 0;
-    Object.keys(achievements).forEach(function (achievement){
-        if (global.stats.achieve[achievement]){
-            lvl += global.stats.achieve[achievement].l > 5 ? 5 : global.stats.achieve[achievement].l;
-            if (global.stats.achieve[achievement][affix]){
-                ulvl += global.stats.achieve[achievement][affix] > 5 ? 5 : global.stats.achieve[achievement][affix];
-            }
-        }
-    });
-    return { aLvl: lvl, uLvl: ulvl };
-}
 
 
 export function unlockAchieve(achievement,small,rank,universe){
@@ -206,9 +189,9 @@ export function drawAchieve(args){
 
 export function checkAchievements(){
     const $ctx = {};
-    checkAchievements_s1($ctx);
+    hooks.checkAchievements_s1($ctx);
 
-    checkAchievements_s2($ctx);
+    hooks.checkAchievements_s2($ctx);
 }
 
 export function checkAdept(){

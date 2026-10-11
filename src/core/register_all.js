@@ -11,7 +11,7 @@ import { registerRegionActions } from '../actions/region_actions.js';
 import { buildTechs } from '../tech/tech.js';
 import { registerActions } from '../actions/actions.js';
 import { registerAchievements } from '../achievements/achieve.js';
-import { registerAsphodel, registerElysium, registerEdenic, registerGenePool, registerTruepath, registerPortal, registerSpace, registerCityActions, registerTechParts, registerGovernor, registerEvents, registerRaces } from './registrations.js';
+import { registerAsphodel, registerElysium, registerEdenic, registerGenePool, registerTruepath, registerPortal, registerSpace, registerCityActions, registerTechParts, registerGovernor, registerEvents, registerRaces, registerHooks } from './registrations.js';
 
 let done = false;
 
@@ -20,6 +20,8 @@ export function registerAll(){
         return;
     }
     done = true;
+    // Hook dulu: hanya menyimpan referensi fungsi, tapi registrasi lain (mis. region actions) sudah memanggil hooks.*.
+    registerHooks();
     registerAsphodel();
     registerElysium();
     registerEdenic();

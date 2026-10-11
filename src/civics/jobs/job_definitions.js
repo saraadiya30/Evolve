@@ -2,14 +2,13 @@
 import { loc } from '../../core/locale.js';
 import { global, keyMultiplier, p_on, tmp_vars } from '../../core/vars.js';
 import { traits } from '../../core/registries.js';
-import { biomes, planetTraits } from '../../races/races.js';
+import { biomes, planetTraits } from '../../races/planet_data.js';
 import { servantTrait, racialTrait } from '../../races/trait_logic/racial_traits.js';
-import { govActive } from '../../governor/governor.js';
-import { planetName } from '../../space/planet_generation.js';
+import { planetName } from '../../space/planet_name.js';
 import { vBind, clearElement } from '../../functions/dom_helpers.js';
 import { easterEgg } from '../../functions/icons_easter_eggs.js';
 import { popover } from '../../functions/popover.js';
-import { getStructNumActive } from '../../actions/evolution/planet_setup.js';
+import { getStructNumActive } from '../../actions/evolution/struct_active.js';
 import { actions } from '../../core/registries.js';
 import { job_desc } from '../jobs.js';
 import { loadFoundry } from './foundry_panel.js';
@@ -63,35 +62,6 @@ export function defineJobs(define){
     }
 }
 
-export function workerScale(num,job){
-    if (global.race['strong'] && ['hunter','forager','farmer','lumberjack','quarry_worker','crystal_miner','scavenger'].includes(job)){
-        num *= traits.strong.vars()[1];
-    }
-    if ((global.race['swift'] || global.race['living_tool']) && ['hunter','forager','farmer','lumberjack','quarry_worker','crystal_miner','scavenger'].includes(job)){
-        num *= traits.strong.vars(0.25)[1];
-    }
-    let teacher = govActive('teacher',1);
-    if(teacher && ['professor'].includes(job)){
-        num *= 1 + (teacher / 100);
-    }
-    if (global.race['lone_survivor']){
-        if (['hunter','forager','farmer','lumberjack','quarry_worker','crystal_miner','scavenger'].includes(job)){
-            num *= 80;
-        }
-        else if (['craftsman'].includes(job)){
-            num *= 60;
-        }
-        else if (['miner','coal_miner','cement_worker','banker','entertainer','priest','pit_miner'].includes(job)){
-            num *= 45;
-        }
-        else if (['professor','scientist'].includes(job)){
-            num *= 125;
-        }
-    }
-    return num;
-}
-
-
 export function setJobName(job){
     let job_name = '';
     if (global.race['unfathomable'] && job === 'hunter'){
@@ -116,11 +86,6 @@ export function setJobName(job){
         job_name = loc('job_' + job);
     }
     global['civic'][job].name = job_name;
-}
-
-export function jobName(job){
-    let name = global.civic[job]?.name || loc(`job_${job}`);
-    return name;
 }
 
 function loadJob(job, define, impact, stress, color){
@@ -365,19 +330,6 @@ export function loadServants(){
             }
         );
     }
-}
-
-export function teamsterCap(){
-    let transport = 0;
-    if (global.race['gravity_well']){
-        transport = global.tech['transport'] ? global.tech.transport : 0;
-        transport = Math.round(global.race.teamster / transport * 1.5);
-    }
-    if (global.tech['railway']){
-        transport -= global.tech['railway'] * 2;
-    }
-    if (transport < 0){ transport = 0; }
-    return transport;
 }
 
 export function craftsmanCap(res){

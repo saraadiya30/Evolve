@@ -1,11 +1,11 @@
 import { loc } from '../../core/locale.js';
 import { calcQueueMax, calcRQueueMax } from '../../functions/queues.js';
-import { calc_mastery } from '../../functions/functions.js';
+import { calc_mastery } from '../../functions/calc_mastery.js';
 import { global } from '../../core/vars.js';
-import { defineGovernor } from '../../governor/governor.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 import { payCrispr } from '../arpa_projects.js';
 import { updateTrades } from '../arpa_project_building.js';
+import { hooks } from '../../core/registries.js';
 
 // Bagian dari genePool (26 entri: architect .. blood_sacrifice), dipisah dari arpa.js. Urutan entri sama persis.
 export const genePoolPart2 = {
@@ -87,7 +87,7 @@ export const genePoolPart2 = {
                     }
                 }
             }
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     bureaucratic_efficiency: {
@@ -107,7 +107,7 @@ export const genePoolPart2 = {
             return false;
         },
         post(){
-            defineGovernor();
+            hooks.defineGovernor();
         },
         flair(){
             return loc('arpa_genepool_bureaucratic_efficiency_flair');

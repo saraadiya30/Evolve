@@ -4,7 +4,7 @@ import { initStruct } from '../../../actions/core/structure_ui.js';
 import { actions } from '../../../core/registries.js';
 import { global, save } from '../../../core/vars.js';
 import { races } from '../../../core/registries.js';
-import { planetName } from '../../../space/planet_generation.js';
+import { planetName } from '../../../space/planet_name.js';
 import { messageQueue } from '../../../functions/message_log.js';
 import { defineIndustry } from '../../../industry/industry_smelter.js';
 import { jumpGateShutdown } from '../../../truepath/ship_orbits.js';

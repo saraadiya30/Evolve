@@ -11,7 +11,7 @@ import { popover } from '../../functions/popover.js';
 import { getTraitDesc } from '../../functions/trait_description.js';
 import { loc } from '../../core/locale.js';
 import { universe_types } from '../../space/space.js';
-import { planetName } from '../../space/planet_generation.js';
+import { planetName } from '../../space/planet_name.js';
 import { geneCost } from '../../space/terraform_lab.js';
 
 // Bagian dari ascendLab (ascend_lab.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.

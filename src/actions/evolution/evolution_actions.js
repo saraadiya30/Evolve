@@ -3,12 +3,11 @@ import { global, seededRandom } from '../../core/vars.js';
 import { modRes } from '../../functions/resource_mod.js';
 import { format_emblem } from '../../functions/icons_easter_eggs.js';
 import { genus_def } from '../../races/genus_def.js';
-import { races } from '../../core/registries.js';
+import { races, hooks } from '../../core/registries.js';
 import { evolveCosts } from '../challenge/challenge_rules.js';
 import { payCosts } from '../core/action_costs.js';
 import { genus_condition } from './evolution_screen.js';
-import { raceList } from '../actions.js';
-import { sentience } from './sentience_stage.js';
+import { raceList } from '../action_lists.js';
 
 // Region 'evolution' dari actions (dipisah dari actions.js). Isi sama persis; digabung via core/registries.js di actions.js.
 export const actions_evolution = {
@@ -902,7 +901,7 @@ export const actions_evolution = {
                         global.race.species = allowed[Math.floor(seededRandom(0,allowed.length))];
                     }
 
-                    sentience();
+                    hooks.sentience();
                 }
                 return false;
             },

@@ -11,7 +11,7 @@ import { incrementStruct, piracy } from '../../space/space_requirements.js';
 import { renderEdenic } from '../edenic_render.js';
 import { production } from '../../resources/prod.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
-import { workerScale } from '../../civics/jobs/job_definitions.js';
+import { workerScale } from '../../civics/jobs/worker_scale.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { racialTrait } from '../../races/trait_logic/racial_traits.js';
 import { traits } from '../../core/registries.js';

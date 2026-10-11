@@ -1,13 +1,9 @@
 // Contains: combineTraits(), traitRank(), setTraitRank(), fathomCheck(), traitSkin(), hoovedReskin(), orbitLength(), shellColor(), foxColor(), basicRace(), renderSupernatural()
 import { global } from '../../core/vars.js';
-import { traits, races } from '../../core/registries.js';
+import { traits, races, hooks } from '../../core/registries.js';
 import { loc } from '../../core/locale.js';
 import { randomKey } from '../../functions/icons_easter_eggs.js';
 import { clearElement } from '../../functions/dom_helpers.js';
-import { genus_def } from '../genus_def.js';
-import { cleanRemoveTrait, cleanAddTrait } from './trait_changes.js';
-import { minorWish } from '../powers/minor_wish.js';
-import { majorWish, ocularPower } from '../powers/power_panels.js';
 
 // Functions extracted from races.js (source order preserved). races.js still re-exports the previously exported names.
 
@@ -28,14 +24,14 @@ export function combineTraits(){
         delete global.race['carnivore'];
         if(global.race['forager'] !== rank){
             setTraitRank('forager',{ set: rank, force:true});
-            cleanRemoveTrait('carnivore');
-            cleanRemoveTrait('herbivore');
-            cleanAddTrait('forager');
+            hooks.cleanRemoveTrait('carnivore');
+            hooks.cleanRemoveTrait('herbivore');
+            hooks.cleanAddTrait('forager');
         }
     }
     else if(global.race['forager']){
         delete global.race['forager'];
-        cleanRemoveTrait('forager');
+        hooks.cleanRemoveTrait('forager');
     }
 }
 
@@ -99,55 +95,6 @@ export function setTraitRank(trait,opts){
 }
 
 
-export function traitSkin(type, trait, species){
-    let artificial = species ? genus_def[races[species].type].traits.artifical : global.race['artifical'];
-    switch (type){
-        case 'name':
-        {
-            let name = {
-                hooved: hoovedReskin(false, species),
-                promiscuous: artificial ? loc('trait_promiscuous_synth_name') : traits.promiscuous.name,
-                weak: species === 'dwarf' ? loc('trait_drunk_name') : traits.weak.name,
-                spiritual: global.race.universe === 'evil' && global.civic.govern.type !== 'theocracy' ? loc('trait_manipulator_name') : traits.spiritual.name,
-            };
-            return trait ? (name[trait] ? name[trait] : traits[trait].name) : name;
-        } 
-        case 'desc':
-        {
-            let desc = {
-                hooved: hoovedReskin(true, species),
-                promiscuous: artificial ? loc('trait_promiscuous_synth') : traits['promiscuous'].desc,
-                weak: species === 'dwarf' ? loc('trait_drunk') : traits.weak.desc,
-                spiritual: global.race.universe === 'evil' && global.civic.govern.type !== 'theocracy' ? loc('trait_manipulator') : traits.spiritual.desc,
-                blurry: global.race['warlord'] ? loc('trait_blurry_warlord') : traits.blurry.desc,
-                playful: global.race['warlord'] ? loc('trait_playful_warlord') : traits.playful.desc,
-                befuddle: global.race['warlord'] ? loc('trait_befuddle_warlord') : traits.befuddle.desc,
-            };
-            return trait ? (desc[trait] ? desc[trait] : traits[trait].desc) : desc;
-        }
-    }
-}
-
-export function hoovedReskin(desc, species=global.race.species){
-    let type = species === global.race.species ? global.race.maintype || races[species].type : races[species].type;
-    if (species === 'sludge' || species === 'ultra_sludge'){
-        return desc ? loc('trait_hooved_slime') : loc('trait_hooved_slime_name');
-    }
-    else if ([
-        'cath','wolven','dracnid','seraph','cyclops','kobold','tuskin','sharkin','beholder','djinn'
-        ].includes(species)){
-        return desc ? loc(`trait_hooved_${species}`) : loc(`trait_hooved_${species}_name`);
-    }
-    else if ([
-        'humanoid','avian','plant','fungi','reptilian','fey','synthetic'
-        ].includes(type)){
-        return desc ? loc(`trait_hooved_${type}`) : loc(`trait_hooved_${type}_name`);
-    }
-    else {
-        return desc ? traits['hooved'].desc : traits['hooved'].name;
-    }
-}
-
 export function orbitLength(){
     let orbit = global.city.calendar.orbit;
     if (global.city.ptrait.includes('kamikaze')){
@@ -188,14 +135,14 @@ export function renderSupernatural(){
     clearElement(parent);
 
     if (global.race['wish'] && global.tech['wish'] && global.race['wishStats']){
-        minorWish(parent);
+        hooks.minorWish(parent);
         if (global.tech.wish >= 2){
-            majorWish(parent);
+            hooks.majorWish(parent);
         }
     }
 
     if (global.race['ocular_power']){
-        ocularPower(parent);
+        hooks.ocularPower(parent);
     }
 }
 

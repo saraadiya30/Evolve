@@ -1,5 +1,5 @@
 import { seededRandom } from '../../core/vars.js';
-import { armorCalc } from '../../civics/military/war_campaign.js';
+import { armorCalc } from '../../civics/military/war_calc.js';
 import { edenElysium } from '../../core/registries.js';
 
 // Region 'eden_elysium' dari edenicModules (dipisah dari edenic.js). Urutan/isi entri sama persis; digabung di edenic.js.

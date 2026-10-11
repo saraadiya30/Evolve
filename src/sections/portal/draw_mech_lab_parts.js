@@ -1,12 +1,13 @@
 import { global, keyMap } from '../../core/vars.js';
 import { loc } from '../../core/locale.js';
-import { validWeapons, validEquipment, buildMech, drawMechLab } from '../../portal/mech/mech_lab.js';
+import { validWeapons, validEquipment, buildMech } from '../../portal/mech/mech_valid.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { deepClone } from '../../core/object_utils.js';
 import { buildQueue } from '../../functions/queues.js';
 import { clearPopper, popover } from '../../functions/popover.js';
 import { mechCost } from '../../portal/mech/mech_cost.js';
 import { mechSize, drawMechs } from '../../portal/mech/mechbay.js';
+import { hooks } from '../../core/registries.js';
 
 // Bagian dari drawMechLab (mech_lab.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
 
@@ -260,7 +261,7 @@ export function drawMechLab_s1($ctx){
                                 break;
                         }
                         global.portal.mechbay.blueprint.hardpoint[0] = validWeapons(s,global.portal.mechbay.blueprint.chassis,0)[0];
-                        drawMechLab();
+                        hooks.drawMechLab();
                         clearPopper();
                     }
                 },
@@ -276,7 +277,7 @@ export function drawMechLab_s1($ctx){
                         else if (c !== 'hydra' && global.portal.mechbay.blueprint.size === 'archfiend'){
                             global.portal.mechbay.blueprint.hardpoint.length = 2;
                         }
-                        drawMechLab();
+                        hooks.drawMechLab();
                         clearPopper();
                     }
                 },

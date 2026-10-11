@@ -1,10 +1,9 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
 import { global } from '../../../core/vars.js';
 import { renderSupernatural } from '../../../races/trait_logic/trait_ranks.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
 import { checkAltPurgatory } from '../../../races/trait_logic/racial_traits.js';
 
 // Bagian dari techsPart1 (25 entri: thrall_quarters .. adv_mulching), dipisah dari group_loader.js. Urutan entri sama persis.
@@ -86,7 +85,7 @@ export const techsPart1Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     psychic_attack: {
@@ -105,7 +104,7 @@ export const techsPart1Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     psychic_finance: {
@@ -123,7 +122,7 @@ export const techsPart1Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     psychic_channeling: {
@@ -141,7 +140,7 @@ export const techsPart1Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     psychic_efficiency: {
@@ -158,7 +157,7 @@ export const techsPart1Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     mind_break: {
@@ -175,7 +174,7 @@ export const techsPart1Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     psychic_stun: {
@@ -192,7 +191,7 @@ export const techsPart1Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     spear: {

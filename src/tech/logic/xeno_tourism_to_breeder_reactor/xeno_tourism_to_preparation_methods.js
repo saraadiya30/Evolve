@@ -4,9 +4,9 @@ import { initStruct, wardenLabel } from '../../../actions/core/structure_ui.js';
 import { actions } from '../../../core/registries.js';
 import { traitCostMod } from '../../../races/trait_logic/racial_traits.js';
 import { global } from '../../../core/vars.js';
-import { jobName } from '../../../civics/jobs/job_definitions.js';
+import { jobName } from '../../../civics/jobs/job_name.js';
 import { unlockAchieve } from '../../../achievements/achievement_logic.js';
-import { planetName } from '../../../space/planet_generation.js';
+import { planetName } from '../../../space/planet_name.js';
 import { messageQueue } from '../../../functions/message_log.js';
 
 // Bagian dari techsPart3 (27 entri: xeno_tourism .. preparation_methods), dipisah dari group_loader.js. Urutan entri sama persis.

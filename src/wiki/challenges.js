@@ -3,7 +3,7 @@ import { loc } from '../core/locale.js';
 import { actions } from '../core/registries.js';
 import { wardenLabel } from '../actions/core/structure_ui.js';
 import { vBind } from '../functions/dom_helpers.js';
-import { neg_roll_traits } from '../races/races.js';
+import { neg_roll_traits } from '../races/planet_data.js';
 import { tradeRatio } from '../config/constants.js';
 import { sideMenu, subSideMenu, infoBoxBuilder, getSolarName, createCalcSection } from './functions.js';
 

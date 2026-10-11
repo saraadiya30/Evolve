@@ -3,13 +3,12 @@ import { vBind } from '../../functions/dom_helpers.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { popover } from '../../functions/popover.js';
 import { global, seededRandom, sizeApproximation } from '../../core/vars.js';
-import { traits, races } from '../../core/registries.js';
+import { traits, races, hooks } from '../../core/registries.js';
 import { unlockAchieve } from '../../achievements/achievement_logic.js';
-import { drawCity } from '../../actions/challenge/challenge_rules.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 import { actions } from '../../core/registries.js';
 import { govCivics } from '../../civics/military/government_operations.js';
-import { govTitle } from '../../civics/military/government_definitions.js';
+import { govTitle } from '../../civics/military/gov_calc.js';
 import { events, eventList } from '../../events/events.js';
 import { swissKnife } from '../../core/swiss_knife.js';
 import { setTraitRank } from '../../races/trait_logic/trait_ranks.js';
@@ -133,7 +132,7 @@ export function minorWish_s2($ctx){
                                     global.interstellar['laboratory'] = { count: 0, on: 0 };
                                     break;
                             }
-                            drawCity();
+                            hooks.drawCity();
                             drawTech();
 
                             let techs = {
@@ -402,7 +401,7 @@ export function minorWish_s2($ctx){
                                     }
                                     break;
                             }
-                            drawCity();
+                            hooks.drawCity();
                             drawTech();
 
                             let techs = {

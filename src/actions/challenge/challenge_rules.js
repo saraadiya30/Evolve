@@ -1,34 +1,33 @@
 // Isi: challengeEffect(), templeEffect(), casino_vault(), casinoEarn(), casinoEffect(), evolveCosts(), setChallenge(), setScenario(), BHStorageMulti(), storageMultipler(), checkCityRequirements(), checkTechPath(), skipRequirement(), checkTechRequirements() +6
 import { global } from '../../core/vars.js';
 import { loc } from '../../core/locale.js';
-import { calc_mastery } from '../../functions/functions.js';
+import { calc_mastery } from '../../functions/calc_mastery.js';
 import { adjustCosts } from '../../functions/cost_adjusters.js';
 import { get_qlevel } from '../../functions/quantum_level.js';
 import { clearElement } from '../../functions/dom_helpers.js';
 import { popover } from '../../functions/popover.js';
-import { crateValue, containerValue } from '../../resources/market_storage.js';
+import { crateValue, containerValue } from '../../resources/crate_value.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { faithBonus, templePlasmidBonus } from '../../resources/aether_alchemy.js';
-import { actions } from '../../core/registries.js';
+import { actions, hooks } from '../../core/registries.js';
 import { production } from '../../resources/prod.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
-import { workerScale } from '../../civics/jobs/job_definitions.js';
+import { workerScale } from '../../civics/jobs/worker_scale.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { traits, races } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
-import { govEffect } from '../../civics/civics.js';
-import { govActive } from '../../governor/governor.js';
+import { govEffect } from '../../civics/gov_effect.js';
+import { govActive } from '../../governor/gov_active.js';
 import { challengeIcon } from '../../achievements/achievement_helpers.js';
 import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL } from '../../config/constants.js';
-import { techPath } from '../../tech/tech_list.js';
 import { renderSpace } from '../../space/space_requirements.js';
 import { renderFortress } from '../../portal/hell/fortress_defense.js';
-import { renderTauCeti } from '../../truepath/tau_ceti_shipyard.js';
 import { renderEdenic } from '../../edenic/edenic_render.js';
-import { challengeList, set_cLabels } from '../actions.js';
+import { challengeList, set_cLabels } from '../action_lists.js';
 import { setChallengeScreen } from './challenge_screen.js';
 import { addAction, drawTech } from '../core/action_runner.js';
 import { removeAction } from '../core/action_costs.js';
+import { checkCityRequirements } from './requirements.js';
 
 // Fungsi-fungsi dipindah dari actions.js (urutan sumber dipertahankan). actions.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -462,158 +461,6 @@ export function storageMultipler(scale = 1, wiki = false){
     return multiplier * scale;
 }
 
-export function checkCityRequirements(action){
-    if ((global.race['kindling_kindred'] || global.race['smoldering']) && action === 'lumber'){
-        return false;
-    }
-    else if ((global.race['kindling_kindred'] || global.race['smoldering']) && action === 'stone'){
-        return true;
-    }
-    let c_path = global.race['truepath'] ? 'truepath' : 'standard';
-    if (actions.city[action].hasOwnProperty('path') && !actions.city[action].path.includes(c_path)){
-        return false;
-    }
-    let isMet = true;
-    Object.keys(actions.city[action].reqs).forEach(function (req){
-        if (!global.tech[req] || global.tech[req] < actions.city[action].reqs[req]){
-            isMet = false;
-        }
-    });
-    return isMet;
-}
-
-export function checkTechPath(tech){
-    let path = global.race['truepath'] ? 'truepath' : 'standard';
-    if ((!techPath[path].includes(actions.tech[tech].era) && !actions.tech[tech].hasOwnProperty('path')) || (actions.tech[tech].hasOwnProperty('path') && !actions.tech[tech].path.includes(path))){
-        return false;
-    }
-    return true;
-}
-
-export function skipRequirement(req,rank){
-    if (global.race['flier'] && req === 'cement'){
-        return true;
-    }
-    return false;
-}
-
-export function checkTechRequirements(tech,predList){
-    let isMet = true; let precog = false;
-
-    let failChecks = {};
-    Object.keys(actions.tech[tech].reqs).forEach(function (req){
-        if (skipRequirement(req, global.tech[req] || 0)){ return; }
-        if (!global.tech[req] || global.tech[req] < actions.tech[tech].reqs[req]){
-            isMet = false;
-            failChecks[req] = actions.tech[tech].reqs[req];
-        }
-    });
-    if (predList && typeof predList === 'object' && global.genes.hasOwnProperty('queue') && global.genes.queue >= 3){
-        precog = true;
-        global.r_queue.queue.forEach(function(q){
-            if (checkTechRequirements(q.type,false)){
-                predList[actions[q.action][q.type].grant[0]] = { v: actions[q.action][q.type].grant[1], a: q.type };
-            }
-        });
-        Object.keys(failChecks).forEach(function (req){
-            let cTech = global.tech[req] || 0;
-            if (skipRequirement(req, global.tech[req] || 0)){ return; }
-            if (!predList[req] || predList[req].v < actions.tech[tech].reqs[req] || predList[req].v > cTech + 1){
-                precog = false;
-            }
-        });
-    }
-    if ((isMet || precog) && (!global.tech[actions.tech[tech].grant[0]] || global.tech[actions.tech[tech].grant[0]] < actions.tech[tech].grant[1])){
-        return isMet ? 'ok' : 'precog';
-    }
-    return false;
-}
-
-export function checkTechQualifications(c_action,type){
-    if (c_action['condition'] && !c_action.condition()){
-        return false;
-    }
-    if (c_action['not_trait']){
-        for (let i=0; i<c_action.not_trait.length; i++){
-            if (global.race[c_action.not_trait[i]]){
-                return false;
-            }
-        }
-    }
-    if (c_action['trait']){
-        for (let i=0; i<c_action.trait.length; i++){
-            if (!global.race[c_action.trait[i]]){
-                return false;
-            }
-        }
-    }
-    if (c_action['not_gene']){
-        for (let i=0; i<c_action.not_gene.length; i++){
-            if (global.genes[c_action.not_gene[i]]){
-                return false;
-            }
-        }
-    }
-    if (c_action['gene']){
-        for (let i=0; i<c_action.gene.length; i++){
-            if (!global.genes[c_action.gene[i]]){
-                return false;
-            }
-        }
-    }
-    if (c_action['not_tech']){
-        for (let i=0; i<c_action.not_tech.length; i++){
-            if (global.tech[c_action.not_tech[i]]){
-                return false;
-            }
-        }
-    }
-    return true;
-}
-
-export function checkOldTech(tech){
-    let tch = actions.tech[tech].grant[0];
-    if (global.tech[tch] && global.tech[tch] >= actions.tech[tech].grant[1]){
-        switch (tech) {
-            case 'fanaticism':
-                return Boolean(global.tech['fanaticism']);
-            case 'anthropology':
-                return Boolean(global.tech['anthropology']);
-            case 'deify':
-                return Boolean(global.tech['ancient_deify']);
-            case 'study':
-                return Boolean(global.tech['ancient_study']);
-            case 'isolation_protocol':
-                return Boolean(global.tech['isolation']);
-            case 'focus_cure':
-                return Boolean(global.tech['focus_cure']);
-            case 'vax_strat1':
-                return Boolean(global.tech['vax_p']);
-            case 'vax_strat2':
-                return Boolean(global.tech['vax_f']);
-            case 'vax_strat3':
-                return Boolean(global.tech['vax_s']);
-            case 'vax_strat4':
-                return Boolean(global.tech['vax_c']);
-            default:
-                return true;
-        }
-    }
-    return false;
-}
-
-export function checkPowerRequirements(c_action){
-    let isMet = true;
-    if (c_action['power_reqs']){
-        Object.keys(c_action.power_reqs).forEach(function (req){
-            if (!global.tech[req] || global.tech[req] < c_action.power_reqs[req]){
-                isMet = false;
-            }
-        });
-    }
-    return isMet;
-}
-
 export function registerTech(action){
     let tech = actions.tech[action].grant[0];
     if (!global.tech[tech]){
@@ -629,7 +476,7 @@ export function gainTech(action){
     drawTech();
     renderSpace();
     renderFortress();
-    renderTauCeti();
+    hooks.renderTauCeti();
     renderEdenic();
 }
 

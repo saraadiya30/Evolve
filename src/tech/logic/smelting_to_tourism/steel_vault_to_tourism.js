@@ -1,9 +1,8 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { swissKnife } from '../../../core/swiss_knife.js';
-import { arpa } from '../../../arpa/arpa_projects.js';
 import { global } from '../../../core/vars.js';
 
 // Bagian dari techsPart2 (19 entri: steel_vault .. tourism), dipisah dari group_loader.js. Urutan entri sama persis.
@@ -84,7 +83,7 @@ export const techsPart2Part4 = {
             return false;
         },
         post(){
-            arpa('Physics');
+            hooks.arpa('Physics');
         }
     },
     hedge_funds: {
@@ -288,13 +287,13 @@ export const techsPart2Part4 = {
         effect: loc('tech_monument_effect'),
         action(){
             if (payCosts($(this)[0])){
-                global.arpa['m_type'] = arpa('Monument');
+                global.arpa['m_type'] = hooks.arpa('Monument');
                 return true;
             }
             return false;
         },
         post(){
-            arpa('Physics');
+            hooks.arpa('Physics');
         }
     },
     tourism: {

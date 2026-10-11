@@ -1,6 +1,7 @@
 import { loc } from '../../core/locale.js';
 import { global, p_on, support_on, sizeApproximation, int_on } from '../../core/vars.js';
-import { payCosts, templeCount } from '../../actions/core/action_costs.js';
+import { payCosts } from '../../actions/core/action_costs.js';
+import { templeCount } from '../../functions/temple_count.js';
 import { initStruct, structName } from '../../actions/core/structure_ui.js';
 import { bank_vault } from '../../actions/core/queue_callbacks.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
@@ -16,7 +17,7 @@ import { eventActive } from '../../functions/event_dates.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { unlockContainers } from '../../resources/market_storage.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL } from '../../config/constants.js';
 import { production } from '../../resources/prod.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
@@ -24,7 +25,8 @@ import { defineIndustry } from '../../industry/industry_smelter.js';
 import { unlockAchieve } from '../../achievements/achievement_logic.js';
 import { races, traits } from '../../core/registries.js';
 import { spaceProjects } from '../../core/registries.js';
-import { planetName, fuel_adjust, house_adjust } from '../planet_generation.js';
+import { fuel_adjust, house_adjust } from '../planet_generation.js';
+import { planetName } from '../planet_name.js';
 import { incrementStruct, renderSpace, terraformProjection } from '../space_requirements.js';
 import { terraformLab } from '../terraform_lab.js';
 

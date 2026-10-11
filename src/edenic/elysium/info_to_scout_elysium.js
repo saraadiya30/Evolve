@@ -1,7 +1,7 @@
 import { loc } from '../../core/locale.js';
 import { global, seededRandom } from '../../core/vars.js';
-import { garrisonSize, soldierDeath, armyRating } from '../../civics/military/army_rating.js';
-import { mercCost } from '../../civics/military/government_operations.js';
+import { garrisonSize, soldierDeath } from '../../civics/military/garrison.js';
+import { mercCost } from '../../civics/military/merc_cost.js';
 import { payCosts } from '../../actions/core/action_costs.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 import { messageQueue } from '../../functions/message_log.js';
@@ -9,6 +9,7 @@ import { clearPopper } from '../../functions/popover.js';
 import { renderEdenic } from '../edenic_render.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { deadCalc } from './elysium.js';
+import { hooks } from '../../core/registries.js';
 
 // Bagian dari edenElysium (8 entri: info .. scout_elysium), dipisah dari elysium.js. Urutan entri sama persis.
 export const edenElysiumPart1 = {
@@ -128,7 +129,7 @@ export const edenElysiumPart1 = {
                     dead = deadCalc(dead, armySize);
                     remain = armySize - dead;
 
-                    let troops = Math.ceil(armyRating(remain,'Troops'));
+                    let troops = Math.ceil(hooks.armyRating(remain,'Troops'));
                     let damage = Math.floor(seededRandom(0,troops,true) / 50);
 
                     let more_dead = Math.floor(seededRandom(0,remain,true));
@@ -205,7 +206,7 @@ export const edenElysiumPart1 = {
                     dead = deadCalc(dead, armySize);
                     remain = armySize - dead;
 
-                    let troops = Math.ceil(armyRating(remain,'Troops'));
+                    let troops = Math.ceil(hooks.armyRating(remain,'Troops'));
                     let damage = Math.floor(seededRandom(0,troops,true) / 50);
 
                     global.civic.garrison.protest += dead;
@@ -257,7 +258,7 @@ export const edenElysiumPart1 = {
                     return false;
                 }
 
-                if (armyRating(jobScale(1),'Troops') > Math.floor(seededRandom(0,global.eden.fortress.detector * 2,true))){
+                if (hooks.armyRating(jobScale(1),'Troops') > Math.floor(seededRandom(0,global.eden.fortress.detector * 2,true))){
                     let dead = Math.floor(seededRandom(0,armySize,true));
                     dead = deadCalc(dead, armySize);
                     let remain = armySize - dead;

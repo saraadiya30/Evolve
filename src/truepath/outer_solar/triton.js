@@ -3,14 +3,15 @@ import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { messageQueue } from '../../functions/message_log.js';
-import { races } from '../../core/registries.js';
-import { armyRating, garrisonSize } from '../../civics/military/army_rating.js';
+import { races, hooks } from '../../core/registries.js';
+import { garrisonSize } from '../../civics/military/garrison.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { production } from '../../resources/prod.js';
 import { payCosts } from '../../actions/core/action_costs.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
 import { drawTech } from '../../actions/core/action_runner.js';
-import { fuel_adjust, planetName } from '../../space/planet_generation.js';
+import { fuel_adjust } from '../../space/planet_generation.js';
+import { planetName } from '../../space/planet_name.js';
 import { renderSpace, incrementStruct } from '../../space/space_requirements.js';
 import { loc } from '../../core/locale.js';
 
@@ -36,7 +37,7 @@ export const outerTriton = {
                             threat(e,t){
                                 let wounded = global.civic.garrison.wounded - garrisonSize();
                                 if (wounded < 0){ wounded = 0; }
-                                let d = +(e - armyRating(t,'army',wounded)).toFixed(0);
+                                let d = +(e - hooks.armyRating(t,'army',wounded)).toFixed(0);
                                 return d < 0 ? 0 : d;
                             }
                         }

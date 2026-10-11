@@ -1,5 +1,5 @@
 import { loc } from '../../core/locale.js';
-import { races, traits } from '../../core/registries.js';
+import { races, traits, hooks } from '../../core/registries.js';
 import { global } from '../../core/vars.js';
 import { payCosts } from '../../actions/core/action_costs.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
@@ -7,7 +7,6 @@ import { initStruct, structName } from '../../actions/core/structure_ui.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
-import { drawResourceTab } from '../../resources/resource_tabs.js';
 import { universeAffix } from '../../functions/universe_utils.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { galaxyProjects } from '../../core/registries.js';
@@ -99,7 +98,7 @@ export const galaxyProjects_gxy_gorddon = {
                         global.tech['xeno'] = 5;
                         initStruct(galaxyProjects.gxy_gorddon.freighter);
                         global.galaxy['trade'] = { max: 0, cur: 0, f0: 0, f1: 0, f2: 0, f3: 0, f4: 0, f5: 0, f6: 0, f7: 0, f8: 0 };
-                        drawResourceTab('market');
+                        hooks.drawResourceTab('market');
                         messageQueue(loc('galaxy_embassy_complete',[races[global.galaxy.alien1.id].name,races[global.galaxy.alien2.id].name]),'info',false,['progress']);
                     }
                     if (global.race['fasting']){

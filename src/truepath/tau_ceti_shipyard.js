@@ -1,22 +1,19 @@
 // Isi: outerTruthTech(), tauCetiTech(), checkPathRequirements(), renderTauCeti(), drawShipYard(), buildTPShipQueue(), TPShipDesc(), buildTPShip(), getRandomShipName(), randomWord(), updateCosts(), shipCrewSize(), shipPower(), shipAttackPower() +6
-import { outerTruth, tauCetiModules } from '../core/registries.js';
-import { checkRequirements } from '../space/space_requirements.js';
-import { planetName } from '../space/planet_generation.js';
-import { global, keyMap, sizeApproximation, p_on } from '../core/vars.js';
-import { powerModifier } from '../functions/power_modifiers.js';
+import { outerTruth, tauCetiModules, hooks } from '../core/registries.js';
+import { checkRequirements } from '../space/check_requirements.js';
+import { planetName } from '../space/planet_name.js';
+import { global, keyMap, sizeApproximation } from '../core/vars.js';
 import { clearElement, vBind } from '../functions/dom_helpers.js';
-import { timeCheck, timeFormat } from '../functions/time_format.js';
 import { buildQueue } from '../functions/queues.js';
 import { popover } from '../functions/popover.js';
 import { deepClone } from '../core/object_utils.js';
 import { loc } from '../core/locale.js';
-import { setAction } from '../actions/core/action_runner.js';
 import { payCosts } from '../actions/core/action_costs.js';
-import { shipCrewCalc, shipPowerCalc, shipAttackCalc, shipSpeedCalc, shipFuelUseCalc, shipCostsCalc } from '../systems/ship_core.js';
-import { jobScale } from '../civics/jobs/job_scale.js';
-import { shipyardRanks } from './truepath.js';
-import { setOrbits, sensorRange, drawShips, genXYcoord } from './ship_orbits.js';
+import { shipyardRanks } from './truepath_data.js';
+import { setOrbits, sensorRange, genXYcoord } from './orbit_math.js';
 import { solarModal } from './solar_map.js';
+import { shipCosts } from './ship_desc.js';
+import { shipCrewSize, shipSpeed, shipAttackPower, shipFuelUse, shipPower } from './ship_stats.js';
 
 // Fungsi-fungsi dipindah dari truepath.js (urutan sumber dipertahankan). truepath.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -91,7 +88,7 @@ export function renderTauCeti(){
             Object.keys(tauCetiModules[region]).forEach(function (tech){
                 if (tech !== 'info' && checkRequirements(tauCetiModules,region,tech)){
                     let c_action = tauCetiModules[region][tech];
-                    setAction(c_action,'tauceti',tech);
+                    hooks.setAction(c_action,'tauceti',tech);
                 }
             });
 
@@ -296,7 +293,7 @@ export function drawShipYard(){
                     }, 50);
                 },
                 redraw(){
-                    drawShips();
+                    hooks.drawShips();
                 }
             },
             filters: {
@@ -320,7 +317,7 @@ export function drawShipYard(){
         });
 
         yard.append($(`<div id="shipList" class="sticky"></div>`));
-        drawShips();
+        hooks.drawShips();
     }
 }
 
@@ -330,48 +327,6 @@ export function buildTPShipQueue(action){
         return true;
     }
     return false;
-}
-
-export function TPShipDesc(parent,obj){
-    let ship = obj.type;
-    let raw = shipCosts(ship);
-    let costs = {};
-    Object.keys(raw).forEach(function(res){
-        costs[res] = function(){ return raw[res]; }
-    });
-
-    let desc = $(`<div class="shipPopper"></div>`);
-    let shipPattern = $(`<div class="divider">${loc(`outer_shipyard_class_${ship.class}`)} | ${loc(`outer_shipyard_engine_${ship.engine}`)} | ${loc(`outer_shipyard_weapon_${ship.weapon}`)} | ${loc(`outer_shipyard_power_${ship.power}`)} | ${loc(`outer_shipyard_sensor_${ship.sensor}`)}</div>`);
-    parent.append(desc);
-
-    desc.append(shipPattern);
-
-    let cost = $('<div class="costList"></div>');
-    desc.append(cost);
-
-    let tc = timeCheck({ id: ship.name , cost: costs, doNotAdjustCost: true }, false, true);
-    Object.keys(costs).forEach(function (res){
-        if (costs[res]() > 0){
-            let label = res === 'Money' ? '$' : global.resource[res].name + ': ';
-            let color = global.resource[res].amount >= costs[res]() ? 'has-text-dark' : ( res === tc.r ? 'has-text-danger' : 'has-text-alert');
-            cost.append($(`<div class="${color}" data-${res}="${costs[res]()}">${label}${sizeApproximation(costs[res](),2)}</div>`));
-        }
-    });
-
-    if (tc && tc['t']){
-        desc.append($(`<div class="divider"></div><div id="popTimer" class="flair has-text-advanced">{{ t | timer }}</div>`));
-        vBind({
-            el: '#popTimer',
-            data: tc,
-            filters: {
-                timer(t){
-                    return loc('action_ready',[timeFormat(t)]);
-                }
-            }
-        });
-    }
-    
-    return desc;
 }
 
 function buildTPShip(ship, queue){
@@ -397,7 +352,7 @@ function buildTPShip(ship, queue){
     ship.name = name;
 
     global.space.shipyard.ships.push(ship);
-    drawShips();
+    hooks.drawShips();
     updateCosts();
     if (!queue){
         global.space.shipyard.blueprint.name = getRandomShipName();
@@ -455,37 +410,6 @@ export function updateCosts(){
     });
 }
 
-export function shipCrewSize(ship){
-    return shipCrewCalc(ship.class, global.race['grenadier'], jobScale);
-}
-
-export function shipPower(ship, wiki){
-    return shipPowerCalc(ship, wiki, powerModifier);
-}
-
-export function shipAttackPower(ship){
-    return shipAttackCalc(ship, global.race['wish'] && global.race['wishStats'] && global.race.wishStats.ship);
-}
-
-export function shipSpeed(ship){
-    let boost = ship.location === 'spc_dwarf' && p_on['m_relay'] && ship.transit === 0 && global.space['m_relay'] && global.space.m_relay.charged >= 10000 ? 3 : 1;
-    return shipSpeedCalc(ship, boost);
-}
-
-export function shipFuelUse(ship){
-    return shipFuelUseCalc(ship);
-}
-
-export function shipCosts(bp){
-    let typeCount = 0;
-    global.space.shipyard.ships.forEach(function(ship){
-        if (ship.class === bp.class){
-            typeCount++;
-        }
-    });
-    return shipCostsCalc(bp, typeCount);
-}
-
 export function clearShipDrag(){
     let el = $('#shipList')[0];
     if (el){
@@ -503,7 +427,7 @@ export function dragShipList(){
             let order = global.space.shipyard.ships;
             order.splice(e.newDraggableIndex, 0, order.splice(e.oldDraggableIndex, 1)[0]);
             global.space.shipyard.ships = order;
-            drawShips();
+            hooks.drawShips();
         }
     });
 }

@@ -1,17 +1,15 @@
 import { global, keyMultiplier, resizeGame } from '../core/vars.js';
-import { actions } from '../core/registries.js';
-import { govActive } from '../governor/governor.js';
+import { actions, hooks } from '../core/registries.js';
+import { govActive } from '../governor/gov_active.js';
 import { clearElement, vBind } from './dom_helpers.js';
 import { loc } from '../core/locale.js';
 import { clearPopper, popover } from './popover.js';
-import { shipCosts, TPShipDesc } from '../truepath/tau_ceti_shipyard.js';
+import { shipCosts, TPShipDesc } from '../truepath/ship_desc.js';
 import { mechCost } from '../portal/mech/mech_cost.js';
 import { adjustCosts } from './cost_adjusters.js';
 import { timeFormat } from './time_format.js';
-import { arpaProjectCosts } from '../arpa/arpa_project_building.js';
 import { deepClone } from '../core/object_utils.js';
-import { mechDesc } from '../portal/mech/mech_lab.js';
-import { actionDesc } from '../actions/core/action_costs.js';
+import { mechDesc } from '../portal/mech/mech_desc.js';
 
 
 
@@ -225,7 +223,7 @@ export function attachQueuePopovers(){
             function(obj){
                 let b_res = global.queue.queue[i].hasOwnProperty('bres') ? global.queue.queue[i].bres : false;
                 if (struct.s[0].substring(0,4) === 'arpa'){
-                    obj.popper.append(arpaProjectCosts(100,struct.a));
+                    obj.popper.append(hooks.arpaProjectCosts(100,struct.a));
                 }
                 else if (struct.s[0].substring(0,2) === 'tp' && struct.s[1].substring(0,4) === 'ship'){
                     TPShipDesc(obj.popper,deepClone(global.queue.queue[i]));
@@ -234,7 +232,7 @@ export function attachQueuePopovers(){
                     mechDesc(obj.popper,deepClone(global.queue.queue[i]));
                 }
                 else {
-                    actionDesc(obj.popper,struct.a,global[struct.s[0]][struct.s[1]],false,false,false,b_res);
+                    hooks.actionDesc(obj.popper,struct.a,global[struct.s[0]][struct.s[1]],false,false,false,b_res);
                 }
             },
             {

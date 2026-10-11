@@ -2,12 +2,11 @@ import { loc } from '../../../core/locale.js';
 import { traitCostMod } from '../../../races/trait_logic/racial_traits.js';
 import { payCosts, checkAffordable } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { global } from '../../../core/vars.js';
 import { messageQueue } from '../../../functions/message_log.js';
 import { popCost } from '../../../functions/cost_adjusters.js';
 import { calcPrestige } from '../../../functions/prestige_calc.js';
-import { arpa } from '../../../arpa/arpa_projects.js';
 import { descension } from '../../../resets/reset_vacuum_collapse_ascend_descension_apotheosis.js';
 
 // Bagian dari techsPart3 (24 entri: virtual_reality .. lake_analysis), dipisah dari group_loader.js. Urutan entri sama persis.
@@ -153,13 +152,13 @@ export const techsPart3Part3 = {
         action(){
             if (payCosts($(this)[0])){
                 global.settings.arpa.blood = true;
-                arpa('Crispr');
+                hooks.arpa('Crispr');
                 return true;
             }
             return false;
         },
         post(){
-            arpa('Blood');
+            hooks.arpa('Blood');
         }
     },
     purify: {

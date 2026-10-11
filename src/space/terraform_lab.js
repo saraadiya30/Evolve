@@ -1,5 +1,5 @@
 // Isi: geneCost(), terraformLab(), terraformScore(), isStargateOn()
-import { biomes, planetTraits } from '../races/races.js';
+import { biomes, planetTraits } from '../races/planet_data.js';
 import { genus_def } from '../races/genus_def.js';
 import { traits, races } from '../core/registries.js';
 import { global, webWorker, save, keyMultiplier, p_on } from '../core/vars.js';

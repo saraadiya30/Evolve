@@ -7,11 +7,10 @@ import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
 import { bank_vault } from '../../actions/core/queue_callbacks.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { renderEdenic } from '../edenic_render.js';
-import { armyRating } from '../../civics/military/army_rating.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
-import { edenicModules } from '../../core/registries.js';
+import { edenicModules, hooks } from '../../core/registries.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { addSmelter } from '../../industry/industry_smelter.js';
 import { spatialReasoning } from '../../resources/resources.js';
@@ -109,7 +108,7 @@ export const edenElysiumPart2 = {
                     if (global.eden.enemy_isle.et > 0){ targets.push('et'); }
 
                     if (global.eden['pillbox'] && global.eden.pillbox.staffed > 0){
-                        let rating = +(Math.round(armyRating(global.eden.pillbox.staffed,'army',0)) / (global.race['warlord'] ? 1250 : 75)).toFixed(0);
+                        let rating = +(Math.round(hooks.armyRating(global.eden.pillbox.staffed,'army',0)) / (global.race['warlord'] ? 1250 : 75)).toFixed(0);
                         if (rating > 100){ rating = 100; }
                         global.eden.fire_support_base.count = Math.floor(rating);
                     }
@@ -299,7 +298,7 @@ export const edenElysiumPart2 = {
                 Nanoweave(offset){ return spaceCostMultiplier('pillbox', offset, 38000000, 1.26, 'eden'); },
             },
             effect(){
-                let rating = +(Math.round(armyRating(global.eden['pillbox'] && global.eden.pillbox.staffed ? global.eden.pillbox.staffed : jobScale(10),'army',0)) / (global.race['warlord'] ? 1250 : 75)).toFixed(1);
+                let rating = +(Math.round(hooks.armyRating(global.eden['pillbox'] && global.eden.pillbox.staffed ? global.eden.pillbox.staffed : jobScale(10),'army',0)) / (global.race['warlord'] ? 1250 : 75)).toFixed(1);
                 if (rating > 100){ rating = 100; }
 
                 let desc = ``;

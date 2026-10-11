@@ -1,5 +1,5 @@
 import { loc } from '../../core/locale.js';
-import { races } from '../../core/registries.js';
+import { races, hooks } from '../../core/registries.js';
 import { global } from '../../core/vars.js';
 import { calcPrestige } from '../../functions/prestige_calc.js';
 import { messageQueue } from '../../functions/message_log.js';
@@ -11,10 +11,8 @@ import { payCosts } from '../../actions/core/action_costs.js';
 import { initStruct } from '../../actions/core/structure_ui.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
 import { drawTech } from '../../actions/core/action_runner.js';
-import { atomic_mass } from '../../resources/resources.js';
-import { drawResourceTab } from '../../resources/resource_tabs.js';
+import { atomic_mass } from '../../resources/atomic_mass.js';
 import { loadTab } from '../../core/index.js';
-import { defineGovernor } from '../../governor/governor.js';
 import { interstellarProjects } from '../../core/registries.js';
 import { int_fuel_adjust } from '../planet_generation.js';
 import { incrementStruct, deepSpace } from '../space_requirements.js';
@@ -238,9 +236,9 @@ export const interstellarProjects_int_blackhole = {
                     if (global.interstellar.mass_ejector.count === 1){
                         messageQueue(loc('interstellar_mass_ejector_msg'),'info',false,['progress']);
                         global.settings.showEjector = true;
-                        defineGovernor();
+                        hooks.defineGovernor();
                     }
-                    drawResourceTab('ejector');
+                    hooks.drawResourceTab('ejector');
                     return true;
                 }
                 return false;

@@ -1,16 +1,16 @@
 import { loc } from '../../core/locale.js';
 import { global, p_on, breakdown } from '../../core/vars.js';
 import { govCivics } from '../../civics/military/government_operations.js';
-import { checkCityRequirements } from '../../actions/challenge/challenge_rules.js';
+import { checkCityRequirements } from '../../actions/challenge/requirements.js';
 import { actions } from '../../core/registries.js';
 import { checkAffordable } from '../../actions/core/action_costs.js';
 import { crateGovHook } from '../../resources/market_storage.js';
-import { atomic_mass } from '../../resources/resources.js';
+import { atomic_mass } from '../../resources/atomic_mass.js';
 import { hoovedRename } from '../../functions/run_stats_helpers.js';
 import { adjustCosts } from '../../functions/cost_adjusters.js';
 import { stabilize_blackhole } from '../../tech/tech.js';
 import { gov_tasks } from '../../core/registries.js';
-import { govActive } from '../governor.js';
+import { govActive } from '../gov_active.js';
 
 // Bagian dari gov_tasks (14 entri: tax .. trash), dipisah dari governor.js. Urutan entri sama persis.
 export const gov_tasksPart1 = {

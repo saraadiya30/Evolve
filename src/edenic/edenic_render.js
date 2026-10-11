@@ -1,10 +1,9 @@
 import { global } from '../core/vars.js';
 import { vBind, clearElement } from '../functions/dom_helpers.js';
 import { popover } from '../functions/popover.js';
-import { setAction } from '../actions/core/action_runner.js';
-import { checkRequirements } from '../space/space_requirements.js';
+import { checkRequirements } from '../space/check_requirements.js';
 import { loc } from '../core/locale.js';
-import { edenicModules } from '../core/registries.js';
+import { edenicModules, hooks } from '../core/registries.js';
 
 export function renderEdenic(){
     if (!global.settings.tabLoad && (global.settings.civTabs !== 1 || global.settings.spaceTabs !== 7)){
@@ -78,7 +77,7 @@ export function renderEdenic(){
             Object.keys(edenicModules[region]).forEach(function (tech){
                 if (tech !== 'info' && checkRequirements(edenicModules,region,tech)){
                     let c_action = edenicModules[region][tech];
-                    setAction(c_action,'eden',tech);
+                    hooks.setAction(c_action,'eden',tech);
                 }
             });
         }

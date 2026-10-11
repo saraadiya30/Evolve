@@ -4,7 +4,27 @@ import { stockTick, stockAutoTrade } from '../../stocks/stocks.js';
 import { stockFlags } from '../../stocks/stocks_core.js';
 import { AUTOSAVE_MIN_INTERVAL_MS } from '../../config/constants.js';
 import { global, seededRandom, save, webWorker, atrack, breakdown } from '../../core/vars.js';
-import { longLoop_s1, longLoop_s2, longLoop_s3 } from './long_loop_sections.js';
+import { longLoopTabRefresh } from './long_loop_tab_refresh.js';
+import { longLoopSyphonBloodwar } from './long_loop_syphon_bloodwar.js';
+import { longLoopGovernmentCounters } from './long_loop_government_counters.js';
+import { longLoopPopulationEvents } from './long_loop_population_events.js';
+import { longLoopMarketPrices } from './long_loop_market_prices.js';
+import { longLoopRaceTimers } from './long_loop_race_timers.js';
+import { longLoopSoldierHealing } from './long_loop_soldier_healing.js';
+import { longLoopGarrisonCounters } from './long_loop_garrison_counters.js';
+import { longLoopCalendar } from './long_loop_calendar.js';
+import { longLoopDecay } from './long_loop_decay.js';
+import { longLoopMiscTimers } from './long_loop_misc_timers.js';
+import { longLoopSyndicateResearch } from './long_loop_syndicate_research.js';
+import { longLoopInfiltrator } from './long_loop_infiltrator.js';
+import { longLoopTauCeti } from './long_loop_tauceti.js';
+import { longLoopGovernmentStability } from './long_loop_government_stability.js';
+import { longLoopQueueMax } from './long_loop_queue_max.js';
+import { longLoopMutation } from './long_loop_mutation.js';
+import { longLoopStellarEngine } from './long_loop_stellar_engine.js';
+import { longLoopTechUnlocks } from './long_loop_tech_unlocks.js';
+import { longLoopOrbitDecay } from './long_loop_orbit_decay.js';
+import { longLoopGovernMaterials } from './long_loop_govern_materials.js';
 import { eventList, events } from '../../events/events.js';
 import { exceededATimeThreshold, addATime, gameLoop } from '../../functions/game_loop_timing.js';
 import { tagEvent } from '../../functions/analytics.js';
@@ -12,13 +32,11 @@ import { modRes } from '../../functions/resource_mod.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { eventActive } from '../../functions/event_dates.js';
 import { mechStationEffect } from '../../edenic/edenic.js';
-import { cleanRemoveTrait } from '../../races/trait_logic/trait_changes.js';
-import { traits } from '../../core/registries.js';
+import { traits, hooks } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { drawAchieve } from '../../achievements/achievement_logic.js';
 import { loc } from '../../core/locale.js';
-import { govTitle } from '../../civics/military/government_definitions.js';
-import { sythMap } from '../../core/run_state.js';
+import { govTitle } from '../../civics/military/gov_calc.js';
 import { S_loops as S } from '../../core/registries.js';
 
 // Fungsi-fungsi dipindah dari main.js (urutan sumber dipertahankan). main.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
@@ -31,9 +49,27 @@ export function longLoop(){
     stockTick();
     if (global.race.species !== 'protoplasm'){
 
-        longLoop_s1($ctx);
-        longLoop_s2($ctx);
-        longLoop_s3($ctx);
+        longLoopTabRefresh($ctx);
+        longLoopSyphonBloodwar($ctx);
+        longLoopGovernmentCounters($ctx);
+        longLoopPopulationEvents($ctx);
+        longLoopMarketPrices($ctx);
+        longLoopRaceTimers($ctx);
+        longLoopSoldierHealing($ctx);
+        longLoopGarrisonCounters($ctx);
+        longLoopCalendar($ctx);
+        longLoopDecay($ctx);
+        longLoopMiscTimers($ctx);
+        longLoopSyndicateResearch($ctx);
+        longLoopInfiltrator($ctx);
+        longLoopTauCeti($ctx);
+        longLoopGovernmentStability($ctx);
+        longLoopQueueMax($ctx);
+        longLoopMutation($ctx);
+        longLoopStellarEngine($ctx);
+        longLoopTechUnlocks($ctx);
+        longLoopOrbitDecay($ctx);
+        longLoopGovernMaterials($ctx);
     }
 
     // Event triggered
@@ -103,7 +139,7 @@ export function longLoop(){
     }
 
     if (global.race['warlord'] && global.race['shapeshifter']){
-        cleanRemoveTrait('shapeshifter');
+        hooks.cleanRemoveTrait('shapeshifter');
     }
 
     if (date.getMonth() === 11 && date.getDate() >= 17 && date.getDate() <= 24){
@@ -184,15 +220,6 @@ export function longLoop(){
     }
     else if (rescheduleNeeded){
         gameLoop('period');
-    }
-}
-
-export function buildGene(blockGeneBuffer = false){
-    let buffer = blockGeneBuffer ? 0 : 10000;
-    if (global.resource.Knowledge.amount >= 200000 && global.resource.Knowledge.amount >= global.resource.Knowledge.max - buffer){
-        global.resource.Knowledge.amount -= 200000;
-        let gene = global.genes['synthesis'] ? sythMap[global.genes['synthesis']] : 1;
-        global.resource.Genes.amount += gene;
     }
 }
 

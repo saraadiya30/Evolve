@@ -1,11 +1,10 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { global } from '../../../core/vars.js';
 import { messageQueue } from '../../../functions/message_log.js';
 import { defineIndustry } from '../../../industry/industry_smelter.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
 import { races } from '../../../core/registries.js';
 import { loadFoundry } from '../../../civics/jobs/foundry_panel.js';
 import { alevel } from '../../../achievements/achievement_helpers.js';
@@ -188,7 +187,7 @@ export const techsPart4Part1 = {
         },
         post(){
             defineIndustry();
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     fluidized_bed_reactor: {
@@ -243,7 +242,7 @@ export const techsPart4Part1 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     stanene: {
@@ -265,7 +264,7 @@ export const techsPart4Part1 = {
         },
         post(){
             defineIndustry();
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     nano_tubes: {
@@ -287,7 +286,7 @@ export const techsPart4Part1 = {
         },
         post(){
             defineIndustry();
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     scarletite: {
@@ -323,7 +322,7 @@ export const techsPart4Part1 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     pillars: {

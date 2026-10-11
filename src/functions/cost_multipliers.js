@@ -2,7 +2,7 @@ import { global } from '../core/vars.js';
 import { darkEffect } from './power_modifiers.js';
 import { traits } from '../core/registries.js';
 import { creepGeneReduction } from '../config/constants.js';
-import { govActive } from '../governor/governor.js';
+import { govActive } from '../governor/gov_active.js';
 import { highPopAdjust } from './adjusters_basic.js';
 
 export function costMultiplier(structure,offset,base,multiplier,cat){

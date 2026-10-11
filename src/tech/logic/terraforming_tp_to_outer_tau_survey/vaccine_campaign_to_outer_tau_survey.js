@@ -1,10 +1,9 @@
 import { loc } from '../../../core/locale.js';
 import { global } from '../../../core/vars.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
 import { messageQueue } from '../../../functions/message_log.js';
-import { defineGovernor } from '../../../governor/governor.js';
 import { int_fuel_adjust } from '../../../space/planet_generation.js';
 
 // Bagian dari techsPart7 (13 entri: vaccine_campaign .. outer_tau_survey), dipisah dari group_loader.js. Urutan entri sama persis.
@@ -116,7 +115,7 @@ export const techsPart7Part4 = {
             return false;
         },
         post(){
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     clone_degradation: {

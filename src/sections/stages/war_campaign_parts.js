@@ -1,12 +1,13 @@
 import { global, seededRandom } from '../../core/vars.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { garrisonSize, armyRating, soldierDeath, lootModify } from '../../civics/military/army_rating.js';
+import { lootModify } from '../../civics/military/army_rating.js';
+import { garrisonSize, soldierDeath } from '../../civics/military/garrison.js';
 import { modRes } from '../../functions/resource_mod.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { loc } from '../../core/locale.js';
-import { biomes, planetTraits } from '../../races/races.js';
-import { traits } from '../../core/registries.js';
-import { looters, armorCalc } from '../../civics/military/war_campaign.js';
+import { biomes, planetTraits } from '../../races/planet_data.js';
+import { traits, hooks } from '../../core/registries.js';
+import { looters, armorCalc } from '../../civics/military/war_calc.js';
 import { checkControlling } from '../../civics/military/government_definitions.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 import { universeAffix } from '../../functions/universe_utils.js';
@@ -43,7 +44,7 @@ export function war_campaign_s1($ctx){
     let lowLuck = global.race['puny'] ? 3 : 5;
 
     let luck = Math.floor(seededRandom(lowLuck,highLuck,true)) / 10;
-    $ctx.army = armyRating(global.civic.garrison.raid,'army') * luck;
+    $ctx.army = hooks.armyRating(global.civic.garrison.raid,'army') * luck;
     $ctx.enemy = 0;
 
     switch(global.civic.garrison.tactic){

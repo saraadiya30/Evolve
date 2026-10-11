@@ -9,7 +9,7 @@ import { genePoolPart2 } from '../arpa/genes/architect_to_blood_sacrifice.js';
 import { genePoolPart3 } from '../arpa/genes/essence_absorber.js';
 import { genePoolPart1 } from '../arpa/genes/genetic_memory_to_geographer.js';
 import { loc } from './locale.js';
-import { edenAsphodel, edenElysium, edenicModules, genePool, outerTruth, tauCetiModules, fortressModules, monsters, spaceProjects, interstellarProjects, galaxyProjects, actions_city, techsPart1, techsPart2, techsPart3, techsPart4, techsPart5, techsPart6, techsPart7, techsPart8, gov_tasks, events, traits, races } from './registries.js';
+import { edenAsphodel, edenElysium, edenicModules, genePool, outerTruth, tauCetiModules, fortressModules, monsters, spaceProjects, interstellarProjects, galaxyProjects, actions_city, techsPart1, techsPart2, techsPart3, techsPart4, techsPart5, techsPart6, techsPart7, techsPart8, gov_tasks, gov_traits, arpaProjects, bloodPool, events, traits, races, hooks } from './registries.js';
 import { edenAsphodelPart1 } from '../edenic/asphodel/info_to_research_station.js';
 import { edenAsphodelPart3 } from '../edenic/asphodel/rectory_to_corruptor.js';
 import { edenAsphodelPart2 } from '../edenic/asphodel/warehouse_to_bliss_den.js';
@@ -21,6 +21,8 @@ import { edenElysiumPart1 } from '../edenic/elysium/info_to_scout_elysium.js';
 import { eventsPart1 } from '../events/definitions/dna_replication_to_scandal.js';
 import { eventsPart2 } from '../events/definitions/spy_to_rumor.js';
 import { eventsPart3 } from '../events/event_pet.js';
+import { gov_traitsPart1 } from '../governor/gov_traits.js';
+import { arpaProjectsDef, bloodPoolDef } from '../arpa/arpa_data.js';
 import { gov_tasksPart2 } from '../governor/tasks/mech.js';
 import { gov_tasksPart3 } from '../governor/tasks/replicate.js';
 import { gov_tasksPart1 } from '../governor/tasks/tax_to_trash.js';
@@ -34,7 +36,7 @@ import { fortressModules_prtl_spire } from '../portal/fortress/spire.js';
 import { fortressModules_prtl_wasteland } from '../portal/fortress/wasteland.js';
 import { monstersPart2 } from '../portal/monsters/ape_to_skeleton_pack.js';
 import { monstersPart1 } from '../portal/monsters/fire_elm_to_lich.js';
-import { genusVars } from '../races/races.js';
+import { genusVars } from '../races/planet_data.js';
 import { racesPart2 } from '../races/species/entish_to_synth.js';
 import { racesPart3 } from '../races/species/nano_to_ultra_sludge.js';
 import { racesPart1 } from '../races/species/protoplasm_to_dracnid.js';
@@ -110,6 +112,32 @@ import { tauHome } from '../truepath/tau_ceti/home.js';
 import { tauRed } from '../truepath/tau_ceti/red.js';
 import { tauRoid } from '../truepath/tau_ceti/roid.js';
 import { tauStar } from '../truepath/tau_ceti/star.js';
+import { sentience } from '../actions/evolution/sentience_stage.js';
+import { checkAchievements_s1, checkAchievements_s2 } from '../sections/core/check_achievements_parts.js';
+import { resQueue, exitSim } from '../actions/evolution/simulation_ai.js';
+import { arpaProjectCosts, crispr, blood, addProject } from '../arpa/arpa_project_building.js';
+import { actionDesc } from '../actions/core/action_costs.js';
+import { genetics_s1, genetics_s2 } from '../sections/stages/genetics_parts.js';
+import { gainGene, gainBlood, arpa } from '../arpa/arpa_projects.js';
+import { cleanRemoveTrait, cleanAddTrait } from '../races/trait_logic/trait_changes.js';
+import { minorWish } from '../races/powers/minor_wish.js';
+import { majorWish, ocularPower, renderPsychicPowers } from '../races/powers/power_panels.js';
+import { ascendLab_s1, ascendLab_s2 } from '../sections/stages/ascend_lab_parts.js';
+import { loneSurvivorSetup } from '../sections/stages/lone_survivor_setup.js';
+import { drawEvolution } from '../actions/evolution/evolution_screen.js';
+import { gainTech, drawCity } from '../actions/challenge/challenge_rules.js';
+import { drawShips } from '../truepath/ship_orbits.js';
+import { checkPathRequirements, renderTauCeti } from '../truepath/tau_ceti_shipyard.js';
+import { drawResourceTab, initResourceTabs, defineResources, tradeSummery } from '../resources/resource_tabs.js';
+import { farmerValue, craftsmanCap } from '../civics/jobs/job_definitions.js';
+import { hellSupression } from '../portal/mech/hellguard.js';
+import { describeSoldier, soldierBreakdown, battleAssessment, war_campaign } from '../civics/military/war_campaign.js';
+import { defineGovernor, dragSpyopList } from '../governor/governor.js';
+import { armyRating } from '../civics/military/army_rating.js';
+import { setAction, runAction } from '../actions/core/action_runner.js';
+import { drawMechLab } from '../portal/mech/mech_lab.js';
+import { setPowerGrid } from '../industry/industry_panels.js';
+import { drawStocks_s1, drawStocks_s2, drawStocks_s3 } from '../sections/drawing/draw_stocks_parts.js';
 
 export function registerAsphodel(){
     Object.assign(edenAsphodel,
@@ -137,6 +165,8 @@ export function registerEdenic(){
 }
 
 export function registerGenePool(){
+    Object.assign(arpaProjects, arpaProjectsDef);
+    Object.assign(bloodPool, bloodPoolDef);
     Object.assign(genePool,
         genePoolPart1,
         genePoolPart2,
@@ -274,6 +304,7 @@ export function registerTechParts(){
 }
 
 export function registerGovernor(){
+    Object.assign(gov_traits, gov_traitsPart1);
     Object.assign(gov_tasks,
         gov_tasksPart1,
         gov_tasksPart2,
@@ -315,4 +346,58 @@ export function registerRaces(){
             eris: loc(`genus_${g}_solar_eris`),
         }
     });
+}
+
+export function registerHooks(){
+    hooks.drawStocks_s3 = drawStocks_s3;
+    hooks.drawStocks_s2 = drawStocks_s2;
+    hooks.drawStocks_s1 = drawStocks_s1;
+    hooks.setPowerGrid = setPowerGrid;
+    hooks.drawMechLab = drawMechLab;
+    hooks.runAction = runAction;
+    hooks.setAction = setAction;
+    hooks.armyRating = armyRating;
+    hooks.dragSpyopList = dragSpyopList;
+    hooks.defineGovernor = defineGovernor;
+    hooks.war_campaign = war_campaign;
+    hooks.battleAssessment = battleAssessment;
+    hooks.soldierBreakdown = soldierBreakdown;
+    hooks.describeSoldier = describeSoldier;
+    hooks.hellSupression = hellSupression;
+    hooks.craftsmanCap = craftsmanCap;
+    hooks.farmerValue = farmerValue;
+    hooks.tradeSummery = tradeSummery;
+    hooks.defineResources = defineResources;
+    hooks.initResourceTabs = initResourceTabs;
+    hooks.drawResourceTab = drawResourceTab;
+    hooks.renderTauCeti = renderTauCeti;
+    hooks.checkPathRequirements = checkPathRequirements;
+    hooks.drawShips = drawShips;
+    hooks.drawCity = drawCity;
+    hooks.gainTech = gainTech;
+    hooks.drawEvolution = drawEvolution;
+    hooks.loneSurvivorSetup = loneSurvivorSetup;
+    hooks.ascendLab_s2 = ascendLab_s2;
+    hooks.ascendLab_s1 = ascendLab_s1;
+    hooks.renderPsychicPowers = renderPsychicPowers;
+    hooks.ocularPower = ocularPower;
+    hooks.majorWish = majorWish;
+    hooks.minorWish = minorWish;
+    hooks.cleanAddTrait = cleanAddTrait;
+    hooks.cleanRemoveTrait = cleanRemoveTrait;
+    hooks.arpa = arpa;
+    hooks.gainBlood = gainBlood;
+    hooks.gainGene = gainGene;
+    hooks.addProject = addProject;
+    hooks.blood = blood;
+    hooks.crispr = crispr;
+    hooks.genetics_s2 = genetics_s2;
+    hooks.genetics_s1 = genetics_s1;
+    hooks.actionDesc = actionDesc;
+    hooks.arpaProjectCosts = arpaProjectCosts;
+    hooks.exitSim = exitSim;
+    hooks.resQueue = resQueue;
+    hooks.checkAchievements_s2 = checkAchievements_s2;
+    hooks.checkAchievements_s1 = checkAchievements_s1;
+    hooks.sentience = sentience;
 }

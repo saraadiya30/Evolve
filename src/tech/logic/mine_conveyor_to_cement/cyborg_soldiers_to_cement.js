@@ -4,7 +4,7 @@ import { initStruct, updateQueueNames } from '../../../actions/core/structure_ui
 import { actions } from '../../../core/registries.js';
 import { vBind } from '../../../functions/dom_helpers.js';
 import { messageQueue } from '../../../functions/message_log.js';
-import { planetName } from '../../../space/planet_generation.js';
+import { planetName } from '../../../space/planet_name.js';
 import { global } from '../../../core/vars.js';
 
 // Bagian dari techsPart4 (17 entri: cyborg_soldiers .. cement), dipisah dari group_loader.js. Urutan entri sama persis.

@@ -1,14 +1,16 @@
-import { checkTechQualifications, checkPowerRequirements } from '../../actions/challenge/challenge_rules.js';
+import { checkTechQualifications } from '../../actions/challenge/tech_qualifications.js';
+import { checkPowerRequirements } from '../../actions/challenge/requirements.js';
 import { global, srSpeak, keyMultiplier, callback_queue } from '../../core/vars.js';
-import { removeAction, checkAffordable, templeCount, actionDesc } from '../../actions/core/action_costs.js';
+import { removeAction, checkAffordable } from '../../actions/core/action_costs.js';
+import { templeCount } from '../../functions/temple_count.js';
 import { adjustCosts } from '../../functions/cost_adjusters.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { easterEgg, trickOrTreat } from '../../functions/icons_easter_eggs.js';
 import { popover } from '../../functions/popover.js';
 import { loc } from '../../core/locale.js';
-import { runAction } from '../../actions/core/action_runner.js';
 import { srDesc } from '../../actions/evolution/planet_setup.js';
 import { drawModal } from '../../actions/core/structure_ui.js';
+import { hooks } from '../../core/registries.js';
 
 // Bagian dari setAction (action_runner.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
 
@@ -155,7 +157,7 @@ export function setAction_s2($ctx){
                     return;
                 }
                 else {
-                    runAction($ctx.c_action,$ctx.action,$ctx.type);
+                    hooks.runAction($ctx.c_action,$ctx.action,$ctx.type);
                 }
             },
             describe(){
@@ -282,7 +284,7 @@ export function setAction_s2($ctx){
 
     popover($ctx.id,function(){ return undefined; },{
         in: function(obj){
-            actionDesc(obj.popper,$ctx.c_action,global[$ctx.action][$ctx.type],$ctx.old,$ctx.action,$ctx.type);
+            hooks.actionDesc(obj.popper,$ctx.c_action,global[$ctx.action][$ctx.type],$ctx.old,$ctx.action,$ctx.type);
         },
         out: function(){
             vBind({el: `#popTimer`},'destroy');

@@ -1,8 +1,8 @@
 import { global } from '../core/vars.js';
 import { traits } from '../core/registries.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
-import { govEffect } from '../civics/civics.js';
-import { teamsterCap } from '../civics/jobs/job_definitions.js';
+import { govEffect } from '../civics/gov_effect.js';
+import { teamsterCap } from '../civics/jobs/worker_scale.js';
 import { production_p1, production_p2 } from '../sections/core/production_parts.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
 

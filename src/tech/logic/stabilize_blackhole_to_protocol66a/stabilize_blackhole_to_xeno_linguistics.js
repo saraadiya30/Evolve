@@ -1,12 +1,11 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { global } from '../../../core/vars.js';
-import { atomic_mass } from '../../../resources/resources.js';
+import { atomic_mass } from '../../../resources/atomic_mass.js';
 import { unlockAchieve } from '../../../achievements/achievement_logic.js';
 import { universeAffix } from '../../../functions/universe_utils.js';
-import { arpa } from '../../../arpa/arpa_projects.js';
 import { races } from '../../../core/registries.js';
 import { drawHellObservations } from '../../../portal/mech/mech_analysis.js';
 
@@ -72,7 +71,7 @@ export const techsPart6Part1 = {
             return false;
         },
         post(){
-            arpa('Physics');
+            hooks.arpa('Physics');
         }
     },
     gravitational_waves: {

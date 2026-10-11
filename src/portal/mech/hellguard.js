@@ -1,15 +1,17 @@
 // Isi: hellguard(), checkSkillPointAssignments(), rankDesc(), addHellEnemy(), soulCapacitor(), hellSupression(), mechCost(), bossResists(), checkBossResist()
 import { global, p_on, support_on, seededRandom } from '../../core/vars.js';
-import { fortressModules, monsters } from '../../core/registries.js';
+import { fortressModules, monsters, hooks } from '../../core/registries.js';
 import { traits, races } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
-import { garrisonSize, armyRating } from '../../civics/military/army_rating.js';
+import { garrisonSize } from '../../civics/military/garrison.js';
 import { asphodelResist } from '../../edenic/edenic.js';
 import { loc } from '../../core/locale.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { soulForgeSoldiers, renderFortress } from '../hell/fortress_defense.js';
+import { renderFortress } from '../hell/fortress_defense.js';
+import { soulForgeSoldiers } from '../hell/soul_forge.js';
 import { checkWarlordAchieve } from '../hell/hell_reports.js';
+import { checkBossResist } from './boss_resist.js';
 
 // Fungsi-fungsi dipindah dari portal.js (urutan sumber dipertahankan). portal.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -68,7 +70,7 @@ export function hellguard(){
 
         if (global.portal.throne.enemy.length > 0){
             let scale = global.race['hivemind'] ? traits.hivemind.vars()[0] : 1;
-            let rating = armyRating(scale,'hellArmy',0) / scale;
+            let rating = hooks.armyRating(scale,'hellArmy',0) / scale;
             global.portal.throne.enemy.forEach(function(e){
                 let eRating = e.s + (global.portal.minions.spawns / 9000) ** 8;
                 let reapEffect = global.race['blurry'] ? 102 - traits.blurry.vars()[0] : 102;
@@ -241,7 +243,7 @@ export function hellSupression(area, val, wiki){
                 let guard_posts_on = wiki ? (global.portal?.guard_post?.on ?? 0) : p_on['guard_post'];
                 let army = val || jobScale(guard_posts_on);
                 let arc = (wiki ? (global.portal?.arcology?.on ?? 0) : p_on['arcology']) * 75;
-                let aRating = armyRating(army,'hellArmy',0);
+                let aRating = hooks.armyRating(army,'hellArmy',0);
                 if (global.race['holy']){
                     aRating *= 1 + (traits.holy.vars()[1] / 100);
                 }
@@ -300,28 +302,3 @@ export function bossResists(boss){
     return { w: weak, r: resist };
 }
 
-export function checkBossResist(boss,weapon){
-    let effectiveness = monsters[boss].weapon[weapon];
-    
-    let seed = global.stats.reset + (global.portal?.spire?.count || 1);
-    let seed_r1 = Math.floor(seededRandom(0,25000,false,seed + (global.portal?.spire?.count || 1) * 2));
-    let seed_w1 = Math.floor(seededRandom(0,25000,false,seed + global.stats.reset * 2));
-    
-    let weaponList = global.race['warlord'] 
-        ? ['laser','kinetic','shotgun','missile','flame','plasma','sonic','tesla','claws','venom','cold','shock','fire','acid','stone','iron','flesh','ice','magma','axe','hammer']
-        : ['laser','kinetic','shotgun','missile','flame','plasma','sonic','tesla'];
-
-    let resist = weaponList[Math.floor(seededRandom(0,weaponList.length,false,seed_r1))];
-    let weak = weaponList[Math.floor(seededRandom(0,weaponList.length,false,seed_w1))];
-
-    if (weapon === resist){
-        let seed_r2 = Math.floor(seededRandom(0,25000,false,seed_r1 + (global.portal?.spire?.count || 1) * 3));
-        effectiveness -= Math.floor(seededRandom(0,26,false,seed_r2)) / 100;
-        if (effectiveness < 0){ effectiveness = 0; }
-    }
-    else if (weapon === weak){
-        let seed_w2 = Math.floor(seededRandom(0,25000,false,seed_w1 + global.stats.reset * 3));
-        effectiveness += Math.floor(seededRandom(0,26,false,seed_w2)) / 100;
-    }
-    return effectiveness;
-}

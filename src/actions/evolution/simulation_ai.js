@@ -4,20 +4,18 @@ import { deepClone } from '../../core/object_utils.js';
 import { clearElement, vBind } from '../../functions/dom_helpers.js';
 import { timeFormat } from '../../functions/time_format.js';
 import { clearPopper } from '../../functions/popover.js';
-import { actions } from '../../core/registries.js';
+import { actions, hooks } from '../../core/registries.js';
 import { addSmelter } from '../../industry/industry_smelter.js';
-import { arpa } from '../../arpa/arpa_projects.js';
 import { randomMinorTrait } from '../../races/trait_logic/racial_traits.js';
 import { races } from '../../core/registries.js';
 import { setTraitRank } from '../../races/trait_logic/trait_ranks.js';
-import { setImitation, shapeShift, cleanAddTrait } from '../../races/trait_logic/trait_changes.js';
+import { setImitation, shapeShift } from '../../races/trait_logic/trait_changes.js';
 import { unlockAchieve } from '../../achievements/achievement_logic.js';
 import { loc } from '../../core/locale.js';
 import { initStruct } from '../core/structure_ui.js';
-import { drawCity } from '../challenge/challenge_rules.js';
 import { drawTech } from '../core/action_runner.js';
 import { resDragQueue } from '../core/queue_callbacks.js';
-import { cataclysm_s1, cataclysm_s2 } from '../../sections/stages/cataclysm_parts.js';
+import { cataclysmSetup } from '../../sections/stages/cataclysm_setup.js';
 
 // Fungsi-fungsi dipindah dari actions.js (urutan sumber dipertahankan). actions.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -235,7 +233,7 @@ export function aiStart(){
         }
 
         global.civic.govern.type = 'technocracy';
-        drawCity();
+        hooks.drawCity();
         drawTech();
     }
 }
@@ -243,22 +241,21 @@ export function aiStart(){
 export function cataclysm(){
     const $ctx = {};
     if (global.race['cataclysm']){
-        cataclysm_s1($ctx);
-        cataclysm_s2($ctx);
+        cataclysmSetup($ctx);
     }
 }
 
 export function fanaticism(god){
     if (['custom','hybrid','nano'].includes(god) && global.race['warlord']){
         randomMinorTrait(5);
-        arpa('Genetics');
+        hooks.arpa('Genetics');
     }
     else {
         switch (races[god].fanaticism){
             case 'smart':
                 if (global.race['dumb']){
                     randomMinorTrait(5);
-                    arpa('Genetics');
+                    hooks.arpa('Genetics');
                 }
                 else {
                     fanaticTrait('smart');
@@ -278,7 +275,7 @@ export function fanaticism(god){
                 break;
             case 'none':
                 randomMinorTrait(5);
-                arpa('Genetics');
+                hooks.arpa('Genetics');
                 break;
             case 'kindling_kindred':
                 fanaticTrait(races[god].fanaticism);
@@ -324,9 +321,9 @@ function fanaticTrait(trait,rank){
         else {
             global.race[trait] = rank ?? 1;
         }
-        cleanAddTrait(trait);
+        hooks.cleanAddTrait(trait);
     }
-    arpa('Genetics');
+    hooks.arpa('Genetics');
 }
 
 export function resQueue(){

@@ -1,12 +1,11 @@
 import { global } from '../core/vars.js';
-import { traits } from '../core/registries.js';
+import { traits, hooks } from '../core/registries.js';
 import { clearElement, vBind } from '../functions/dom_helpers.js';
 import { calcGenomeScore } from '../functions/run_stats_helpers.js';
 import { popover } from '../functions/popover.js';
 import { getTraitDesc } from '../functions/trait_description.js';
 import { loc } from '../core/locale.js';
 import { geneCost } from './terraform_lab.js';
-import { ascendLab_s1, ascendLab_s2 } from '../sections/stages/ascend_lab_parts.js';
 
 // Functions extracted from space.js (source order preserved). space.js still re-exports the previously exported names.
 
@@ -16,8 +15,8 @@ export function ascendLab(hybrid,wiki){
     $ctx.hybrid = hybrid;
     $ctx.wiki = wiki;
     $ctx.summaryTab = summaryTab;
-    { const $r = ascendLab_s1($ctx); if ($r) return $r.$r; }
-    ascendLab_s2($ctx);
+    { const $r = hooks.ascendLab_s1($ctx); if ($r) return $r.$r; }
+    hooks.ascendLab_s2($ctx);
 
     function summaryTab(tab){
         if (tab === 4 || tab === 5){

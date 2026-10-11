@@ -7,8 +7,7 @@ import { initStruct } from '../../actions/core/structure_ui.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { retirement } from '../../resets/reset_terraform_ai_matrix_retirement_eden.js';
 import { loc } from '../../core/locale.js';
-import { tauCetiModules } from '../../core/registries.js';
-import { renderTauCeti } from '../tau_ceti_shipyard.js';
+import { tauCetiModules, hooks } from '../../core/registries.js';
 import { wom_recycle, retireProjection } from '../support.js';
 
 // Region 'tau_gas2' dari tauCetiModules (dipisah dari truepath.js). Isi/urutan entri sama persis; digabung via core/registries.js di truepath.js.
@@ -122,7 +121,7 @@ export const tauGas2 = {
                     if (global.resource.Elerium.diff >= 10){
                         global.tauceti.alien_space_station.on = 1;
                     }
-                    renderTauCeti();
+                    hooks.renderTauCeti();
                 }
             }
         },
@@ -247,7 +246,7 @@ export const tauGas2 = {
                         incrementStruct('ignition_device','tauceti');
                         if (global.tauceti.ignition_device.count >= 10){
                             global.tech['m_ignite'] = 1;
-                            renderTauCeti();
+                            hooks.renderTauCeti();
                         }
                         return true;
                     }

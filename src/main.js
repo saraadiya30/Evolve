@@ -9,24 +9,22 @@ import { popover } from './functions/popover.js';
 import { calcQuantumLevel } from './functions/quantum_level.js';
 import { vBind } from './functions/dom_helpers.js';
 import { flib } from './functions/run_stats_helpers.js';
-import { calc_mastery } from './functions/functions.js';
+import { calc_mastery } from './functions/calc_mastery.js';
 import { drawPet } from './functions/icons_easter_eggs.js';
-import { races, traits } from './core/registries.js';
+import { races, traits, hooks } from './core/registries.js';
 import { orbitLength } from './races/trait_logic/trait_ranks.js';
-import { biomes, planetTraits } from './races/races.js';
+import { biomes, planetTraits } from './races/planet_data.js';
 import { shapeShift } from './races/trait_logic/trait_changes.js';
-import { defineResources } from './resources/resource_tabs.js';
 import { defineJobs } from './civics/jobs/job_definitions.js';
-import { gridDefs } from './industry/power_grid.js';
+import { gridDefs } from './industry/grid_defs.js';
 import { setupRituals } from './industry/industry_panels.js';
-import { govEffect } from './civics/civics.js';
-import { drawEvolution } from './actions/evolution/evolution_screen.js';
+import { govEffect } from './civics/gov_effect.js';
 import { updateQueueNames } from './actions/core/structure_ui.js';
 import { planetGeology } from './actions/evolution/planet_setup.js';
 import { start_cataclysm } from './actions/core/queue_callbacks.js';
 import { genPlanets, setUniverse } from './space/planet_generation.js';
 import { universe_types } from './space/space.js';
-import { govActive } from './governor/governor.js';
+import { govActive } from './governor/gov_active.js';
 import { swissKnife } from './core/swiss_knife.js';
 import { index, mainVue, initTabs, loadTab } from './core/index.js';
 import { setWeather, seasonDesc } from './systems/seasons.js';
@@ -36,7 +34,8 @@ import { S_loops as S } from './core/registries.js';
 import { execGameLoops } from './loops/game_loop_runner.js';
 export { execGameLoops } from './loops/game_loop_runner.js';
 import { resourceAlt } from './loops/long/long_loop.js';
-export { buildGene, steelCheck, spyCaught } from './loops/long/long_loop.js';
+export { steelCheck, spyCaught } from './loops/long/long_loop.js';
+export { buildGene } from './loops/long/build_gene.js';
 import { registerAll } from './core/register_all.js';
 export { firstRun, sythMap, set_firstRun } from './core/run_state.js';
 
@@ -308,7 +307,7 @@ if (global.city['replicator'] && global.race?.replicator?.pow && global.race?.go
 }
 
 defineJobs(true);
-defineResources();
+hooks.defineResources();
 initTabs();
 buildQueue();
 if (global.race['shapeshifter']){
@@ -831,7 +830,7 @@ if (global.race.species === 'protoplasm'){
         genPlanets();
     }
     else {
-        drawEvolution();
+        hooks.drawEvolution();
     }
 }
 else {

@@ -1,6 +1,6 @@
 import { loc } from '../../core/locale.js';
 import { payCrispr } from '../arpa_projects.js';
-import { blood } from '../arpa_project_building.js';
+import { hooks } from '../../core/registries.js';
 
 // Bagian dari genePool (1 entri: essence_absorber .. essence_absorber), dipisah dari arpa.js. Urutan entri sama persis.
 export const genePoolPart3 = {
@@ -22,7 +22,7 @@ export const genePoolPart3 = {
             return false;
         },
         post(){
-            blood();
+            hooks.blood();
         }
     },
 };

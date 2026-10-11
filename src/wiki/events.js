@@ -1,6 +1,6 @@
 import { global } from '../core/vars.js';
 import { races } from '../core/registries.js';
-import { govTitle } from '../civics/military/government_definitions.js';
+import { govTitle } from '../civics/military/gov_calc.js';
 import { housingLabel } from '../actions/core/structure_ui.js';
 import { clearElement } from '../functions/dom_helpers.js';
 import { eventActive } from '../functions/event_dates.js';

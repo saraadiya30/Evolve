@@ -1,67 +1,16 @@
-import { global, p_on, support_on, active_rituals, affix_list } from '../core/vars.js';
-import { calc_mastery, calcPillar } from '../functions/functions.js';
+import { global, p_on, support_on, active_rituals } from '../core/vars.js';
+import { calcPillar } from '../functions/functions.js';
+import { calc_mastery } from '../functions/calc_mastery.js';
 import { darkEffect } from '../functions/power_modifiers.js';
-import { traits } from '../core/registries.js';
-import { templeCount } from '../actions/core/action_costs.js';
+import { traits, hooks } from '../core/registries.js';
+import { templeCount } from '../functions/temple_count.js';
 import { actions } from '../core/registries.js';
-import { hellSupression } from '../portal/mech/hellguard.js';
-import { syndicate } from '../truepath/ship_orbits.js';
-import { govEffect } from '../civics/civics.js';
+import { syndicate } from '../truepath/orbit_math.js';
+import { govEffect } from '../civics/gov_effect.js';
 import { teamster } from './prod.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
 import { loc } from '../core/locale.js';
-export { craftCost, initResourceTabs, drawResourceTab, defineResources, tradeSummery } from './resource_tabs.js';
-export { setResourceName, marketItem, galaxyOffers } from './special_resources.js';
-export { galacticTrade, containerItem, tradeSellPrice, tradeBuyPrice, craftingPopover } from './crate_assignment.js';
-export { crateGovHook, unlockCrates, unlockContainers, crateValue, containerValue, loadEjector, loadSupply } from './market_storage.js';
 import { faithTempleCount, faithBonus, templePlasmidBonus } from './aether_alchemy.js';
-export { loadAlchemy, initAether, faithTempleCount, faithBonus, templePlasmidBonus } from './aether_alchemy.js';
-
-export const atomic_mass = {
-    Food: 4.355,
-    Lumber: 7.668,
-    Chrysotile: 15.395,
-    Stone: 20.017,
-    Crystal: 5.062,
-    Furs: 13.009,
-    Copper: 63.546,
-    Iron: 55.845,
-    Aluminium: 26.9815,
-    Cement: 20.009,
-    Coal: 12.0107,
-    Oil: 5.342,
-    Uranium: 238.0289,
-    Steel: 55.9,
-    Titanium: 47.867,
-    Alloy: 45.264,
-    Polymer: 120.054,
-    Iridium: 192.217,
-    Helium_3: 3.0026,
-    Deuterium: 2.014,
-    Neutronium: 248.74,
-    Adamantite: 178.803,
-    Infernite: 222.666,
-    Elerium: 297.115,
-    Nano_Tube: 15.083,
-    Graphene: 26.9615,
-    Stanene: 33.9615,
-    Bolognium: 75.898,
-    Unobtainium: 168.59,
-    Vitreloy: 41.08,
-    Orichalcum: 237.8,
-    Asphodel_Powder: 0.01,
-    Elysanite: 13.666,
-    Water: 18.01,
-    Plywood: 7.666,
-    Brick: 20.009,
-    Wrought_Iron: 55.845,
-    Sheet_Metal: 26.9815,
-    Mythril: 94.239,
-    Aerogel: 7.84,
-    Nanoweave: 23.71,
-    Scarletite: 188.6,
-    Quantium: 241.35
-};
 
 export const supplyValue = {
     Lumber: { in: 0.5, out: 25000 },
@@ -250,7 +199,7 @@ export const craftingRatio = (function(){
                 });
             }
             if (p_on['hell_forge']){
-                let sup = hellSupression('ruins');
+                let sup = hooks.hellSupression('ruins');
                 crafting.general.add.push({
                     name: loc(`portal_hell_forge_title`),
                     manual: 0,
@@ -454,9 +403,6 @@ export const craftingRatio = (function(){
         }
     }
 })();
-
-export const aether_big_affix = affix_list.sln;
-export const aether_small_affix = ['m','μ','n','p','f','a','z','y'];
 
 export const spatialReasoning = (function(){
     let spatial = {};

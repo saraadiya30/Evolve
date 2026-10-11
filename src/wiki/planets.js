@@ -1,6 +1,6 @@
 import { global } from '../core/vars.js';
 import { loc } from '../core/locale.js';
-import { planetTraits, biomes } from '../races/races.js';
+import { planetTraits, biomes } from '../races/planet_data.js';
 import { headerBoxBuilder, infoBoxBuilder } from './functions.js';
 
 export function planetsPage(content) {

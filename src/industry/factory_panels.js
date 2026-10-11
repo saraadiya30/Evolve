@@ -9,9 +9,9 @@ import { production } from '../resources/prod.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
 import { traits } from '../core/registries.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
-import { atomic_mass } from '../resources/resources.js';
+import { atomic_mass } from '../resources/atomic_mass.js';
 import { f_rate, nf_resources } from './industry.js';
-import { colorRange } from './industry_panels.js';
+import { colorRange } from './color_range.js';
 
 // Fungsi-fungsi dipindah dari industry.js (urutan sumber dipertahankan). industry.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 

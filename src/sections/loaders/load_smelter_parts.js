@@ -1,10 +1,10 @@
-import { smelterFuelConfig } from '../../industry/industry_smelter.js';
+import { smelterFuelConfig } from '../../industry/smelter_fuel.js';
 import { loc } from '../../core/locale.js';
 import { easterEgg, trickOrTreat } from '../../functions/icons_easter_eggs.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { popover } from '../../functions/popover.js';
 import { global, keyMultiplier, sizeApproximation } from '../../core/vars.js';
-import { colorRange } from '../../industry/industry_panels.js';
+import { colorRange } from '../../industry/color_range.js';
 
 // Bagian dari loadSmelter (industry_smelter.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
 

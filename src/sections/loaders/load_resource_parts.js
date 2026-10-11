@@ -6,7 +6,7 @@ import { vBind } from '../../functions/dom_helpers.js';
 import { eventActive } from '../../functions/event_dates.js';
 import { popover } from '../../functions/popover.js';
 import { drawModal } from '../../resources/market_storage.js';
-import { craftCost } from '../../resources/resource_tabs.js';
+import { craftCost } from '../../resources/craft_cost.js';
 import { breakdownPopover, craftingPopover } from '../../resources/crate_assignment.js';
 import { loc } from '../../core/locale.js';
 

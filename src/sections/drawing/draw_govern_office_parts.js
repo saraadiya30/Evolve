@@ -1,14 +1,17 @@
-import { clearSpyopDrag, gmen, govActive, genGovernor, defineGovernor, gov_traits, dragSpyopList } from '../../governor/governor.js';
+import { genGovernor } from '../../governor/gov_utils.js';
+import { clearSpyopDrag } from '../../governor/gov_utils.js';
+import { gmen } from '../../governor/gov_men.js';
+import { govActive } from '../../governor/gov_active.js';
+import { gov_traits, hooks } from '../../core/registries.js';
 import { loc } from '../../core/locale.js';
 import { global } from '../../core/vars.js';
 import { gov_tasks } from '../../core/registries.js';
-import { govTitle } from '../../civics/military/government_definitions.js';
+import { govTitle } from '../../civics/military/gov_calc.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { tagEvent } from '../../functions/analytics.js';
 import { calcQueueMax, calcRQueueMax } from '../../functions/queues.js';
 import { popover } from '../../functions/popover.js';
 import { updateQueueNames } from '../../actions/core/structure_ui.js';
-import { drawCity } from '../../actions/challenge/challenge_rules.js';
 import { drawTech } from '../../actions/core/action_runner.js';
 
 // Bagian dari drawnGovernOffice (governor.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
@@ -341,11 +344,11 @@ export function drawnGovernOffice_s2($ctx){
                     delete global.race.governor.g;
                     delete global.race.governor.tasks;
                     updateQueueNames(true, ['city-amphitheatre', 'city-apartment']);
-                    drawCity();
+                    hooks.drawCity();
                     drawTech();
                     calcQueueMax();
                     calcRQueueMax();
-                    defineGovernor();
+                    hooks.defineGovernor();
                 }
             },
             fireText(){
@@ -379,6 +382,6 @@ export function drawnGovernOffice_s2($ctx){
     });
     
     Object.keys(global.civic.foreign).forEach(function (gov){
-        dragSpyopList(gov);
+        hooks.dragSpyopList(gov);
     });
 }

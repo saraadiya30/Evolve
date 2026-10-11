@@ -1,7 +1,7 @@
 import { global, sizeApproximation, keyMultiplier } from '../../core/vars.js';
-import { traits, races } from '../../core/registries.js';
-import { traitSkin, traitRank, setTraitRank, combineTraits } from '../../races/trait_logic/trait_ranks.js';
-import { cleanRemoveTrait, cleanAddTrait } from '../../races/trait_logic/trait_changes.js';
+import { traits, races, hooks } from '../../core/registries.js';
+import { traitRank, setTraitRank, combineTraits } from '../../races/trait_logic/trait_ranks.js';
+import { traitSkin } from '../../races/trait_logic/trait_skin.js';
 import { bindTrait, genetics, dragGeneticsList } from '../../arpa/arpa_projects.js';
 import { updateTrades } from '../../arpa/arpa_project_building.js';
 import { loc } from '../../core/locale.js';
@@ -10,11 +10,10 @@ import { deepClone } from '../../core/object_utils.js';
 import { eventActive } from '../../functions/event_dates.js';
 import { fibonacci } from '../../functions/icons_easter_eggs.js';
 import { vBind } from '../../functions/dom_helpers.js';
-import { calc_mastery } from '../../functions/functions.js';
+import { calc_mastery } from '../../functions/calc_mastery.js';
 import { popover } from '../../functions/popover.js';
 import { getTraitDesc } from '../../functions/trait_description.js';
 import { drawTech } from '../../actions/core/action_runner.js';
-import { drawCity } from '../../actions/challenge/challenge_rules.js';
 import { unlockFeat } from '../../achievements/achievement_logic.js';
 
 // Part of genetics (from arpa.js), mechanically split: shared variables across parts are in $ctx.
@@ -328,10 +327,10 @@ export function genetics_s1($ctx){
                             delete global.race.inactiveTraits['herbivore'];
                             delete global.race.inactiveTraits['carnivore'];
                         }
-                        cleanRemoveTrait(t,rank);
+                        hooks.cleanRemoveTrait(t,rank);
                         genetics();
                         drawTech();
-                        drawCity();
+                        hooks.drawCity();
 
                         let count = 0;
                         Object.keys(global.race).forEach(function (trait){
@@ -361,13 +360,13 @@ export function genetics_s1($ctx){
                         }
                         global.race.modified.t++;
                         if (traits[t].val >= 0){ global.race.modified.pa++; } else { global.race.modified.na++; }
-                        cleanAddTrait(t);
+                        hooks.cleanAddTrait(t);
                         if ($ctx.offspec_traits.includes(t)){
                             setTraitRank(t, {down:true});
                         }
                         genetics();
                         drawTech();
-                        drawCity();
+                        hooks.drawCity();
                         combineTraits();
                     }
                 },

@@ -6,6 +6,7 @@ import { INFERNO_SMELTER_RATE } from '../config/constants.js';
 import { loadFactory, loadDroid, loadGraphene, loadNFactory } from './factory_panels.js';
 import { loadPylon, loadQuarry, loadTMine, loadMiningShip, loadAlienSpaceStation, loadReplicator, loadMechStation } from './industry_panels.js';
 import { loadSmelter_s1, loadSmelter_s2, loadSmelter_s3 } from '../sections/loaders/load_smelter_parts.js';
+import { smelterFuelConfig } from './smelter_fuel.js';
 
 // Fungsi-fungsi dipindah dari industry.js (urutan sumber dipertahankan). industry.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -112,39 +113,6 @@ export function defineIndustry(){
         $(`#industry`).append(replicator);
         loadIndustry('replicator',replicator,'#iReplicator');
     }
-}
-
-export function smelterFuelConfig(){
-    let fuel = {
-        d_fuel: 'Lumber',
-        l_type: 'Lumber',
-        l_cost: 3,
-        // Discount coal cost for species that (usually) cannot burn lumber
-        c_cost: (global.race['kindling_kindred'] || global.race['smoldering']) ? 0.15 : 0.25,
-        // Oil bonus is free with Forge trait
-        o_cost: global.race['forge'] ? 0 : 0.35,
-    };
-
-    if (global.race['evil']){
-        if (global.race['soul_eater'] && global.race.species !== 'wendigo' && !global.race['artificial']){
-            fuel.l_type = 'Food';
-        }
-        else {
-            fuel.l_type = 'Furs';
-            fuel.l_cost = 1;
-        }
-    }
-    // Set default fuel to coal if it's not possible to burn lumber, souls, or flesh
-    else if (global.race['kindling_kindred'] || global.race['smoldering']){
-        fuel.d_fuel = 'Coal';
-    }
-
-    // Synthetics start with oil unlocked and always default to its use
-    if (global.race['artificial']) {
-        fuel.d_fuel = 'Oil';
-    }
-
-    return fuel;
 }
 
 function loadSmelter(parent,bind){

@@ -1,13 +1,15 @@
 import { global, p_on, support_on, hell_reports, hell_graphs } from '../../core/vars.js';
-import { traits } from '../../core/registries.js';
+import { traits, hooks } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
-import { soulForgeSoldiers, casualties, fortressDefenseRating, renderFortress } from '../../portal/hell/fortress_defense.js';
+import { casualties, renderFortress } from '../../portal/hell/fortress_defense.js';
+import { fortressDefenseRating } from '../../portal/hell/fortress_data.js';
+import { soulForgeSoldiers } from '../../portal/hell/soul_forge.js';
 import { soulCapacitor } from '../../portal/mech/hellguard.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { armyRating, soldierDeath } from '../../civics/military/army_rating.js';
+import { soldierDeath } from '../../civics/military/garrison.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { loc } from '../../core/locale.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { actions } from '../../core/registries.js';
 import { drawTech } from '../../actions/core/action_runner.js';
@@ -149,7 +151,7 @@ export function bloodwar_s1($ctx){
                 pat_size += global.tech['hdroid'] ? jobScale(2) : jobScale(1);
                 terminators--;
             }
-            let pat_rating = Math.round(armyRating(pat_size,'hellArmy',hurt));
+            let pat_rating = Math.round(hooks.armyRating(pat_size,'hellArmy',hurt));
 
             let demons = Math.rand(Math.floor(global.portal.fortress.threat / 50), Math.floor(global.portal.fortress.threat / 10));
 

@@ -8,7 +8,8 @@ import { powerCostMod } from '../../functions/power_modifiers.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { production } from '../../resources/prod.js';
-import { planetName, fuel_adjust } from '../planet_generation.js';
+import { fuel_adjust } from '../planet_generation.js';
+import { planetName } from '../planet_name.js';
 import { incrementStruct } from '../space_requirements.js';
 
 // Region 'spc_belt' dari spaceProjects (dipisah dari space.js). Isi sama persis; digabung via core/registries.js di space.js.

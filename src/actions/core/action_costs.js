@@ -5,12 +5,10 @@ import { adjustCosts } from '../../functions/cost_adjusters.js';
 import { clearPopper } from '../../functions/popover.js';
 import { global, sizeApproximation } from '../../core/vars.js';
 import { loc } from '../../core/locale.js';
-import { actions } from '../../core/registries.js';
-import { garrisonSize, armyRating } from '../../civics/military/army_rating.js';
-import { govActive } from '../../governor/governor.js';
-import { runAction } from './action_runner.js';
-import { getStructNumActive } from '../evolution/planet_setup.js';
-import { exitSim } from '../evolution/simulation_ai.js';
+import { actions, hooks } from '../../core/registries.js';
+import { garrisonSize } from '../../civics/military/garrison.js';
+import { govActive } from '../../governor/gov_active.js';
+import { getStructNumActive } from '../evolution/struct_active.js';
 
 // Fungsi-fungsi dipindah dari actions.js (urutan sumber dipertahankan). actions.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -26,7 +24,7 @@ export function actionDesc(parent,c_action,obj,old,action,a_type,bres){
         parent.append(touch);
 
         $('#touchButton').on('touchstart', function(){
-            runAction(c_action,action,a_type);
+            hooks.runAction(c_action,action,a_type);
         });
     }
 
@@ -342,33 +340,6 @@ export function checkAffordable(c_action,max,raw){
     return true;
 }
 
-export function templeCount(zig){
-    if (!zig && global.city['temple']){
-        let count = global.city.temple.count;
-        if (!global.race['cataclysm'] && !global.race['orbit_decayed'] && !global.race['lone_survivor'] && !global.race['warlord']){
-            if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.temple){
-                count++;
-            }
-            if (global.genes.hasOwnProperty('ancients') && global.genes.ancients >= 6){
-                count++;
-            }
-        }
-        return count;
-    }
-    else if (zig && global.space['ziggurat']){
-        let count = global.space.ziggurat.count;
-        if (!global.race['lone_survivor'] && !global.race['warlord']){
-            if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.zigg){
-                count++;
-            }
-            if (global.genes.hasOwnProperty('ancients') && global.genes.ancients >= 7){
-                count++;
-            }
-        }
-        return count;
-    }
-    return 0;
-}
  
 
 function checkMaxCosts(costs){
@@ -406,7 +377,7 @@ function checkMaxCosts(costs){
             }
         }
         else if (res === 'Army'){
-            if (armyRating(global.civic.garrison.raid,'army') < Number(costs[res]())){
+            if (hooks.armyRating(global.civic.garrison.raid,'army') < Number(costs[res]())){
                 test = false;
                 return;
             }
@@ -480,7 +451,7 @@ export function checkCosts(costs){
             }
         }
         else if (res === 'Army'){
-            if (armyRating(global.civic.garrison.raid,'army') < Number(costs[res]())){
+            if (hooks.armyRating(global.civic.garrison.raid,'army') < Number(costs[res]())){
                 test = false;
                 return;
             }
@@ -607,7 +578,7 @@ export function exitSimulation(){
         data: {},
         methods: {
             exitsim(){
-                exitSim();
+                hooks.exitSim();
             }
         }
     });

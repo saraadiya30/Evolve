@@ -1,6 +1,6 @@
 // Isi: masteryType(), challenge_multiplier(), getResetConstants(), calcPrestige(), adjustCosts(), bloatAdjust(), loneAdjust(), truthAdjust(), inflationAdjust(), extraAdjust(), technoAdjust(), scienceAdjust(), smolderAdjust(), kindlingAdjust() +2
 import { global } from '../core/vars.js';
-import { universeLevel } from '../achievements/achievement_logic.js';
+import { universeLevel } from '../achievements/universe_level.js';
 import { alevel } from '../achievements/achievement_helpers.js';
 import { traits, races } from '../core/registries.js';
 import { jobScale } from '../civics/jobs/job_scale.js';

@@ -3,7 +3,7 @@ import { loc } from '../core/locale.js';
 import { clearElement, vBind } from '../functions/dom_helpers.js';
 import { adjustCosts } from '../functions/cost_adjusters.js';
 import { actions } from '../core/registries.js';
-import { planetName } from '../space/planet_generation.js';
+import { planetName } from '../space/planet_name.js';
 
 export function headerBoxBuilder(parent,args,box){
     if (!args.hasOwnProperty('h_level')){

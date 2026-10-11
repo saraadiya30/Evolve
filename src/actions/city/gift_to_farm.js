@@ -5,15 +5,15 @@ import { messageQueue } from '../../functions/message_log.js';
 import { getHalloween } from '../../functions/event_dates.js';
 import { costMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
-import { drawCity, BHStorageMulti } from '../challenge/challenge_rules.js';
+import { BHStorageMulti } from '../challenge/challenge_rules.js';
 import { buildTemplate } from '../evolution/evolution_screen.js';
 import { payCosts } from '../core/action_costs.js';
 import { housingLabel, structName } from '../core/structure_ui.js';
 import { powerOnNewStruct } from '../evolution/planet_setup.js';
-import { traits } from '../../core/registries.js';
+import { traits, hooks } from '../../core/registries.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { spatialReasoning } from '../../resources/resources.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { production } from '../../resources/prod.js';
 
 // Bagian dari actions_city (21 entri: gift .. farm), dipisah dari city.js. Urutan entri sama persis.
@@ -82,7 +82,7 @@ export const actions_cityPart1 = {
                                     global.stats.plasmid += 100;
                                     messageQueue(loc('city_gift_msg',[100,loc('arpa_genepool_effect_plasmid')]),'info',false,['events']);
                                 }
-                                drawCity();
+                                hooks.drawCity();
                             }
                         }
                         else {
@@ -165,7 +165,7 @@ export const actions_cityPart1 = {
                                 }
 
                                 messageQueue(loc('city_gift2_msg',[gift.join(", ")]),'info',false,['events']);
-                                drawCity();
+                                hooks.drawCity();
                             }
                         }
                     }

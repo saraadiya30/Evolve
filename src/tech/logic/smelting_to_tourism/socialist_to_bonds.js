@@ -3,12 +3,9 @@ import { global } from '../../../core/vars.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { drawTech } from '../../../actions/core/action_runner.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { checkControlling } from '../../../civics/military/government_definitions.js';
-import { defineGovernor } from '../../../governor/governor.js';
 import { vBind } from '../../../functions/dom_helpers.js';
-import { drawResourceTab } from '../../../resources/resource_tabs.js';
-import { arpa } from '../../../arpa/arpa_projects.js';
 
 // Bagian dari techsPart2 (25 entri: socialist .. bonds), dipisah dari group_loader.js. Urutan entri sama persis.
 export const techsPart2Part3 = {
@@ -109,7 +106,7 @@ export const techsPart2Part3 = {
             return false;
         },
         post(){
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     spy: {
@@ -127,7 +124,7 @@ export const techsPart2Part3 = {
         },
         post(){
             vBind({el: '#foreign'},'update');
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     espionage: {
@@ -149,7 +146,7 @@ export const techsPart2Part3 = {
         },
         post(){
             vBind({el: '#foreign'},'update');
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     spy_training: {
@@ -226,7 +223,7 @@ export const techsPart2Part3 = {
             return false;
         },
         post(){
-            drawResourceTab('market');
+            hooks.drawResourceTab('market');
         }
     },
     tax_rates: {
@@ -244,7 +241,7 @@ export const techsPart2Part3 = {
             return false;
         },
         post(){
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     large_trades: {
@@ -311,7 +308,7 @@ export const techsPart2Part3 = {
             return false;
         },
         post(){
-            drawResourceTab('market');
+            hooks.drawResourceTab('market');
         }
     },
     diplomacy: {
@@ -343,7 +340,7 @@ export const techsPart2Part3 = {
         },
         post(){
             if (global.tech['high_tech'] >= 6) {
-                arpa('Physics');
+                hooks.arpa('Physics');
             }
         }
     },

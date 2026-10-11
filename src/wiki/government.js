@@ -1,6 +1,6 @@
 import { global } from '../core/vars.js';
 import { loc } from '../core/locale.js';
-import { govActive } from '../governor/governor.js';
+import { govActive } from '../governor/gov_active.js';
 import { sideMenu, infoBoxBuilder, resourceName } from './functions.js';
 
 export function govPage(content){

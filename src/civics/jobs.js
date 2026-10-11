@@ -4,19 +4,16 @@ import { getHalloween } from '../functions/event_dates.js';
 import { loc } from '../core/locale.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
 import { racialTrait } from '../races/trait_logic/racial_traits.js';
-import { races, traits } from '../core/registries.js';
-import { biomes } from '../races/races.js';
+import { races, traits, hooks } from '../core/registries.js';
+import { biomes } from '../races/planet_data.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
-import { planetName } from '../space/planet_generation.js';
-import { hellSupression } from '../portal/mech/hellguard.js';
+import { planetName } from '../space/planet_name.js';
 import { asphodelResist } from '../edenic/edenic.js';
 import { actions } from '../core/registries.js';
-import { templeCount } from '../actions/core/action_costs.js';
-import { workerScale, jobName, teamsterCap, farmerValue } from './jobs/job_definitions.js';
+import { templeCount } from '../functions/temple_count.js';
+import { jobName } from './jobs/job_name.js';
+import { workerScale, teamsterCap } from './jobs/worker_scale.js';
 import { jobScale } from './jobs/job_scale.js';
-export { defineJobs, workerScale, setJobName, jobName, loadServants, teamsterCap, craftsmanCap, limitCraftsmen, farmerValue } from './jobs/job_definitions.js';
-export { jobScale } from './jobs/job_scale.js';
-export { loadFoundry } from './jobs/foundry_panel.js';
 
 export const job_desc = {
     unemployed: function(servant){
@@ -50,8 +47,8 @@ export const job_desc = {
         return desc;
     },
     farmer: function(servant){
-        let farmer = +farmerValue(true,servant).toFixed(2);
-        let farmhand = +farmerValue(false,servant).toFixed(2);
+        let farmer = +hooks.farmerValue(true,servant).toFixed(2);
+        let farmhand = +hooks.farmerValue(false,servant).toFixed(2);
         if (!servant){
             farmer = +workerScale(farmer,'farmer').toFixed(2);
             farmhand = +workerScale(farmhand,'farmer').toFixed(2);
@@ -331,7 +328,7 @@ export const job_desc = {
     },
     archaeologist(){
         let value = highPopAdjust(250000);
-        let sup = hellSupression('ruins');
+        let sup = hooks.hellSupression('ruins');
         let know = Math.round(value * sup.supress);
         return loc('job_archaeologist_desc',[know.toLocaleString()]);
     },

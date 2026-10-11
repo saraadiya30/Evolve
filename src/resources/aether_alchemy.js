@@ -4,13 +4,13 @@ import { vBind, clearElement } from '../functions/dom_helpers.js';
 import { popover } from '../functions/popover.js';
 import { loc } from '../core/locale.js';
 import { AETHER_OCOIN_RATE } from '../stocks/stocks_core.js';
-import { templeCount } from '../actions/core/action_costs.js';
-import { workerScale } from '../civics/jobs/job_definitions.js';
+import { templeCount } from '../functions/temple_count.js';
+import { workerScale } from '../civics/jobs/worker_scale.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
 import { traits } from '../core/registries.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
-import { govEffect } from '../civics/civics.js';
-import { aether_small_affix, aether_big_affix } from './resources.js';
+import { govEffect } from '../civics/gov_effect.js';
+import { aether_small_affix, aether_big_affix } from './aether_affix.js';
 import { tradeRatio } from '../config/constants.js';
 
 // Functions extracted from resources.js (source order preserved). resources.js still re-exports the previously exported names.

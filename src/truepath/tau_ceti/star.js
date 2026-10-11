@@ -6,8 +6,7 @@ import { drawTech } from '../../actions/core/action_runner.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { matrix, gardenOfEden } from '../../resets/reset_terraform_ai_matrix_retirement_eden.js';
 import { loc } from '../../core/locale.js';
-import { tauCetiModules } from '../../core/registries.js';
-import { renderTauCeti } from '../tau_ceti_shipyard.js';
+import { tauCetiModules, hooks } from '../../core/registries.js';
 import { wom_recycle, matrixProjection, edenProjection } from '../support.js';
 
 // Region 'tau_star' dari tauCetiModules (dipisah dari truepath.js). Isi/urutan entri sama persis; digabung via core/registries.js di truepath.js.
@@ -71,7 +70,7 @@ export const tauStar = {
                                 global.tauceti['matrix'] = { count: 1, on: 0 };
                             }
                             drawTech();
-                            renderTauCeti();
+                            hooks.renderTauCeti();
                             clearPopper();
                         }
                         return true;
@@ -101,13 +100,13 @@ export const tauStar = {
                 if (o && p_on['matrix']){
                     // Powered on and energized
                     global.tech.matrix = 4;
-                    renderTauCeti();
+                    hooks.renderTauCeti();
                 }
                 else {
                     if (global.tech.matrix > 3){
                         // Disabled or lost power
                         global.tech.matrix = 3;
-                        renderTauCeti();
+                        hooks.renderTauCeti();
                     }
                     if (o){
                         // Not powered yet, check again soon

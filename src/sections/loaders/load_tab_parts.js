@@ -1,18 +1,15 @@
 import { global, tmp_vars } from '../../core/vars.js';
-import { clearResDrag, resQueue } from '../../actions/evolution/simulation_ai.js';
-import { drawEvolution } from '../../actions/evolution/evolution_screen.js';
-import { drawCity } from '../../actions/challenge/challenge_rules.js';
+import { clearResDrag } from '../../actions/evolution/simulation_ai.js';
 import { drawTech } from '../../actions/core/action_runner.js';
-import { clearGrids, gridDefs } from '../../industry/power_grid.js';
+import { clearGrids } from '../../industry/power_grid.js';
+import { gridDefs } from '../../industry/grid_defs.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
-import { setPowerGrid } from '../../industry/industry_panels.js';
 import { clearMechDrag } from '../../portal/mech/mechbay.js';
 import { renderFortress, buildFortress } from '../../portal/hell/fortress_defense.js';
-import { drawMechLab } from '../../portal/mech/mech_lab.js';
 import { drawHellObservations } from '../../portal/mech/mech_analysis.js';
-import { clearGeneticsDrag, arpa } from '../../arpa/arpa_projects.js';
-import { clearSpyopDrag } from '../../governor/governor.js';
-import { clearShipDrag, renderTauCeti, drawShipYard } from '../../truepath/tau_ceti_shipyard.js';
+import { clearGeneticsDrag } from '../../arpa/arpa_projects.js';
+import { clearSpyopDrag } from '../../governor/gov_utils.js';
+import { clearShipDrag, drawShipYard } from '../../truepath/tau_ceti_shipyard.js';
 import { clearElement, vBind } from '../../functions/dom_helpers.js';
 import { powerGrid } from '../../industry/power_grid.js';
 import { tagEvent } from '../../functions/analytics.js';
@@ -21,23 +18,23 @@ import { renderSpace } from '../../space/space_requirements.js';
 import { ascendLab } from '../../space/ascend_lab.js';
 import { terraformLab } from '../../space/terraform_lab.js';
 import { renderEdenic } from '../../edenic/edenic_render.js';
-import { tabLabel } from '../../core/index.js';
+import { tabLabel } from '../../core/tab_label.js';
 import { defineJobs } from '../../civics/jobs/job_definitions.js';
 import { defineGovernment, commisionGarrison, foreignGov, defineGarrison } from '../../civics/military/government_definitions.js';
 import { buildGarrison } from '../../civics/military/government_operations.js';
 import { shapeShift } from '../../races/trait_logic/trait_changes.js';
-import { renderPsychicPowers } from '../../races/powers/power_panels.js';
 import { renderSupernatural } from '../../races/trait_logic/trait_ranks.js';
-import { drawResourceTab, initResourceTabs, tradeSummery } from '../../resources/resource_tabs.js';
 import { containerItem } from '../../resources/crate_assignment.js';
 import { marketItem } from '../../resources/special_resources.js';
-import { atomic_mass, supplyValue } from '../../resources/resources.js';
+import { supplyValue } from '../../resources/resources.js';
+import { atomic_mass } from '../../resources/atomic_mass.js';
 import { loadEjector, loadSupply } from '../../resources/market_storage.js';
 import { loadAlchemy, initAether } from '../../resources/aether_alchemy.js';
 import { tradeRatio } from '../../config/constants.js';
 import { loc } from '../../core/locale.js';
 import { drawStocks } from '../../stocks/stocks.js';
 import { setupStats } from '../../achievements/achievement_logic.js';
+import { hooks } from '../../core/registries.js';
 
 // Bagian dari loadTab (index.js), dipisah mekanis: variabel yang dibagi antar bagian ada di $ctx.
 
@@ -68,7 +65,7 @@ export function loadTab_s2($ctx){
         case 0:
             if (!global.settings.tabLoad){
                 tagEvent('page_view',{ page_title: `Evolve - Evolution` });
-                drawEvolution();
+                hooks.drawEvolution();
             }
             break;
         case 1:
@@ -145,7 +142,7 @@ export function loadTab_s2($ctx){
                                 clearElement($(`#eden`));
                                 switch (tab){
                                     case 0:
-                                        drawCity();
+                                        hooks.drawCity();
                                         break;
                                     case 1:
                                     case 2:
@@ -157,7 +154,7 @@ export function loadTab_s2($ctx){
                                         renderFortress();
                                         break;
                                     case 6:
-                                        renderTauCeti();
+                                        hooks.renderTauCeti();
                                         break;
                                     case 7:
                                         renderEdenic();
@@ -174,10 +171,10 @@ export function loadTab_s2($ctx){
                     }
                 });
                 if (global.race.species !== 'protoplasm'){
-                    drawCity();
+                    hooks.drawCity();
                     renderSpace();
                     renderFortress();
-                    renderTauCeti();
+                    hooks.renderTauCeti();
                     renderEdenic();
                 }
                 if (global.race['noexport']){
@@ -297,7 +294,7 @@ export function loadTab_s2($ctx){
                                             Object.keys(gridDefs()).forEach(function(gridtype){
                                                 powerGrid(gridtype);
                                             });
-                                            setPowerGrid();
+                                            hooks.setPowerGrid();
                                         }
                                         break;
                                     case 3:
@@ -310,7 +307,7 @@ export function loadTab_s2($ctx){
                                         break;
                                     case 4:
                                         if (global.race.species !== 'protoplasm' && !global.race['start_cataclysm']){
-                                            drawMechLab();
+                                            hooks.drawMechLab();
                                         }
                                         break;
                                     case 5:
@@ -320,7 +317,7 @@ export function loadTab_s2($ctx){
                                         break;
                                     case 6:
                                         if (global.race['psychic'] && global.tech['psychic'] && global.race.species !== 'protoplasm'){
-                                            renderPsychicPowers();
+                                            hooks.renderPsychicPowers();
                                         }
                                         break;
                                     case 7:
@@ -343,7 +340,7 @@ export function loadTab_s2($ctx){
                 Object.keys(gridDefs()).forEach(function(gridtype){
                     powerGrid(gridtype);
                 });
-                setPowerGrid();
+                hooks.setPowerGrid();
 
                 $('#civic').append($('<div id="civics" class="tile is-parent"></div>'));
                 defineJobs();
@@ -356,12 +353,12 @@ export function loadTab_s2($ctx){
                         buildFortress($('#fortress'),false);
                     }
                     foreignGov();
-                    drawMechLab();
+                    hooks.drawMechLab();
                     if (global.race['truepath']){
                         drawShipYard();
                     }
                     if (global.race['psychic'] && global.tech['psychic']){
-                        renderPsychicPowers();
+                        hooks.renderPsychicPowers();
                     }
                     if ((global.race['wish'] && global.tech['wish']) || global.race['ocular_power']){
                         renderSupernatural();
@@ -406,7 +403,7 @@ export function loadTab_s2($ctx){
                         }
                     }
                 });
-                resQueue();
+                hooks.resQueue();
                 if (global.race.species !== 'protoplasm'){
                     drawTech();
                 }
@@ -461,27 +458,27 @@ export function loadTab_s2($ctx){
                                 switch (tab){
                                     case 0:
                                         {
-                                            drawResourceTab('market');
+                                            hooks.drawResourceTab('market');
                                         }
                                         break;
                                     case 1:
                                         {
-                                            drawResourceTab('storage');
+                                            hooks.drawResourceTab('storage');
                                         }
                                         break;
                                     case 2:
                                         {
-                                            drawResourceTab('ejector');
+                                            hooks.drawResourceTab('ejector');
                                         }
                                         break;
                                     case 3:
                                         {
-                                            drawResourceTab('supply');
+                                            hooks.drawResourceTab('supply');
                                         }
                                         break;
                                     case 4:
                                         {
-                                            drawResourceTab('alchemy');
+                                            hooks.drawResourceTab('alchemy');
                                         }
                                         break;
                                 }
@@ -496,7 +493,7 @@ export function loadTab_s2($ctx){
                     }
                 });
 
-                initResourceTabs();
+                hooks.initResourceTabs();
                 if (tmp_vars.hasOwnProperty('resource')){
                     Object.keys(tmp_vars.resource).forEach(function(name){
                         let color = tmp_vars.resource[name].color;
@@ -529,7 +526,7 @@ export function loadTab_s2($ctx){
                         }
                     });
                 }
-                tradeSummery();
+                hooks.tradeSummery();
             }
             break;
         case 5:
@@ -557,10 +554,10 @@ export function loadTab_s2($ctx){
                         }
                     }
                 });
-                arpa('Physics');
-                arpa('Genetics');
-                arpa('Crispr');
-                arpa('Blood');
+                hooks.arpa('Physics');
+                hooks.arpa('Genetics');
+                hooks.arpa('Crispr');
+                hooks.arpa('Blood');
             }
             break;
         case 6:

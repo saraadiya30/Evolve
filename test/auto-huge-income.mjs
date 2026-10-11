@@ -12,7 +12,7 @@ seedMathRandom(12345); setFixedNow(1735689600000);
 global.localStorage.setItem('evolved', JSON.parse(readFileSync(join(__dirname, 'fixtures', fx + '.json'), 'utf8')).save);
 const { global: G, atrack, tmp_vars } = await import('../src/core/vars.js');
 const { execGameLoops } = await import('../src/main.js');
-const { modRes } = await import('../src/functions/functions.js');
+const { modRes } = await import('../src/functions/resource_mod.js');
 const { diffCalc } = await import('../src/loops/long/long_loop.js');
 const { S_loops: S } = await import('../src/core/registries.js');
 const { stockFlags, moneyToOcoin } = await import('../src/stocks/stocks_core.js');

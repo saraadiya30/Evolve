@@ -1,12 +1,11 @@
 // Isi: psychicBoost(), psychicKill(), psychicAssault(), psychicFinance(), psychicMindBreak(), psychicCapture(), blubberFill()
 import { loc } from '../../core/locale.js';
-import { atomic_mass } from '../../resources/resources.js';
+import { atomic_mass } from '../../resources/atomic_mass.js';
 import { global, keyMultiplier } from '../../core/vars.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { modRes } from '../../functions/resource_mod.js';
 import { popover } from '../../functions/popover.js';
-import { traits } from '../../core/registries.js';
-import { renderPsychicPowers } from './power_panels.js';
+import { traits, hooks } from '../../core/registries.js';
 
 // Fungsi-fungsi dipindah dari races.js (urutan sumber dipertahankan). races.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -126,7 +125,7 @@ export function psychicKill(parent){
                         modRes('Food', 10000 * traits.anthropophagite.vars()[0], true);
                     }
                     if (global.stats.psykill === 10){
-                        renderPsychicPowers();
+                        hooks.renderPsychicPowers();
                     }
                 }
             }

@@ -3,10 +3,11 @@ import { global, sizeApproximation } from '../../core/vars.js';
 import { costMultiplier } from '../../functions/cost_multipliers.js';
 import { powerModifier, darkEffect, powerCostMod } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
-import { biomes, planetTraits } from '../../races/races.js';
+import { biomes, planetTraits } from '../../races/planet_data.js';
 import { traits, races } from '../../core/registries.js';
 import { traitCostMod } from '../../races/trait_logic/racial_traits.js';
-import { BHStorageMulti, checkPowerRequirements, storageMultipler } from '../challenge/challenge_rules.js';
+import { BHStorageMulti, storageMultipler } from '../challenge/challenge_rules.js';
+import { checkPowerRequirements } from '../challenge/requirements.js';
 import { payCosts, conceal_adjust } from '../core/action_costs.js';
 import { structName } from '../core/structure_ui.js';
 import { powerOnNewStruct } from '../evolution/planet_setup.js';
@@ -16,7 +17,7 @@ import { spatialReasoning } from '../../resources/resources.js';
 import { unlockCrates, unlockContainers } from '../../resources/market_storage.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
 
 // Bagian dari actions_city (18 entri: compost .. rock_quarry), dipisah dari city.js. Urutan entri sama persis.

@@ -11,10 +11,11 @@ import { loadFoundry } from '../../civics/jobs/foundry_panel.js';
 import { production } from '../../resources/prod.js';
 import { payCosts } from '../../actions/core/action_costs.js';
 import { powerOnNewStruct } from '../../actions/evolution/planet_setup.js';
-import { fuel_adjust, planetName } from '../../space/planet_generation.js';
+import { fuel_adjust } from '../../space/planet_generation.js';
+import { planetName } from '../../space/planet_name.js';
 import { incrementStruct } from '../../space/space_requirements.js';
 import { loc } from '../../core/locale.js';
-import { syndicate } from '../ship_orbits.js';
+import { syndicate } from '../orbit_math.js';
 
 // Region 'spc_enceladus' dari outerTruth (dipisah dari truepath.js). Isi/urutan entri sama persis; digabung via core/registries.js di truepath.js.
 export const outerEnceladus = {

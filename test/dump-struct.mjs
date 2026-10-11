@@ -15,16 +15,16 @@ function sig(x, depth = 0) {
     const out = Object.keys(x).map(k => [k, sig(x[k], depth + 1)]);
     seen.delete(x); return out;
 }
-const T = await import('../src/tech/tech.js'), E = await import('../src/edenic/edenic.js'), R = await import('../src/races/races.js'), A = await import('../src/actions/actions.js');
-const P = await import('../src/portal/portal.js'), S = await import('../src/space/space.js'), TP = await import('../src/truepath/truepath.js'), AC = await import('../src/achievements/achieve.js');
-const TL = await import('../src/tech/tech_list.js'), AR = await import('../src/arpa/arpa.js'), G = await import('../src/governor/governor.js'), EV = await import('../src/events/events.js');
+const T = await import('../src/tech/tech.js'), E = await import('../src/edenic/edenic.js'), A = await import('../src/actions/actions.js'), FD = await import('../src/portal/hell/fortress_tech.js'), SR = await import('../src/space/space_requirements.js');
+const P = await import('../src/portal/portal.js'), S = await import('../src/space/space.js'), AC = await import('../src/achievements/achieve.js');
+const TL = await import('../src/tech/tech_list.js'), G = await import('../src/governor/governor.js'), EV = await import('../src/events/events.js'), RG = await import('../src/core/registries.js'), TC = await import('../src/truepath/tau_ceti_shipyard.js'), ET = await import('../src/edenic/edenic_tech.js'), FT = await import('../src/achievements/feats.js');
 const out = {
-    techs: sig(TL.techList()), edenic: sig(E.edenicTech()), traits: sig(R.traits), races: sig(R.races), actions: sig(A.actions),
-    fortress: sig(P.fortressTech()), monsters: sig(P.monsters), space: sig(S.spaceTech()), inter: sig(S.interstellarTech()), galaxy: sig(S.galaxyTech()),
-    outerTruth: sig(TP.outerTruthTech()), tauCeti: sig(TP.tauCetiTech()), perkList: sig(AC.perkList), feats: sig(AC.feats),
-    genePool: sig(AR.genePool), bloodPool: sig(AR.bloodPool), arpaProjects: sig(AR.arpaProjects), gov_tasks: sig(G.gov_tasks), gov_traits: sig(G.gov_traits), events: sig(EV.events),
+    techs: sig(TL.techList()), edenic: sig(ET.edenicTech()), traits: sig(RG.traits), races: sig(RG.races), actions: sig(A.actions),
+    fortress: sig(FD.fortressTech()), monsters: sig(RG.monsters), space: sig(SR.spaceTech()), inter: sig(SR.interstellarTech()), galaxy: sig(SR.galaxyTech()),
+    outerTruth: sig(TC.outerTruthTech()), tauCeti: sig(TC.tauCetiTech()), perkList: sig(RG.perkList), feats: sig(FT.feats),
+    genePool: sig(RG.genePool), bloodPool: sig(RG.bloodPool), arpaProjects: sig(RG.arpaProjects), gov_tasks: sig(G.gov_tasks), gov_traits: sig(RG.gov_traits), events: sig(EV.events),
 };
-const exportsOf = { T, E, R, A, P, S, TP, AC, AR, G, EV };
+const exportsOf = { T, E, A, P, S, AC, G, EV };
 out.exports = Object.fromEntries(Object.entries(exportsOf).map(([k, m]) => [k, Object.keys(m).sort()]));
 writeFileSync(process.argv[2], JSON.stringify(out));
 const n = JSON.stringify(out).length;

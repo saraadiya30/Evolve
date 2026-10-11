@@ -1,11 +1,11 @@
 // Penggabung (loader) semua grup techs: dulu 8 file group_loader.js (satu per folder grup), sekarang satu file.
 // HANYA logika/teks dinamis (title, desc, cost, action, effect, condition, post, wiki, flair). Field statis ada di techs_data.js
 // Urutan import = urutan tech.js lama (grup 1..8) supaya urutan evaluasi modul tidak berubah.
-import { techsPart1, techsPart2, techsPart3, techsPart4, techsPart5, techsPart6, techsPart7, techsPart8 } from '../../core/registries.js';
+import { techsPart1, techsPart2, techsPart3, techsPart4, techsPart5, techsPart6, techsPart7, techsPart8, hooks } from '../../core/registries.js';
 import { global } from '../../core/vars.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { buildGarrison } from '../../civics/military/government_operations.js';
-import { defineGovernor, removeTask } from '../../governor/governor.js';
+import { removeTask } from '../../governor/gov_utils.js';
 
 // Bagian 1 dari techs: HANYA logika/teks dinamis (title, desc, cost, action, effect, condition, post, wiki, flair). Field statis ada di techs_data.js
 export { techsPart1 };
@@ -39,7 +39,7 @@ export function uniteEffect(){
     removeTask('spy');
     removeTask('spyop');
     removeTask('combo_spy');
-    defineGovernor();
+    hooks.defineGovernor();
 }
 
 export { techsPart5 };

@@ -5,15 +5,17 @@ import { vBind, clearElement } from '../functions/dom_helpers.js';
 import { powerGrid } from './power_grid.js';
 import { popover } from '../functions/popover.js';
 import { binary_limit_test, trickOrTreat, easterEgg } from '../functions/icons_easter_eggs.js';
-import { atomic_mass } from '../resources/resources.js';
-import { checkCityRequirements, checkPowerRequirements } from '../actions/challenge/challenge_rules.js';
-import { actions } from '../core/registries.js';
-import { checkSpaceRequirements, checkRequirements, convertSpaceSector } from '../space/space_requirements.js';
-import { fortressTech } from '../portal/hell/fortress_defense.js';
-import { checkPathRequirements } from '../truepath/tau_ceti_shipyard.js';
-import { edenicTech } from '../edenic/edenic.js';
+import { atomic_mass } from '../resources/atomic_mass.js';
+import { checkCityRequirements, checkPowerRequirements } from '../actions/challenge/requirements.js';
+import { actions, hooks } from '../core/registries.js';
+import { checkSpaceRequirements, convertSpaceSector } from '../space/space_requirements.js';
+import { checkRequirements } from '../space/check_requirements.js';
+import { fortressTech } from '../portal/hell/fortress_tech.js';
+import { edenicTech } from '../edenic/edenic_tech.js';
 import { ritual_types } from './industry.js';
-import { gridDefs, clearGrids, dragPowerGrid } from './power_grid.js';
+import { clearGrids, dragPowerGrid } from './power_grid.js';
+import { gridDefs } from './grid_defs.js';
+import { colorRange } from './color_range.js';
 
 // Fungsi-fungsi dipindah dari industry.js (urutan sumber dipertahankan). industry.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -464,27 +466,6 @@ export function maxRitualNum(mana, time_multiplier=0.25, rate=0.0025){
     });
 }
 
-export function colorRange(num,max,invert){
-    if (num <= 0){
-        return invert ? 'has-text-success' : 'has-text-danger';
-    }
-    else if (num >= max){
-        return invert ? 'has-text-danger' : 'has-text-success';
-    }
-    else if (num <= max / 3){
-        return invert ? 'has-text-info' : 'has-text-caution';
-    }
-    else if (num <= max * 0.66){
-        return 'has-text-warning';
-    }
-    else if (num < max){
-        return invert ? 'has-text-caution' : 'has-text-info';
-    }
-    else {
-        return '';
-    }
-}
-
 export function gridEnabled(c_action,region,p0,p1){
     let isOk = false;
     switch (region){
@@ -503,7 +484,7 @@ export function gridEnabled(c_action,region,p0,p1){
             isOk = checkRequirements(fortressTech(),p0,p1);
             break;
         case 'tauceti':
-            isOk = checkPathRequirements(region,p0,p1);
+            isOk = hooks.checkPathRequirements(region,p0,p1);
             break;
         case 'eden':
             isOk = checkRequirements(edenicTech(),p0,p1);

@@ -3,9 +3,9 @@ import { global } from '../../core/vars.js';
 import { decodeStructId } from '../../functions/queues.js';
 import { arpaTimeCheck, timeCheck } from '../../functions/time_format.js';
 import { actions } from '../../core/registries.js';
-import { shipCosts } from '../../truepath/tau_ceti_shipyard.js';
+import { shipCosts } from '../../truepath/ship_desc.js';
 import { mechCost } from '../../portal/mech/mech_cost.js';
-import { atomic_mass } from '../../resources/resources.js';
+import { atomic_mass } from '../../resources/atomic_mass.js';
 
 // Bagian dari gov_tasks (1 entri: replicate .. replicate), dipisah dari governor.js. Urutan entri sama persis.
 export const gov_tasksPart3 = {

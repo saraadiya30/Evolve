@@ -1,10 +1,10 @@
 import { global, seededRandom, sizeApproximation } from '../core/vars.js';
 import { loc } from '../core/locale.js';
-import { races, traits } from '../core/registries.js';
-import { garrisonSize, armyRating } from '../civics/military/army_rating.js';
+import { races, traits, hooks } from '../core/registries.js';
+import { garrisonSize } from '../civics/military/garrison.js';
 import { tradeRatio } from '../config/constants.js';
-import { soldierDeath } from '../civics/military/army_rating.js';
-import { govActive } from '../governor/governor.js';
+import { soldierDeath } from '../civics/military/garrison.js';
+import { govActive } from '../governor/gov_active.js';
 import { events } from '../core/registries.js';
 
 export { events };
@@ -15,7 +15,7 @@ export { events };
 
 
 export function pillaged(gov,serious){
-    let army = armyRating(garrisonSize(),'army',global.civic.garrison.wounded);
+    let army = hooks.armyRating(garrisonSize(),'army',global.civic.garrison.wounded);
     let eAdv = global.tech['high_tech'] ? global.tech['high_tech'] + 1 : 1;
     let enemy = (gov === 'witchhunt' ? 1000 : global.civic.foreign[gov].mil) * (1 + Math.floor(seededRandom(0,10) - 5) / 10) * eAdv;
 

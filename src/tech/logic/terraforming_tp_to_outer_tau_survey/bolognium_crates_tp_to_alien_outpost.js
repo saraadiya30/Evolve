@@ -5,8 +5,8 @@ import { initStruct } from '../../../actions/core/structure_ui.js';
 import { actions } from '../../../core/registries.js';
 import { vBind } from '../../../functions/dom_helpers.js';
 import { messageQueue } from '../../../functions/message_log.js';
-import { planetName } from '../../../space/planet_generation.js';
-import { setOrbits } from '../../../truepath/ship_orbits.js';
+import { planetName } from '../../../space/planet_name.js';
+import { setOrbits } from '../../../truepath/orbit_math.js';
 import { drawShipYard } from '../../../truepath/tau_ceti_shipyard.js';
 
 // Bagian dari techsPart7 (27 entri: bolognium_crates_tp .. alien_outpost), dipisah dari group_loader.js. Urutan entri sama persis.

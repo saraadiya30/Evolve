@@ -24,7 +24,7 @@ npm run lint       # ESLint untuk src/ dan test/
 Kalau perilaku game **sengaja** diubah, perbarui baseline dengan `npm run test:update`
 (lalu cek `git diff test/` untuk memastikan yang berubah memang yang diharapkan).
 
-`test/diagnostics/` berisi skrip eksplorasi manual (tidak masuk `npm test`): `auto-sim`, `auto-sweep`, `auto-display`, `accel-equiv`, `profile-dom`, `profile-dom-writes`, `profile-dom-selects` (lihat `docs/PROFILING.md`).
+`test/diagnostics/` berisi skrip eksplorasi manual (tidak masuk `npm test`): `auto-sim`, `auto-sweep`, `auto-display`, `accel-equiv`, `profile-cpu` (profil CPU per fungsi/file), `profile-dom`, `profile-dom-writes`, `profile-dom-selects` (lihat `docs/PROFILING.md`).
 `harness.mjs`, `compare.mjs`, `dump-struct.mjs` adalah alat bantu yang dipakai tes di atas.
 
 Catatan Node: `npm test` dan `npm run lint` lewat `test/launch.cjs` supaya memakai Node >= 18 dari sistem (dependency `node` di package.json memasang Node 16 ke `node_modules/.bin`).

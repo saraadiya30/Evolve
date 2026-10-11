@@ -19,7 +19,7 @@ import { production } from '../../resources/prod.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { unlockContainers } from '../../resources/market_storage.js';
 import { actions } from '../../core/registries.js';
-import { govActive } from '../../governor/governor.js';
+import { govActive } from '../../governor/gov_active.js';
 
 // Part 3 of actions_city split (20 entries: cement_plant through meditation), extracted from city.js. Entry order preserved.
 export const actions_cityPart3 = {

@@ -1,20 +1,16 @@
 // Isi: spireCreep(), towerPrice(), soulForgeSoldiers(), fortressTech(), renderFortress(), checkHellRequirements(), buildEnemyFortress(), buildFortress(), fortressDefenseRating(), casualties(), fortressData()
 import { global, p_on, seededRandom, sizeApproximation } from '../../core/vars.js';
-import { jobScale } from '../../civics/jobs/job_scale.js';
-import { armyRating, garrisonSize, soldierDeath } from '../../civics/military/army_rating.js';
-import { govCivics } from '../../civics/military/government_operations.js';
-import { highPopAdjust } from '../../functions/adjusters_basic.js';
-import { fortressModules } from '../../core/registries.js';
+import { garrisonSize, soldierDeath } from '../../civics/military/garrison.js';
+import { fortressModules, hooks } from '../../core/registries.js';
 import { clearElement, vBind } from '../../functions/dom_helpers.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { popover } from '../../functions/popover.js';
 import { loc } from '../../core/locale.js';
-import { checkRequirements } from '../../space/space_requirements.js';
-import { setAction } from '../../actions/core/action_runner.js';
+import { checkRequirements } from '../../space/check_requirements.js';
 import { traits, races } from '../../core/registries.js';
-import { hellSupression } from '../mech/hellguard.js';
 import { buildFortress_s1, buildFortress_s2, buildFortress_s3 } from '../../sections/portal/build_fortress_parts.js';
 import { SPIRE_CREEP_DIVISOR, SPIRE_CREEP_FLOOR } from '../../config/constants.js';
+import { soulForgeSoldiers } from './soul_forge.js';
 
 // Fungsi-fungsi dipindah dari portal.js (urutan sumber dipertahankan). portal.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -25,37 +21,8 @@ export function spireCreep(base){
 }
 
 export function towerPrice(cost, wiki){
-    let sup = hellSupression('gate', 0, wiki);
+    let sup = hooks.hellSupression('gate', 0, wiki);
     return Math.round(cost / (sup.supress > 0.01 ? sup.supress : 0.01));
-}
-
-export function soulForgeSoldiers(wiki){
-    let base = global.race['warlord'] ? 400 : 650;
-    let num_gun_emplacement = wiki ? (global.portal?.gun_emplacement?.on ?? 0) : p_on['gun_emplacement'];
-    let num_soldiers_saved = num_gun_emplacement * (global.tech.hell_gun >= 2 ? jobScale(2) : jobScale(1));
-
-    // To avoid divide-by-0 type issues, force the average soldier combat rating to be at least 1
-    let avg_rating = Math.max(armyRating(1, 'hellArmy'), highPopAdjust(1));
-    let soldiers = Math.ceil(base / avg_rating);
-    soldiers = Math.max(0, soldiers - num_soldiers_saved);
-
-    if (global.race['hivemind']){
-        // Permit actual soldiers to count as a group for combat rating adjustment
-        // Gun emplacements use the combat rating of the remaining soldiers
-        // Both soldiers=0 and soldiers=1 cases use the combat rating of 1 soldier alone
-        soldiers = 0;
-        while ((soldiers + num_soldiers_saved) * avg_rating < base){
-            soldiers++;
-            avg_rating = armyRating(soldiers, 'hellArmy') / soldiers;
-            avg_rating = Math.max(avg_rating, highPopAdjust(1));
-        }
-    }
-
-    return soldiers;
-}
-
-export function fortressTech(){
-    return fortressModules;
 }
 
 export function renderFortress(){
@@ -122,7 +89,7 @@ export function renderFortress(){
             Object.keys(fortressModules[region]).forEach(function (tech){
                 if (tech !== 'info' && checkRequirements(fortressModules,region,tech)){
                     let c_action = fortressModules[region][tech];
-                    setAction(c_action,'portal',tech);
+                    hooks.setAction(c_action,'portal',tech);
                 }
             });
         }
@@ -171,7 +138,7 @@ function buildEnemyFortress(parent){
             attack(idx){
                 let horde = Math.floor(global.portal.minions.spawns * seededRandom(6, 10, true) / 10);
                 let scale = global.race['hivemind'] ? traits.hivemind.vars()[0] : 1;
-                let rating = armyRating(scale,'hellArmy',0) / scale;
+                let rating = hooks.armyRating(scale,'hellArmy',0) / scale;
                 let died = seededRandom((250 + global.portal.throne.enemy[idx].s * 250) / rating, (500 + global.portal.throne.enemy[idx].s * 1250) / rating, true);
                 if (global.race['armored']){
                     died *= 1 - (traits.armored.vars()[0] / 100);
@@ -230,32 +197,6 @@ export function buildFortress(parent,full){
     buildFortress_s3($ctx);
 }
 
-export function fortressDefenseRating(v){
-    let army = v - (global.portal.fortress.patrols * global.portal.fortress.patrol_size);
-    if (p_on['soul_forge']){
-        let forge = soulForgeSoldiers();
-        if (forge <= army){
-            army -= forge;
-        }
-    }
-    if (global.portal.hasOwnProperty('guard_post')){
-        army -= jobScale(global.portal.guard_post.on);
-    }
-    let wounded = 0;
-    if (global.civic.garrison.wounded > global.civic.garrison.workers - global.portal.fortress.garrison){
-        wounded = global.civic.garrison.wounded - (global.civic.garrison.workers - global.portal.fortress.garrison);
-        if (wounded > army){
-            wounded = army;
-        }
-    }
-    if (p_on['war_droid']){
-        let droids = p_on['war_droid'] - global.portal.fortress.patrols > 0 ? p_on['war_droid'] - global.portal.fortress.patrols : 0;
-        army += global.tech['hdroid'] ? jobScale(droids * 2) : jobScale(droids);
-    }
-    let turret = global.tech['turret'] ? (global.tech['turret'] >= 2 ? 70 : 50) : 35;
-    return Math.round(armyRating(army,'hellArmy',wounded)) + (p_on['turret'] ? p_on['turret'] * turret : 0);
-}
-
 export function casualties(demons,pat_armor,ambush,report){
     let casualties = Math.round(Math.log2((demons / global.portal.fortress.patrol_size) / (pat_armor || 1))) - Math.rand(0,pat_armor);
     let dead = 0;
@@ -279,46 +220,3 @@ export function casualties(demons,pat_armor,ambush,report){
     return dead;
 }
 
-export function fortressData(dt){
-    switch (dt){
-        case 'hostiles':
-            {
-                if (global.portal.fortress.threat >= 2000){
-                    return `${loc('fortress_threat',[global.portal.fortress.threat])} ${loc('fortress_threat_high')}`;
-                }
-                else if (global.portal.fortress.threat < 1000){
-                    return `${loc('fortress_threat',[global.portal.fortress.threat])} ${loc('fortress_threat_low')}`;
-                }
-                else {
-                    return `${loc('fortress_threat',[global.portal.fortress.threat])} ${loc('fortress_threat_medium')}`;
-                }
-            }
-        case 'threatLevel':
-            {
-                let t = global.portal.fortress.threat;
-                if (t < 1000){
-                    return `${loc('fortress_threat_level')} ${loc('fortress_threat_level1')}`;
-                }
-                else if (t < 1500){
-                    return `${loc('fortress_threat_level')} ${loc('fortress_threat_level2')}`;
-                }
-                else if (t >= 5000){
-                    return `${loc('fortress_threat_level')} ${loc('fortress_threat_level6')}`;
-                }
-                else if (t >= 3000){
-                    return `${loc('fortress_threat_level')} ${loc('fortress_threat_level5')}`;
-                }
-                else if (t >= 2000){
-                    return `${loc('fortress_threat_level')} ${loc('fortress_threat_level4')}`;
-                }
-                else {
-                    return `${loc('fortress_threat_level')} ${loc('fortress_threat_level3')}`;
-                }
-            }
-        case 'hireLabel':
-            {
-                let cost = Math.round(govCivics('m_cost')).toLocaleString();
-                return loc('civics_garrison_hire_mercenary_cost',[cost]);
-            }
-    }
-}

@@ -1,6 +1,6 @@
 import { adjustCosts } from './cost_adjusters.js';
 import { global } from '../core/vars.js';
-import { arpaAdjustCosts } from '../arpa/arpa_projects.js';
+import { arpaAdjustCosts } from '../arpa/arpa_costs.js';
 import { loc } from '../core/locale.js';
 
 export function timeCheck(c_action,track,detailed,reqMet){

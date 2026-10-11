@@ -2,11 +2,9 @@ import { global } from '../../../core/vars.js';
 import { loc } from '../../../core/locale.js';
 import { payCosts, checkAffordable } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { unlockAchieve } from '../../../achievements/achievement_logic.js';
 import { loadFoundry } from '../../../civics/jobs/foundry_panel.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
-import { arpa } from '../../../arpa/arpa_projects.js';
 import { calcPrestige } from '../../../functions/prestige_calc.js';
 import { big_bang } from '../../../resets/reset_mad_bioseed_cataclysm_big_bang.js';
 
@@ -157,7 +155,7 @@ export const techsPart5Part4 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     mega_manufacturing: {
@@ -234,7 +232,7 @@ export const techsPart5Part4 = {
             return false;
         },
         post(){
-            arpa('Physics');
+            hooks.arpa('Physics');
         }
     },
     exotic_infusion: {

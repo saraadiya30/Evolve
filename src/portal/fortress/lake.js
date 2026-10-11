@@ -9,9 +9,8 @@ import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod } from '../../functions/power_modifiers.js';
 import { popCost } from '../../functions/cost_adjusters.js';
 import { spatialReasoning } from '../../resources/resources.js';
-import { drawResourceTab } from '../../resources/resource_tabs.js';
 import { incrementStruct } from '../../space/space_requirements.js';
-import { traits } from '../../core/registries.js';
+import { traits, hooks } from '../../core/registries.js';
 import { loadTab } from '../../core/index.js';
 import { fortressModules } from '../../core/registries.js';
 import { spireCreep, renderFortress } from '../hell/fortress_defense.js';
@@ -296,7 +295,7 @@ export const fortressModules_prtl_lake = {
                         initStruct(fortressModules.prtl_spire.purifier);
                         initStruct(fortressModules.prtl_spire.port);
                         messageQueue(loc('portal_transport_unlocked'),'info',false,['progress','hell']);
-                        drawResourceTab('supply');
+                        hooks.drawResourceTab('supply');
                         renderFortress();
                     }
                     return true;

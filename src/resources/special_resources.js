@@ -6,10 +6,10 @@ import { harmonyEffect } from '../functions/cost_multipliers.js';
 import { darkEffect } from '../functions/power_modifiers.js';
 import { vBind } from '../functions/dom_helpers.js';
 import { popover } from '../functions/popover.js';
-import { calc_mastery } from '../functions/functions.js';
+import { calc_mastery } from '../functions/calc_mastery.js';
 import { trickOrTreat } from '../functions/icons_easter_eggs.js';
 import { loc } from '../core/locale.js';
-import { govActive } from '../governor/governor.js';
+import { govActive } from '../governor/gov_active.js';
 import { OCULAR_POWER_CHARM_BASE } from '../config/constants.js';
 import { traits } from '../core/registries.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
@@ -17,7 +17,7 @@ import { plasmidBonus, spatialReasoning } from './resources.js';
 import { tradeRatio, resource_values } from '../config/constants.js';
 import { aetherFormat } from './aether_alchemy.js';
 import { astroVal, astrologySign } from '../functions/astrology.js';
-import { tradeRouteColor } from './market_storage.js';
+import { tradeRouteColor } from './crate_value.js';
 import { tradeSellPrice, tradeBuyPrice, galacticTrade } from './crate_assignment.js';
 
 // Fungsi-fungsi dipindah dari resources.js (urutan sumber dipertahankan). resources.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
@@ -622,44 +622,3 @@ export function initGalaxyTrade(){
     galacticTrade();
 }
 
-export function galaxyOffers(){
-    let offers = [
-        {
-            buy: { res: 'Deuterium', vol: 5 },
-            sell: { res: 'Helium_3', vol: 25 }
-        },
-        {
-            buy: { res: 'Neutronium', vol: 2.5 },
-            sell: { res: 'Copper', vol: 200 }
-        },
-        {
-            buy: { res: 'Adamantite', vol: 3 },
-            sell: { res: 'Iron', vol: 300 }
-        },
-        {
-            buy: { res: 'Elerium', vol: 1 },
-            sell: { res: 'Oil', vol: 125 }
-        },
-        {
-            buy: { res: 'Nano_Tube', vol: 10 },
-            sell: { res: 'Titanium', vol: 20 }
-        },
-        {
-            buy: { res: 'Graphene', vol: 25 },
-            sell: { res: global.race['kindling_kindred'] || global.race['smoldering'] ? (global.race['smoldering'] ? 'Chrysotile' : 'Stone') : 'Lumber', vol: 1000 }
-        },
-        {
-            buy: { res: 'Stanene', vol: 40 },
-            sell: { res: 'Aluminium', vol: 800 }
-        },
-        {
-            buy: { res: 'Bolognium', vol: 0.75 },
-            sell: { res: 'Uranium', vol: 4 }
-        },
-        {
-            buy: { res: 'Vitreloy', vol: 1 },
-            sell: { res: 'Infernite', vol: 1 }
-        }
-    ];
-    return offers;
-}

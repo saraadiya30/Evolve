@@ -13,7 +13,8 @@ import { universeAffix } from '../../functions/universe_utils.js';
 import { loadTab } from '../../core/index.js';
 import { drawShipYard } from '../../truepath/tau_ceti_shipyard.js';
 import { spaceProjects } from '../../core/registries.js';
-import { planetName, fuel_adjust } from '../planet_generation.js';
+import { fuel_adjust } from '../planet_generation.js';
+import { planetName } from '../planet_name.js';
 import { incrementStruct, renderSpace } from '../space_requirements.js';
 
 // Region 'spc_dwarf' dari spaceProjects (dipisah dari space.js). Isi sama persis; digabung via core/registries.js di space.js.

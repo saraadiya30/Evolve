@@ -4,11 +4,10 @@ import { popover } from '../../functions/popover.js';
 import { global, keyMultiplier } from '../../core/vars.js';
 import { loc } from '../../core/locale.js';
 import { craftingRatio } from '../../resources/resources.js';
-import { craftCost } from '../../resources/resource_tabs.js';
+import { craftCost } from '../../resources/craft_cost.js';
 import { craftingPopover } from '../../resources/crate_assignment.js';
-import { traits } from '../../core/registries.js';
+import { traits, hooks } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
-import { craftsmanCap } from './job_definitions.js';
 
 // Fungsi-fungsi dipindah dari jobs.js (urutan sumber dipertahankan). jobs.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -93,7 +92,7 @@ export function loadFoundry(servants){
                     let keyMult = keyMultiplier();
                     let tMax = -1;
                     if (res === 'Scarletite' || res === 'Quantium'){
-                        tMax = craftsmanCap(res);
+                        tMax = hooks.craftsmanCap(res);
                     }
                     for (let i=0; i<keyMult; i++){
                         if (servants){
@@ -171,10 +170,10 @@ export function loadFoundry(servants){
             },
             filters: {
                 maxScar(v){
-                    return craftsmanCap('Scarletite');
+                    return hooks.craftsmanCap('Scarletite');
                 },
                 maxQuantium(v){
-                    return craftsmanCap('Quantium');
+                    return hooks.craftsmanCap('Quantium');
                 }
             }
         });

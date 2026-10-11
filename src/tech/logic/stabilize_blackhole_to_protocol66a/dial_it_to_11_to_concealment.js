@@ -1,17 +1,14 @@
 import { loc } from '../../../core/locale.js';
 import { global } from '../../../core/vars.js';
 import { calcPrestige } from '../../../functions/prestige_calc.js';
-import { planetName } from '../../../space/planet_generation.js';
-import { races } from '../../../core/registries.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
+import { planetName } from '../../../space/planet_name.js';
+import { races, hooks } from '../../../core/registries.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
 import { actions } from '../../../core/registries.js';
 import { cataclysm_end } from '../../../resets/reset_mad_bioseed_cataclysm_big_bang.js';
 import { setupRituals } from '../../../industry/industry_panels.js';
 import { defineIndustry } from '../../../industry/industry_smelter.js';
-import { arpa } from '../../../arpa/arpa_projects.js';
-import { drawResourceTab } from '../../../resources/resource_tabs.js';
 
 // Bagian dari techsPart6 (19 entri: dial_it_to_11 .. concealment), dipisah dari group_loader.js. Urutan entri sama persis.
 export const techsPart6Part3 = {
@@ -81,7 +78,7 @@ export const techsPart6Part3 = {
         },
         flair: loc('tech_mana_flair'),
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     ley_lines: {
@@ -176,7 +173,7 @@ export const techsPart6Part3 = {
             return false;
         },
         post(){
-            arpa('Physics');
+            hooks.arpa('Physics');
         }
     },
     clerics: {
@@ -270,7 +267,7 @@ export const techsPart6Part3 = {
             return false;
         },
         post(){
-            drawResourceTab('alchemy');
+            hooks.drawResourceTab('alchemy');
         }
     },
     transmutation: {
@@ -292,7 +289,7 @@ export const techsPart6Part3 = {
             return false;
         },
         post(){
-            drawResourceTab('alchemy');
+            hooks.drawResourceTab('alchemy');
         }
     },
     secret_society: {

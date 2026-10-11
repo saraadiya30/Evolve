@@ -3,7 +3,7 @@ import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
 import { actions } from '../../../core/registries.js';
 import { global } from '../../../core/vars.js';
-import { planetName } from '../../../space/planet_generation.js';
+import { planetName } from '../../../space/planet_name.js';
 import { races } from '../../../core/registries.js';
 
 // Bagian dari techsPart5 (27 entri: missionary .. dyson_net), dipisah dari group_loader.js. Urutan entri sama persis.

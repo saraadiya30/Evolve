@@ -1,23 +1,20 @@
 // Isi: arpa(), roid_eject_type(), payCrispr(), payBloodPrice(), drawGenes(), drawBlood(), checkGeneRequirements(), checkBloodRequirements(), gainGene(), gainBlood(), pick_monument(), monument_costs(), checkRequirements(), payArpaCosts() +10
-import { genePool } from '../core/registries.js';
+import { genePool, hooks } from '../core/registries.js';
 import { global, keyMultiplier, support_on, p_on } from '../core/vars.js';
 import { loc } from '../core/locale.js';
 import { checkCosts, removeAction } from '../actions/core/action_costs.js';
 import { actions } from '../core/registries.js';
 import { addAction } from '../actions/core/action_runner.js';
-import { adjustCosts } from '../functions/cost_adjusters.js';
 import { clearElement, vBind } from '../functions/dom_helpers.js';
 import { timeFormat } from '../functions/time_format.js';
 import { trickOrTreat, easterEgg } from '../functions/icons_easter_eggs.js';
 import { popover } from '../functions/popover.js';
-import { traitSkin } from '../races/trait_logic/trait_ranks.js';
-import { fathomCheck } from '../races/trait_logic/fathom_check.js';
+import { traitSkin } from '../races/trait_logic/trait_skin.js';
 import { traits } from '../core/registries.js';
-import { planetTraits } from '../races/races.js';
-import { genetics_s1, genetics_s2 } from '../sections/stages/genetics_parts.js';
+import { planetTraits } from '../races/planet_data.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
-import { arpaProjects, bloodPool } from './arpa.js';
-import { crispr, blood, addProject } from './arpa_project_building.js';
+import { arpaProjects, bloodPool } from '../core/registries.js';
+import { arpaAdjustCosts } from './arpa_costs.js';
 
 // Fungsi-fungsi dipindah dari arpa.js (urutan sumber dipertahankan). arpa.js tetap mengekspor ulang nama yang tadinya ter-ekspor.
 
@@ -39,10 +36,10 @@ export function arpa(type) {
         case 'BloodTech':
             return bloodPool;
         case 'Crispr':
-            crispr();
+            hooks.crispr();
             break;
         case 'Blood':
-            blood();
+            hooks.blood();
             break;
     }
 }
@@ -148,7 +145,7 @@ export function checkBloodRequirements(trait){
 export function gainGene(action){
     let gene = actions.genes[action].grant[0];
     global.genes[gene] = actions.genes[action].grant[1];
-    crispr();
+    hooks.crispr();
 }
 
 export function gainBlood(action){
@@ -159,7 +156,7 @@ export function gainBlood(action){
     else {
         global.blood[trait] = actions.blood[action].grant[1];
     }
-    blood();
+    hooks.blood();
 }
 
 export function pick_monument(){
@@ -239,32 +236,6 @@ function checkArpaCosts(costs){
     return test;
 }
 
-export function arpaAdjustCosts(costs,offset,wiki){
-    costs = creativeAdjust(costs,offset,wiki);
-    return adjustCosts({ 'cost': costs },offset,wiki);
-}
-
-function creativeAdjust(costs,offset,wiki){
-    let fathom = fathomCheck('human');
-    if ((wiki && wiki.creative) || (!wiki && global.race['creative']) || (!wiki && fathom > 0)){
-        let newCosts = {};
-        Object.keys(costs).forEach(function (res){
-            newCosts[res] = function(){
-                let cost = costs[res](offset, wiki);
-                if((wiki && wiki.creative) || (!wiki && global.race['creative'])){
-                    cost *= (1 - traits.creative.vars()[1] / 100);
-                }
-                if (fathom > 0){
-                    cost *= 1 - (traits.creative.vars(1)[1] / 100 * fathom);
-                }
-                return cost;
-            }
-        });
-        return newCosts;
-    }
-    return costs;
-}
-
 export function costMultiplier(project,offset,base,multiplier,wiki){
     let rank = global.arpa[project] ? global.arpa[project].rank : 0;
     if (((wiki && wiki.creative) || (!wiki && global.race['creative'])) && project !== 'syphon'){
@@ -281,7 +252,7 @@ export function physics(){
         let parent = $('#arpaPhysics');
         clearElement(parent);
         Object.keys(arpaProjects).forEach(function (project){
-            addProject(parent,project);
+            hooks.addProject(parent,project);
         });
     }
 }
@@ -460,8 +431,8 @@ export function genetics(){
     }
 
     if (global.tech['genetics'] > 2){
-        genetics_s1($ctx);
-        genetics_s2($ctx);
+        hooks.genetics_s1($ctx);
+        hooks.genetics_s2($ctx);
     }
 }
 

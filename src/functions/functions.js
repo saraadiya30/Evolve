@@ -3,30 +3,8 @@ import { loc } from '../core/locale.js';
 import { races } from '../core/registries.js';
 import { addATime } from './game_loop_timing.js';
 import { clearPopper } from './popover.js';
-export { gameLoop, loopTimers, addATime, exceededATimeThreshold } from './game_loop_timing.js';
-export { powerGrid } from '../industry/power_grid.js';
-export { tagEvent } from './analytics.js';
-export { timeScale, TIME_ACCELERATION_FACTOR, resetResBuffer, modRes } from './resource_mod.js';
-export { removeFromQueue, removeFromRQueue, calcQueueMax, calcRQueueMax, buildQueue, decodeStructId } from './queues.js';
-export { initMessageQueue, messageQueue } from './message_log.js';
-export { popover, clearPopper } from './popover.js';
-export { genCivName } from './civ_name.js';
-export { costMultiplier, spaceCostMultiplier, harmonyEffect } from './cost_multipliers.js';
-export { calcQuantumLevel, get_qlevel } from './quantum_level.js';
-export { powerModifier, powerCostMod, darkEffect } from './power_modifiers.js';
-export { clearElement, vBind } from './dom_helpers.js';
-export { timeCheck, arpaTimeCheck, timeFormat } from './time_format.js';
-import { masteryType } from './prestige_calc.js';
-export { masteryType, challenge_multiplier, getResetConstants, calcPrestige } from './prestige_calc.js';
-export { adjustCosts } from './cost_adjusters.js';
-export { svgIcons, svgViewBox, getBaseIcon, drawIcon, drawPet, easterEgg, easterEggBind, trickOrTreat, trickOrTreatBind, format_emblem, binary_limit_test, fibonacci, randomKey, sLevel } from './icons_easter_eggs.js';
-export { popCost } from './cost_adjusters.js';
 import { hoovedRename } from './run_stats_helpers.js';
 import { rName } from './resource_name.js';
-export { calcGenomeScore, updateResetStats, flib, shrineBonusActive, getShrineBonus, hoovedRename } from './run_stats_helpers.js';
-export { deepClone } from '../core/object_utils.js';
-export { eventActive, getEaster, getHalloween } from './event_dates.js';
-export { getTraitDesc } from './trait_description.js';
 import { S_functions as S } from '../core/registries.js';
 
 S.popperRef = false;
@@ -93,20 +71,6 @@ window.importGame = function importGame(data,utf16){
     }
 }
 
-
-export const calc_mastery = (function(){
-    let mastery;
-    return function(recalc){
-        if (mastery && !recalc){
-            return mastery;
-        }
-        else if (global.genes['challenge'] && global.genes.challenge >= 2){
-            mastery = masteryType(global.race.universe);
-            return mastery;
-        }
-        return 0;
-    }
-})();
 
 export const calcPillar = (function(){
     let bonus;

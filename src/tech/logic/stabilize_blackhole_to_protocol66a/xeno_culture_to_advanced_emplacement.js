@@ -1,6 +1,5 @@
 import { loc } from '../../../core/locale.js';
-import { races } from '../../../core/registries.js';
-import { renderPsychicPowers } from '../../../races/powers/power_panels.js';
+import { races, hooks } from '../../../core/registries.js';
 import { global } from '../../../core/vars.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
@@ -300,7 +299,7 @@ export const techsPart6Part2 = {
             return false;
         },
         post(){
-            renderPsychicPowers();
+            hooks.renderPsychicPowers();
         }
     },
     gateway_depot: {

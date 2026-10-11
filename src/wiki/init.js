@@ -1,4 +1,4 @@
 import { } from '../achievements/achieve.js';
-import { defineResources } from '../resources/resource_tabs.js';
+import { hooks } from '../core/registries.js';
 
-defineResources(true);
+hooks.defineResources(true);

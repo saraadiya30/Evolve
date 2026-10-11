@@ -7,7 +7,7 @@ import { traits } from '../../core/registries.js';
 import { structName } from '../../actions/core/structure_ui.js';
 import { warhead, big_bang } from '../../resets/reset_mad_bioseed_cataclysm_big_bang.js';
 import { eventList, events } from '../../events/events.js';
-import { govTitle } from '../../civics/military/government_definitions.js';
+import { govTitle } from '../../civics/military/gov_calc.js';
 import { unlockFeat } from '../../achievements/achievement_logic.js';
 import { alevel } from '../../achievements/achievement_helpers.js';
 

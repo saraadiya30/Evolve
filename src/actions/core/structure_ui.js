@@ -5,18 +5,16 @@ import { nf_resources } from '../../industry/industry.js';
 import { galacticTrade } from '../../resources/crate_assignment.js';
 import { global } from '../../core/vars.js';
 import { loc } from '../../core/locale.js';
-import { actions } from '../../core/registries.js';
+import { actions, hooks } from '../../core/registries.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { clearElement } from '../../functions/dom_helpers.js';
 import { deepClone } from '../../core/object_utils.js';
 import { eventActive } from '../../functions/event_dates.js';
 import { races } from '../../core/registries.js';
-import { removeTask, defineGovernor, govActive } from '../../governor/governor.js';
+import { removeTask } from '../../governor/gov_utils.js';
+import { govActive } from '../../governor/gov_active.js';
 import { job_desc } from '../../civics/jobs.js';
 import { renderSpace } from '../../space/space_requirements.js';
-import { setAction } from './action_runner.js';
-import { drawEvolution } from '../evolution/evolution_screen.js';
-import { sentience } from '../evolution/sentience_stage.js';
 
 // Functions extracted from actions.js (source order preserved). actions.js still re-exports the previously exported names.
 
@@ -99,26 +97,26 @@ function starDockModal(modal){
     modal.append(dock);
 
     let c_action = actions.starDock.probes;
-    setAction(c_action,'starDock','probes');
+    hooks.setAction(c_action,'starDock','probes');
 
     if (global.tech['geck'] && global.stats.achieve['lamentis'] && global.stats.achieve.lamentis.l >= 5){
         let c_action = actions.starDock.geck;
-        setAction(c_action,'starDock','geck');
+        hooks.setAction(c_action,'starDock','geck');
     }
 
     if (global.tech['genesis'] >= 5){
         let c_action = actions.starDock.seeder;
-        setAction(c_action,'starDock','seeder');
+        hooks.setAction(c_action,'starDock','seeder');
     }
 
     if (global.tech['genesis'] === 6){
         let c_action = actions.starDock.prep_ship;
-        setAction(c_action,'starDock','prep_ship');
+        hooks.setAction(c_action,'starDock','prep_ship');
     }
 
     if (global.tech['genesis'] >= 7){
         let c_action = actions.starDock.launch_ship;
-        setAction(c_action,'starDock','launch_ship');
+        hooks.setAction(c_action,'starDock','launch_ship');
     }
 }
 
@@ -164,7 +162,7 @@ export function orbitDecayed(){
             global.resource.Slave.display = false;
             global.resource.Slave.amount = 0;
             removeTask('slave');
-            defineGovernor();
+            hooks.defineGovernor();
         }
         if (global.race['deconstructor']){
             nf_resources.forEach(function (res){
@@ -483,12 +481,12 @@ export function initStruct(c_action){
 export function evoExtraState(race){
     if ((race === 'synth' || (race === 'custom' && global.custom.race0.traits.includes('imitation')) || (race === 'hybrid' && global.custom.race1.traits.includes('imitation'))) && Object.keys(global.stats.synth).length > 1){
         global.race['evoFinalMenu'] = race;
-        drawEvolution();
+        hooks.drawEvolution();
         return true;
     }
     else {
         global.race.species = race;
-        sentience();
+        hooks.sentience();
     }
 }
 

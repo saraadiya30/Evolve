@@ -1,4 +1,4 @@
-import { traitSkin } from '../races/trait_logic/trait_ranks.js';
+import { traitSkin } from '../races/trait_logic/trait_skin.js';
 import { traits } from '../core/registries.js';
 import { loc } from '../core/locale.js';
 import { global } from '../core/vars.js';

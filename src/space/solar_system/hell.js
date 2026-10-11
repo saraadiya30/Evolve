@@ -14,7 +14,8 @@ import { traitCostMod } from '../../races/trait_logic/racial_traits.js';
 import { addSmelter } from '../../industry/industry_smelter.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { spaceProjects } from '../../core/registries.js';
-import { planetName, fuel_adjust, iron_adjust } from '../planet_generation.js';
+import { fuel_adjust, iron_adjust } from '../planet_generation.js';
+import { planetName } from '../planet_name.js';
 import { incrementStruct } from '../space_requirements.js';
 
 // Region 'spc_hell' dari spaceProjects (dipisah dari space.js). Isi sama persis; digabung via core/registries.js di space.js.

@@ -12,10 +12,9 @@ import { get_qlevel } from '../../functions/quantum_level.js';
 import { powerCostMod, powerModifier } from '../../functions/power_modifiers.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { calcPillar } from '../../functions/functions.js';
-import { traits, races } from '../../core/registries.js';
+import { traits, races, hooks } from '../../core/registries.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { traitCostMod } from '../../races/trait_logic/racial_traits.js';
-import { armyRating } from '../../civics/military/army_rating.js';
 import { limitCraftsmen } from '../../civics/jobs/job_definitions.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { loadFoundry } from '../../civics/jobs/foundry_panel.js';
@@ -26,8 +25,8 @@ import { addSmelter } from '../../industry/industry_smelter.js';
 import { unlockAchieve } from '../../achievements/achievement_logic.js';
 import { alevel } from '../../achievements/achievement_helpers.js';
 import { fortressModules } from '../../core/registries.js';
-import { hellSupression } from '../mech/hellguard.js';
-import { soulForgeSoldiers, renderFortress } from '../hell/fortress_defense.js';
+import { renderFortress } from '../hell/fortress_defense.js';
+import { soulForgeSoldiers } from '../hell/soul_forge.js';
 import { checkWarlordAchieve } from '../hell/hell_reports.js';
 import { towerSize } from '../portal.js';
 
@@ -44,7 +43,7 @@ export const fortressModules_prtl_ruins = {
                 return desc;
             },
             filter(v,type){
-                let sup = hellSupression('ruins');
+                let sup = hooks.hellSupression('ruins');
                 switch (type){
                     case 'army':
                         return Math.round(sup.rating);
@@ -99,7 +98,7 @@ export const fortressModules_prtl_ruins = {
                 if (unicornFathom > 0){
                     holy *= 1 + (traits.holy.vars(1)[1] / 100 * unicornFathom);
                 }
-                let rating = Math.round(holy * armyRating(jobScale(1),'hellArmy',0));
+                let rating = Math.round(holy * hooks.armyRating(jobScale(1),'hellArmy',0));
                 return `<div>${loc('portal_guard_post_effect1',[rating])}</div><div class="has-text-caution">${loc('portal_guard_post_effect2',[jobScale(1),$(this)[0].powered()])}</div>`;
             },
             action(args){
@@ -282,7 +281,7 @@ export const fortressModules_prtl_ruins = {
             },
             powered(){ return powerCostMod(25); },
             effect(wiki){
-                let sup = hellSupression('ruins', 0, wiki);
+                let sup = hooks.hellSupression('ruins', 0, wiki);
                 let vault = spatialReasoning(bank_vault() * 8 * sup.supress);
                 vault = +(vault).toFixed(0);
                 let containers = Math.round(get_qlevel(wiki)) * 10;
@@ -342,7 +341,7 @@ export const fortressModules_prtl_ruins = {
             },
             special: true,
             effect(wiki){
-                let sup = hellSupression('ruins', 0, wiki);
+                let sup = hooks.hellSupression('ruins', 0, wiki);
                 let craft = +(75 * sup.supress).toFixed(1);
                 let reactor = global.tech['inferno_power'] ? `<div>${loc('portal_hell_forge_effect2',[global.stats.achieve['what_is_best'] && global.stats.achieve.what_is_best.e >= 1 ? 12 : 10,loc(`portal_inferno_power_title`)])}</div>` : ``;
                 return `<div>${loc('portal_hell_forge_effect',[jobScale(1)])}</div>${reactor}<div>${loc('interstellar_stellar_forge_effect3',[$(this)[0].smelting()])}</div><div>${loc('interstellar_stellar_forge_effect',[craft])}</div><div class="has-text-caution">${loc('minus_power',[$(this)[0].powered()])}</div>`;

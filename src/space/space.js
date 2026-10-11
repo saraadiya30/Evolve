@@ -1,10 +1,6 @@
 import { global } from '../core/vars.js';
 import { loc } from '../core/locale.js';
 import { galaxyProjects } from '../core/registries.js';
-export { astrialProjection, terraformProjection, convertSpaceSector, piracy, xeno_race, gatewayStorage, incrementStruct, spaceTech, interstellarTech, galaxyTech, checkSpaceRequirements, checkRequirements, renderSpace, deepSpace, galaxySpace } from './space_requirements.js';
-export { house_adjust, iron_adjust, swarm_adjust, fuel_adjust, int_fuel_adjust, zigguratBonus, planetName, genPlanets, setUniverse } from './planet_generation.js';
-export { ascendLab } from './ascend_lab.js';
-export { terraformLab, isStargateOn } from './terraform_lab.js';
 
 
 

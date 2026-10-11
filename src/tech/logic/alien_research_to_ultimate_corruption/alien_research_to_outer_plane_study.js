@@ -1,13 +1,12 @@
 import { loc } from '../../../core/locale.js';
 import { payCosts } from '../../../actions/core/action_costs.js';
-import { actions } from '../../../core/registries.js';
+import { actions, hooks } from '../../../core/registries.js';
 import { initStruct } from '../../../actions/core/structure_ui.js';
 import { global } from '../../../core/vars.js';
 import { messageQueue } from '../../../functions/message_log.js';
 import { defineIndustry } from '../../../industry/industry_smelter.js';
-import { defineGovernor } from '../../../governor/governor.js';
-import { planetName } from '../../../space/planet_generation.js';
-import { jobName } from '../../../civics/jobs/job_definitions.js';
+import { planetName } from '../../../space/planet_name.js';
+import { jobName } from '../../../civics/jobs/job_name.js';
 
 // Bagian dari techsPart8 (26 entri: alien_research .. outer_plane_study), dipisah dari group_loader.js. Urutan entri sama persis.
 export const techsPart8Part1 = {
@@ -175,7 +174,7 @@ export const techsPart8Part1 = {
         },
         post(){
             defineIndustry();
-            defineGovernor();
+            hooks.defineGovernor();
         }
     },
     womling_unlock: {

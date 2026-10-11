@@ -3,54 +3,19 @@ import { loc } from '../core/locale.js';
 import { format_emblem } from '../functions/icons_easter_eggs.js';
 import { deepClone } from '../core/object_utils.js';
 import { challengeIcon } from '../achievements/achievement_helpers.js';
-import { races } from '../core/registries.js';
+import { races, hooks } from '../core/registries.js';
 import { actions } from '../core/registries.js';
 import { actions_evolution } from './evolution/evolution_actions.js';
 import { actions_city } from './city/city.js';
 import { actions_tech, actions_arpa, actions_genes, actions_blood, actions_space, actions_interstellar, actions_galaxy, actions_portal, actions_tauceti, actions_eden } from './region_actions.js';
 import { actions_starDock } from './locations/star_dock.js';
 import { setChallengeScreen } from './challenge/challenge_screen.js';
-export { setChallengeScreen } from './challenge/challenge_screen.js';
-export { buildTemplate, genus_condition, drawEvolution } from './evolution/evolution_screen.js';
 import { challengeEffect, setChallenge, setScenario } from './challenge/challenge_rules.js';
-export { templeEffect, casino_vault, casinoEarn, casinoEffect, evolveCosts, BHStorageMulti, storageMultipler, checkCityRequirements, skipRequirement, checkTechRequirements, checkTechQualifications, checkPowerRequirements, gainTech, drawCity } from './challenge/challenge_rules.js';
-export { drawTech, addAction, setAction, postBuild } from './core/action_runner.js';
-export { setPlanet, powerOnNewStruct, getStructNumActive, planetGeology } from './evolution/planet_setup.js';
 import { payCosts } from './core/action_costs.js';
-export { actionDesc, removeAction, updateDesc, payCosts, checkAffordable, templeCount, checkCosts, conceal_adjust, dirt_adjust } from './core/action_costs.js';
 import { evoExtraState } from './core/structure_ui.js';
-export { drawModal, orbitDecayed, evoProgress, wardenLabel, housingLabel, structName, updateQueueNames, initStruct } from './core/structure_ui.js';
-import { sentience } from './evolution/sentience_stage.js';
-export { sentience } from './evolution/sentience_stage.js';
-export { cataclysm, fanaticism, absorbRace, resQueue, clearResDrag } from './evolution/simulation_ai.js';
-export { bananaPerk, bank_vault, start_cataclysm, doCallbacks } from './core/queue_callbacks.js';
+import { raceList, challengeList } from './action_lists.js';
 
 export { actions };
-
-export const raceList = [
-    'human','orc','elven',
-    'troll','ogre','cyclops',
-    'kobold','goblin','gnome',
-    'cath','wolven','vulpine',
-    'centaur','rhinotaur','capybara',
-    //'bearkin','porkenari','hedgeoken',
-    'tortoisan','gecko','slitheryn',
-    'arraak','pterodacti','dracnid',
-    'sporgar','shroomi','moldling',
-    'mantis','scorpid','antid',
-    'entish','cacti','pinguicula',
-    'sharkin','octigoran',
-    'dryad','satyr',
-    'phoenix','salamander',
-    'yeti','wendigo',
-    'tuskin','kamel',
-    'imp','balorg',
-    'seraph','unicorn',
-    'synth','nano',
-    'ghast','shoggoth',
-    'dwarf','raccoon','lichen','wyvern','beholder','djinn','narwhal','bombardier','nephilim',
-    'custom','hybrid'
-];
 
 if (Object.keys(global.stats.synth).length > 1){
     let synthList = deepClone(raceList.filter(r => !['nano','synth'].includes(r)));
@@ -74,7 +39,7 @@ if (Object.keys(global.stats.synth).length > 1){
             if (global.stats.synth[race] || global['beta']){
                 global.race.species = global.race['evoFinalMenu'];
                 global.race['srace'] = race;
-                sentience();
+                hooks.sentience();
             }
             return false;
         },
@@ -82,16 +47,6 @@ if (Object.keys(global.stats.synth).length > 1){
     });
 }
             
-export const challengeList = {
-    'plasmid': 'no_plasmid',
-    'mastery': 'weak_mastery',
-    'trade': 'no_trade',
-    'craft': 'no_craft',
-    'crispr': 'no_crispr',
-    'nerfed': 'nerfed',
-    'badgenes': 'badgenes',
-};
-
 const advancedChallengeList = {
     'joyless': {t: 'c', e: 'joyless' },
     'steelen': {t: 'c', e: 'steelen' },
@@ -115,12 +70,6 @@ const advancedChallengeList = {
     'warlord': {t: 's', e: 'what_is_best' },
 };
 
-
-export let cLabels = global.settings['cLabels'];
-
-export let callback_repeat = new Map();
-
-export function set_cLabels(v){ return cLabels = v; }
 
 // Registrasi eksplisit: dipanggil dari core/register_all.js (bukan lagi efek samping saat modul dimuat).
 export function registerActions(){
@@ -182,7 +131,7 @@ export function registerActions(){
                         }
                         else {
                             global.race.species = race;
-                            sentience();
+                            hooks.sentience();
                         };
                     }
                     return false;
