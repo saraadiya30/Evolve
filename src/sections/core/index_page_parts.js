@@ -4,6 +4,7 @@ import { easterEgg, drawIcon, trickOrTreat } from '../../functions/icons_easter_
 import { global, message_filters, message_logs } from '../../core/vars.js';
 import { loc, locales } from '../../core/locale.js';
 import { alevel } from '../../achievements/achievement_helpers.js';
+import { initMobileNav } from './mobile_nav.js';
 
 // Variabel yang dibagi antar bagian ada di $ctx.
 
@@ -631,4 +632,6 @@ export function index_s2($ctx){
             </span>
         </div>
     `);
+
+    initMobileNav();
 }

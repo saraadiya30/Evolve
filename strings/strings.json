@@ -11869,5 +11869,7 @@
   "wiki_achievements_incomplete": "Incomplete",
   "wiki_achievements_completed": "Completed",
   "wiki_search_placeholder": "No results found.",
-  "wiki_search_regex_support": "RegEx Supported"
+  "wiki_search_regex_support": "RegEx Supported",
+  "mobile_nav_game": "Game",
+  "mobile_nav_label": "Main navigation"
 }

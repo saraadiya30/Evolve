@@ -11,6 +11,7 @@ import { loc } from '../../core/locale.js';
 import { srDesc } from '../../actions/evolution/planet_setup.js';
 import { drawModal } from '../../actions/core/structure_ui.js';
 import { hooks } from '../../core/registries.js';
+import { isTouchMode } from '../../functions/touch_mode.js';
 
 // Variabel yang dibagi antar bagian ada di $ctx.
 
@@ -153,7 +154,7 @@ export function setAction_s2($ctx){
         },
         methods: {
             action(args){
-                if ('ontouchstart' in document.documentElement && navigator.userAgent.match(/Mobi/ && global.settings.touch) ? true : false){
+                if (isTouchMode()){
                     return;
                 }
                 else {
