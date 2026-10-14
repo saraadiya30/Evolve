@@ -31,8 +31,9 @@
         -webkit-text-size-adjust: 100%;
         text-size-adjust: 100%;
     }
+    // overflow-x hanya di <html>: bila <body> juga overflow != visible ia menjadi scroll container
+    // sendiri dan "position: sticky" (top bar, baris tab) berhenti menempel ke layar.
     html body {
-        overflow-x: hidden;
         padding-bottom: calc(@nav-h + env(safe-area-inset-bottom, 0px));
     }
     html body .main {
@@ -187,16 +188,19 @@
     }
 
     // ---- 7. Tab utama: bisa digeser horizontal, menempel di bawah top bar ---------------
+    // Semua baris tab (termasuk sub-tab) bisa digeser horizontal; hanya tab UTAMA (#mainTabs) yang menempel.
     html body .main .content .b-tabs > .tabs,
     html body .main .content > .tabs {
-        position: sticky;
-        top: var(--topbar-h, 1.6rem);
-        z-index: 9;
         overflow-x: auto;
         overflow-y: hidden;
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
         margin-bottom: .25rem;
+    }
+    html body .main #mainTabs > .tabs {
+        position: sticky;
+        top: var(--topbar-h, 1.6rem);
+        z-index: 9;
     }
     html body .main .content .b-tabs > .tabs::-webkit-scrollbar {
         display: none;
@@ -226,6 +230,7 @@
     html body .main .columns,
     html body .main .columns > .column,
     html body .main .content,
+    html body .main .content .b-tabs,
     html body .main .content .b-tabs > .tabs {
         background-color: inherit;
     }
@@ -355,20 +360,34 @@
         padding: 0 .125rem;
     }
 
-    // ---- 15. Market: tiap item dipecah jadi 3 baris (nama / beli-jual / trade route) ------------
+    // ---- 15. Market: 2 baris per item ---------------------------------------------------------------
+    // Baris 1: nama + BUY [harga] + SELL [harga]. Baris 2: kontrol trade route.
+    // Selektor sengaja "html body .market-item ..." agar menang atas aturan dua-class bawaan game.
     html body .market-item {
         flex-wrap: wrap;
         align-items: center;
         margin-left: 0;
-        padding: .25rem 0;
-        gap: .25rem 0;
+        padding: .25rem .5rem;
+        gap: .25rem .5rem;
     }
     html body .market-item .res {
-        width: 100%;
+        flex: 1 1 5rem;
+        width: auto;
+        min-width: 0;
         margin-right: 0;
     }
+    html body .market-item .buy,
     html body .market-item .sell {
-        margin-left: .75rem;
+        display: inline-flex;
+        margin-left: 0;
+    }
+    html body .market-item .order {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 4rem;
+        min-height: 2rem;
+        padding: 0 .5rem;
     }
     html body .market-item .trade {
         display: flex;
@@ -383,6 +402,23 @@
         width: 3rem;
         text-align: center;
     }
+    html body .market-item .trade .add,
+    html body .market-item .trade .sub {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        top: 0;
+        min-width: 2.25rem;
+        min-height: 2rem;
+        margin: 0;
+        padding: 0;
+        font-size: 1.25rem;
+        line-height: 1;
+    }
+    html body .market-item .trade .zero {
+        min-height: 2rem;
+        margin-left: auto;
+    }
     html body .market-item .trade .mass {
         margin-left: auto;
     }
@@ -395,7 +431,6 @@
     }
 
     // ---- 16. Kontrol teks kecil yang bisa di-tap ------------------------------------------------
-    html body .order,
     html body .main .content .zero {
         display: inline-flex;
         align-items: center;
@@ -452,6 +487,296 @@
         height: 2.5rem;
         line-height: 2.5rem;
     }
+
+    // ---- 20. Power Grid: tombol angka on/off sebaris dan angkanya di tengah --------------------------
+    // Aturan bawaan ".circuit > span { display: inline-block }" lebih spesifik daripada bagian 9.
+    html body .main .powerGrid .circuit {
+        display: flex;
+        align-items: center;
+        min-width: 0;
+        min-height: 2.75rem;
+    }
+    html body .main .powerGrid .circuit.inactive {
+        display: none;
+    }
+    html body .main .powerGrid .circuit > span {
+        display: inline-flex;
+        align-items: center;
+    }
+    html body .main .powerGrid .circuit > span.add,
+    html body .main .powerGrid .circuit > span.sub {
+        justify-content: center;
+        min-width: 2.5rem;
+        min-height: 2rem;
+        line-height: 1;
+    }
+
+    // ---- 21. Industry (Smelter): satu bahan bakar/jenis per baris ------------------------------------
+    // ".fuels" berisi deretan datar sub / current / add; grid 3 kolom menjaga tiap kelompok tetap utuh.
+    html body .main .industry .fuels {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: .25rem 0;
+        max-width: 20rem;
+        margin: 0 auto;
+    }
+    html body .main .industry .fuels > .current {
+        width: auto;
+        text-align: center;
+    }
+
+    // ---- 22. Settings: tiap pasangan label + dropdown jadi satu baris --------------------------------
+    html body .main .settings .theme,
+    html body .main .settings .localization,
+    html body .main .settings .queue {
+        display: grid;
+        grid-template-columns: max-content minmax(0, 1fr);
+        align-items: center;
+        gap: .25rem .75rem;
+        margin-bottom: .5rem;
+    }
+    html body .main .settings .theme > .dropdown,
+    html body .main .settings .localization > .dropdown,
+    html body .main .settings .queue > .dropdown {
+        display: flex;
+    }
+    html body .main .settings .theme > .dropdown .dropdown-trigger,
+    html body .main .settings .localization > .dropdown .dropdown-trigger,
+    html body .main .settings .queue > .dropdown .dropdown-trigger {
+        flex: 1 1 auto;
+        min-width: 0;
+    }
+    html body .main .settings .theme > .dropdown .dropdown-trigger .button,
+    html body .main .settings .localization > .dropdown .dropdown-trigger .button,
+    html body .main .settings .queue > .dropdown .dropdown-trigger .button {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    // ---- 23. Storage: tombol Construct Crate / Container berdampingan -------------------------------
+    // Margin kiri 13rem/3rem bawaan menyelaraskan kolom di desktop saja.
+    html body .storage-header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: .5rem;
+    }
+    html body .storage-header .crate,
+    html body .storage-header .container {
+        margin-left: 0;
+    }
+
+    // ---- 24. Storage: label Crate / Container selebar sama agar kontrolnya sejajar -------------------
+    html body #resStorage .market-item .trade > span:first-child {
+        width: 5rem;
+    }
+
+    // ---- 25. Stock market (Misc > Stocks) ---------------------------------------------------------------
+    // Modul ini menyuntikkan CSS dan style inline sendiri (selektor ber-ID), jadi override memakai
+    // #stockExchange; "!important" hanya untuk lebar/margin yang ditulis inline oleh modulnya.
+    html body #stockExchange .stk-modebtn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 2.5rem;
+        margin: 0;
+        padding: 0 .875rem;
+        font-size: .875rem;
+    }
+    html body #stockExchange .stk-rng > span {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.25rem;
+        padding: 0 .625rem;
+    }
+    html body #stockExchange #stockOrderForm > .b-tooltip,
+    html body #stockExchange #stockOcoin > .b-tooltip,
+    html body #stockExchange .stk-btns > .b-tooltip,
+    html body #stockExchange #stockOrderForm > .b-tooltip .tooltip-trigger,
+    html body #stockExchange #stockOcoin > .b-tooltip .tooltip-trigger,
+    html body #stockExchange .stk-btns > .b-tooltip .tooltip-trigger {
+        display: flex;
+        width: 100%;
+    }
+    html body #stockExchange #stockOrderForm .order,
+    html body #stockExchange #stockOcoin .order,
+    html body #stockExchange .stk-btns .order {
+        width: 100%;
+        justify-content: center;
+        margin-left: 0;
+        min-width: 0;
+    }
+
+    // Form order: baris 1 = jenis order; baris 2 = [Price | %] + harga; baris 3 = jumlah lot + PLACE.
+    html body #stockExchange #stockOrderForm {
+        display: grid;
+        grid-template-columns: auto auto minmax(0, 1fr);
+        align-items: center;
+        gap: .5rem 0;
+        margin-left: 0;
+    }
+    html body #stockExchange #stockOrderForm > .b-tooltip:first-child {
+        grid-column: ~"1 / -1";
+    }
+    html body #stockExchange #stockOrderForm > span.stk-modebtn:first-of-type {
+        border-radius: .25rem 0 0 .25rem;
+    }
+    html body #stockExchange #stockOrderForm > span.stk-modebtn:nth-of-type(2) {
+        border-radius: 0 .25rem .25rem 0;
+        margin-left: -.0625rem;
+    }
+    html body #stockExchange #stockOrderForm > input,
+    html body #stockExchange #stockOrderForm select {
+        width: 100% !important;
+        margin: 0 !important;
+        min-height: 2.5rem;
+    }
+    html body #stockExchange #stockOrderForm > input:nth-of-type(1) {
+        margin-left: .5rem !important;
+    }
+    html body #stockExchange #stockOrderForm > input:nth-of-type(2) {
+        grid-column: ~"1 / 3";
+        width: calc(100% - .5rem) !important;
+    }
+    html body #stockExchange #stockOrderForm > .b-tooltip:last-child {
+        margin-left: .5rem;
+        width: calc(100% - .5rem);
+    }
+
+    // Tombol Convert / BUY / SELL (dompet dan di bawah grafik): empat kolom sama lebar.
+    html body #stockExchange #stockOcoin,
+    html body #stockExchange .stk-btns {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: .5rem;
+        align-items: center;
+        margin-left: 0;
+    }
+    html body #stockExchange #stockOcoin > .res {
+        grid-column: ~"1 / -1";
+        width: auto;
+    }
+    html body #stockExchange #stockOcoin > input {
+        grid-column: ~"1 / -1";
+        width: 100% !important;
+        margin: 0 !important;
+    }
+
+    // Auto: [label ...... OFF] / [Keep Money income ...... input] / [status]
+    html body #stockExchange #stockAuto {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: .5rem;
+        align-items: center;
+        margin-left: 0;
+    }
+    html body #stockExchange #stockAuto > .b-tooltip {
+        width: auto;
+    }
+    html body #stockExchange #stockAuto > span {
+        margin: 0 !important;
+    }
+    html body #stockExchange #stockAuto > span:last-child {
+        grid-column: ~"1 / -1";
+    }
+    html body #stockExchange #stockAuto > input {
+        margin: 0 !important;
+    }
+
+    // Take-profit / stop-loss: pil dan input sejajar, tanpa indentasi desktop.
+    html body #stockExchange .stk-side-head {
+        gap: .5rem;
+    }
+    html body #stockExchange .stk-side-head > label {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.5rem;
+        margin-right: .25rem;
+    }
+    html body #stockExchange .stk-side-row {
+        gap: .5rem;
+        margin-left: 0;
+    }
+    html body #stockExchange .stk-side-row input {
+        width: 5.5rem;
+        margin-right: 0;
+        min-height: 2.5rem;
+    }
+
+    // Tombol order setinggi input supaya satu baris terlihat seimbang.
+    html body #stockExchange #stockOrderForm .order,
+    html body #stockExchange #stockOcoin .order,
+    html body #stockExchange .stk-btns .order,
+    html body #stockExchange #stockAuto .order {
+        min-height: 2.5rem;
+        padding: 0 .25rem;
+        line-height: 1.1;
+        text-align: center;
+    }
+    // Checkbox TP/SL: modul memberi semua input di .stk-side lebar 4.5rem, termasuk checkbox.
+    html body #stockExchange .stk-side-head input[type="checkbox"] {
+        width: 1.5rem;
+        min-height: 1.5rem;
+        height: 1.5rem;
+        margin: 0 .5rem 0 0;
+        flex: none;
+    }
+
+    // Watchlist: selebar layar dan memanjang mengikuti isi (tanpa kotak scroll bersarang).
+    html body #stockExchange .stk-layout {
+        margin-left: 0;
+    }
+    html body #stockExchange .stk-list {
+        flex: 1 1 100%;
+        margin-left: 0;
+        border-left: 0;
+        border-top: .0625rem solid rgba(128, 128, 128, .4);
+        min-height: 0;
+    }
+    html body #stockExchange .stk-listwrap {
+        flex: none;
+    }
+    html body #stockExchange .stk-listscroll {
+        position: static;
+        overflow: visible;
+    }
+    html body #stockExchange .stk-item {
+        padding: .625rem .5rem;
+    }
+
+    // ---- 26. Baris bertinggi tetap yang berisi tombol « » (Tax Rates, Campaign/Battalion) -----------------
+    html body .main .taxRate,
+    html body .main .tactics {
+        height: auto !important;
+        min-height: 2.5rem;
+        align-items: center;
+    }
+
+    // ---- 27. Foreign Powers: tinggi tombol seragam (lebar bawaan tetap, dua per baris) ----------------------
+    html body .main .foreign button {
+        height: auto;
+        min-height: 2.5rem;
+        line-height: 1.2;
+    }
+
+    // ---- 28. Area yang belum bisa diuji visual (A.R.P.A. genetika, sequence): lebar bawaan > layar ----------
+    // Hasil audit statis evolve.less: .traitRow 25rem dan .trait_selection.summary 23rem melebihi ruang ~22rem.
+    html body .main .traitRow,
+    html body .main .trait_selection.summary > div {
+        width: 100% !important;
+        max-width: 100%;
+        box-sizing: border-box;
+    }
+    html body .main .arpaProject {
+        width: 100%;
+        max-width: 20rem;
+    }
+
+    // ---- 29. Jaring pengaman: konten yang lebih lebar dari layar bisa digeser menyamping ----------------------
+    // html/body memotong overflow-x; tanpa ini konten selebar >layar tidak terjangkau sama sekali.
+    html body .main .content .tab-content {
+        overflow-x: auto;
+    }
 }
 
 // Ponsel landscape: tinggi layar sangat terbatas, jadi bottom nav dibuat tipis (ikon + label sebaris).
@@ -464,5 +789,19 @@
         gap: .5rem;
         min-height: 2.75rem;
         padding: 0 .5rem;
+    }
+    // Tinggi layar terbatas: top bar ikut ter-scroll (tidak menempel), hanya baris tab yang menempel.
+    html body .topBar {
+        position: static;
+    }
+    html body .topBar .calendar {
+        flex: 0 1 auto;
+        order: 2;
+    }
+    html body .main #mainTabs > .tabs {
+        top: 0;
+    }
+    html body .tabs a {
+        min-height: 2.5rem;
     }
 }

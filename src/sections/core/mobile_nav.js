@@ -15,6 +15,18 @@ function navItem(view, label, active){
     </button>`;
 }
 
+let syncTimer = null;
+
+function syncTopBarHeight(){
+    const topBar = document.getElementById('topBar');
+    if (topBar){
+        const h = `${topBar.offsetHeight}px`;
+        if (document.documentElement.style.getPropertyValue('--topbar-h') !== h){
+            document.documentElement.style.setProperty('--topbar-h',h);
+        }
+    }
+}
+
 export function initMobileNav(){
     $('body').attr('data-mview','game');
     $('body').append(`<nav id="mobileNav" class="mobileNav promoBar" aria-label="${loc('mobile_nav_label')}">
@@ -57,11 +69,10 @@ export function initMobileNav(){
         }
     },300);
 
-    // Tinggi top bar berubah-ubah (bisa 1-2 baris); tab utama menempel tepat di bawahnya.
-    const topBar = document.getElementById('topBar');
-    if (topBar && 'ResizeObserver' in window){
-        new ResizeObserver(function(){
-            document.documentElement.style.setProperty('--topbar-h',`${topBar.offsetHeight}px`);
-        }).observe(topBar);
+    // Tinggi top bar berubah-ubah (1-2 baris) dan elemennya bisa diganti Vue saat render ulang, jadi
+    // tingginya dibaca ulang dari elemen yang sekarang; tab utama menempel tepat di bawahnya.
+    if (!syncTimer){
+        syncTimer = setInterval(syncTopBarHeight,400);
     }
+    syncTopBarHeight();
 }
