@@ -2,6 +2,7 @@ import { S_functions as S } from '../core/registries.js';
 import { eventActive } from './event_dates.js';
 import { global } from '../core/vars.js';
 import { clearElement } from './dom_helpers.js';
+import { isTouchMode } from './touch_mode.js';
 
 
 
@@ -59,7 +60,7 @@ export function popover(id,content,opts){
         });
     }
     if (opts['unbind']){
-        if ('ontouchstart' in document.documentElement && navigator.userAgent.match(/Mobi/ && global.settings.touch) ? true : false){
+        if (isTouchMode()){
             $(opts.elm).on('touchend',function(e){
                 clearPopper();
                 if (opts.hasOwnProperty('out') && typeof opts['out'] === 'function'){

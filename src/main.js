@@ -1,4 +1,4 @@
-import { global, save, webWorker, intervals, keyMap, resizeGame, power_generated, p_on, support_on, int_on, set_qlevel, convertVersion } from './core/vars.js';
+import { global, save, webWorker, intervals, keyMap, resizeGame, p_on, support_on, int_on, set_qlevel, convertVersion } from './core/vars.js';
 import { loc } from './core/locale.js';
 import { challengeIcon } from './achievements/achievement_helpers.js';
 import { gameLoop, loopTimers } from './functions/game_loop_timing.js';
@@ -11,25 +11,23 @@ import { vBind } from './functions/dom_helpers.js';
 import { flib } from './functions/run_stats_helpers.js';
 import { calc_mastery } from './functions/calc_mastery.js';
 import { drawPet } from './functions/icons_easter_eggs.js';
-import { races, traits, hooks } from './core/registries.js';
+import { races, hooks } from './core/registries.js';
 import { orbitLength } from './races/trait_logic/trait_ranks.js';
 import { biomes, planetTraits } from './races/planet_data.js';
 import { shapeShift } from './races/trait_logic/trait_changes.js';
 import { defineJobs } from './civics/jobs/job_definitions.js';
 import { gridDefs } from './industry/grid_defs.js';
 import { setupRituals } from './industry/industry_panels.js';
-import { govEffect } from './civics/gov_effect.js';
 import { updateQueueNames } from './actions/core/structure_ui.js';
 import { planetGeology } from './actions/evolution/planet_setup.js';
 import { start_cataclysm } from './actions/core/queue_callbacks.js';
 import { genPlanets, setUniverse } from './space/planet_generation.js';
 import { universe_types } from './space/space.js';
-import { govActive } from './governor/gov_active.js';
 import { swissKnife } from './core/swiss_knife.js';
+import { MORALE_LABEL_CHEESE } from './systems/morale_core.js';
 import { index, mainVue, initTabs, loadTab } from './core/index.js';
 import { setWeather, seasonDesc } from './systems/seasons.js';
 import { enableDebug } from './core/debug.js';
-import { MORALE_BONUS_PER_LOT } from './stocks/stocks_core.js';
 import { S_loops as S } from './core/registries.js';
 import { execGameLoops } from './loops/game_loop_runner.js';
 export { execGameLoops } from './loops/game_loop_runner.js';
@@ -357,149 +355,40 @@ popover('race',
 );
 
 S.moraleCap = 125;
+S.moraleMin = 50;
+S.moraleParts = [];
+S.powerParts = [];
 
 popover('morale',
     function(obj){
-        if (global.city.morale.unemployed !== 0){
-            let type = global.city.morale.unemployed > 0 ? 'success' : 'danger';
-            obj.popper.append(`<p class="modal_bd"><span>${loc(global.race['playful'] ? 'morale_hunter' : 'morale_unemployed')}</span> <span class="has-text-${type}"> ${+(global.city.morale.unemployed).toFixed(1)}%</span></p>`);
-        }
-        if (global.city.morale.stress !== 0){
-            let type = global.city.morale.stress > 0 ? 'success' : 'danger';
-            obj.popper.append(`<p class="modal_bd"><span>${loc('morale_stress')}</span> <span class="has-text-${type}"> ${+(global.city.morale.stress).toFixed(1)}%</span></p>`);
-        }
-
-        let total = 100 + global.city.morale.unemployed + global.city.morale.stress;
-        Object.keys(global.city.morale).forEach(function (morale){
-            if (!['current','unemployed','stress','season','cap','potential','pet'].includes(morale) && global.city.morale[morale] !== 0){
-                total += global.city.morale[morale];
-                let type = global.city.morale[morale] > 0 ? 'success' : 'danger';
-
-                let value = global.city.morale[morale];
-                if (morale === 'entertain' && global.civic.govern.type === 'democracy'){
-                    let democracy = 1 + (govEffect.democracy()[0] / 100);
-                    value /= democracy;
-                }
-
-                obj.popper.append(`<p class="modal_bd"><span>${loc(`morale_${morale}`)}</span> <span class="has-text-${type}"> ${+(value).toFixed(1)}%</span></p>`)
-
-                if (morale === 'entertain' && global.civic.govern.type === 'democracy'){
-                    let democracy = govEffect.democracy()[0];
-                    obj.popper.append(`<p class="modal_bd"><span>ᄂ${loc('govern_democracy')}</span> <span class="has-text-success"> +${democracy}%</span></p>`);
-                }
+        // Baris dan Total berasal dari buku besar morale (systems/morale_core.js) yang diisi tick di fast_loop_morale*.js:
+        // tooltip ini tidak menghitung apa pun sendiri, jadi tidak bisa menyimpang dari morale yang dipakai game dan governor.
+        (S.moraleParts || []).forEach(function (part){
+            if (part.value === 0){
+                return;
+            }
+            let opts = part.opts || {};
+            let shown = opts.shown === undefined ? part.value : opts.shown;
+            let type = part.value > 0 ? 'success' : 'danger';
+            let name = part.label === MORALE_LABEL_CHEESE ? swissKnife(true,false) : loc(part.label);
+            obj.popper.append(`<p class="modal_bd"><span>${name}</span> <span class="has-text-${type}"> ${+(shown).toFixed(opts.prec === undefined ? 1 : opts.prec)}%</span></p>`);
+            if (opts.sub){
+                obj.popper.append(`<p class="modal_bd"><span>${opts.sub.prefix || ''}${loc(opts.sub.label)}</span> <span class="has-text-success"> ${opts.sub.text}</span></p>`);
             }
         });
 
-        if (global.city.morale.season !== 0){
-            total += global.city.morale.season;
-            let season = global.city.calendar.season === 0 ? loc('morale_spring') : global.city.calendar.season === 1 ? loc('morale_summer') : loc('morale_winter');
-            let type = global.city.morale.season > 0 ? 'success' : 'danger';
-            obj.popper.append(`<p class="modal_bd"><span>${season}</span> <span class="has-text-${type}"> ${+(global.city.morale.season).toFixed(1)}%</span></p>`);
-        }
-
-        if (global.civic.govern.type === 'corpocracy'){
-            let penalty = govEffect.corpocracy()[3];
-            total -= penalty;
-            obj.popper.append(`<p class="modal_bd"><span>${loc('govern_corpocracy')}</span> <span class="has-text-danger"> -${penalty}%</span></p>`);
-        }
-        if (global.civic.govern.type === 'republic'){
-            let repub = govEffect.republic()[1];
-            total += repub;
-            obj.popper.append(`<p class="modal_bd"><span>${loc('govern_republic')}</span> <span class="has-text-success"> ${repub}%</span></p>`);
-        }
-        if (global.civic.govern.type === 'federation'){
-            let fed = govEffect.federation()[1];
-            total += fed;
-            obj.popper.append(`<p class="modal_bd"><span>${loc('govern_federation')}</span> <span class="has-text-success"> ${fed}%</span></p>`);
-        }
-
-        let milVal = govActive('militant',1);
-        if (milVal){
-            total -= milVal;
-            obj.popper.append(`<p class="modal_bd"><span>${loc('gov_trait_militant')}</span> <span class="has-text-danger"> -${milVal}%</span></p>`);
-        }
-
-        if (global.race['cheese']){
-            let raw_cheese = global.stats.hasOwnProperty('reset') ? global.stats.reset + 1 : 1;
-            let cheese = +(raw_cheese / (raw_cheese + 10) * 11).toFixed(2);
-            total += cheese;
-            obj.popper.append(`<p class="modal_bd"><span>${swissKnife(true,false)}</span> <span class="has-text-success"> ${cheese}%</span></p>`);
-        }
-
-        if (global.race['motivated']){
-            let boost = Math.ceil(global.race['motivated'] ** 0.4);
-            total += boost;
-            obj.popper.append(`<p class="modal_bd"><span>${loc(`event_motivation_bd`)}</span> <span class="has-text-success"> ${boost}%</span></p>`);
-        }
-
-        if (global.race['artisan'] && global.civic.craftsman.workers > 0){
-            let boost = +(traits.artisan.vars()[2] * global.civic.craftsman.workers).toFixed(2);
-            total += boost;
-            obj.popper.append(`<p class="modal_bd"><span>${loc(`trait_artisan_name`)}</span> <span class="has-text-success"> ${boost}%</span></p>`)
-        }
-
-        if (global.race['pet'] && global.city.morale.pet){
-            let change = global.city.morale.pet;
-            total += change;
-            let style = change > 0 ? 'success' : 'danger';
-            obj.popper.append(`<p class="modal_bd"><span>${loc(`event_pet_${global.race.pet.type}_owner`)}</span> <span class="has-text-${style}"> ${change}%</span></p>`);
-        }
-
-        if (global.race['wishStats'] && global.race.wishStats.fame !== 0){
-            total += global.race.wishStats.fame;
-            if (global.race.wishStats.fame > 0){
-                obj.popper.append(`<p class="modal_bd"><span>${loc(`wish_reputable`)}</span> <span class="has-text-success"> ${global.race.wishStats.fame}%</span></p>`);
-            }
-            else {
-                obj.popper.append(`<p class="modal_bd"><span>${loc(`wish_notorious`)}</span> <span class="has-text-danger"> ${global.race.wishStats.fame}%</span></p>`);
-            }
-        }
-
-        if (global.civic['homeless']){
-            let homeless = global.civic.homeless / 2;
-            total -= homeless;
-            obj.popper.append(`<p class="modal_bd"><span>${loc(`homeless`)}</span> <span class="has-text-danger"> -${homeless}%</span></p>`);
-        }
-
-        if (global.tech['vax_c'] || global.tech['vax_f']){
-            let drop = global.tech['vax_c'] ? 10 : 50;
-            total -= drop;
-            obj.popper.append(`<p class="modal_bd"><span>${loc(global.tech['vax_c'] ? `tech_vax_strat4_bd` : `tech_vax_strat2_bd`)}</span> <span class="has-text-danger"> -${drop}%</span></p>`);
-        }
-        else if (global.tech['vax_s']){
-            let gain = 20;
-            total += gain;
-            obj.popper.append(`<p class="modal_bd"><span>${loc(`tech_vax_strat3_bd`)}</span> <span class="has-text-success"> ${gain}%</span></p>`);
-        }
-
-        if (global.city['tormented']){
-            total -= global.city.tormented;
-            obj.popper.append(`<p class="modal_bd"><span>${loc(`trait_tormented_name`)}</span> <span class="has-text-danger"> -${global.city.tormented}%</span></p>`);
-        }
-
-        if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.bad > 0){
-            let badPress = Math.floor(global.race.wishStats.bad / 75) + 1;
-            total -= badPress * 5;
-            obj.popper.append(`<p class="modal_bd"><span>${loc(`wish_bad`)}</span> <span class="has-text-danger"> -${badPress * 5}%</span></p>`);
-        }
-
-        // This tooltip's "Total" is its own separate tally of morale modifiers - it doesn't reuse the real
-        // calculation in the main tick, so the Morale stock bonus (a flat +0.1%/lot added to current, not part
-        // of any modifier above) has to be listed here too, or Current can sit far above Total with nothing in
-        // the breakdown explaining the gap.
-        if (global.stocks && global.stocks.market &&  global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
-            let stockBonus = global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
-            total += stockBonus;
-            obj.popper.append(`<p class="modal_bd"><span>${loc('stock_bonus_label')}</span> <span class="has-text-success"> ${+(stockBonus).toFixed(1)}%</span></p>`);
-        }
-
-        total = +(total).toFixed(1);
+        // Total = potential: morale sebelum minimum dan cap diterapkan, angka yang sama yang dibaca governor untuk pajak
+        let total = global.city.morale.potential;
 
         let container = $(`<div></div>`);
         obj.popper.append(container);
 
         container.append(`<div class="modal_bd sum"><span>${loc('morale_total')}</span> <span class="has-text-warning"> ${+(total).toFixed(1)}%</span></div>`);
-        container.append(`<div class="modal_bd"><span>${loc('morale_max')}</span> <span class="has-text-${total > S.moraleCap ? 'caution' : 'warning'}"> ${+(S.moraleCap).toFixed(1)}%</span></div>`);
+        container.append(`<div class="modal_bd"><span>${loc('morale_max')}</span> <span class="has-text-${total > S.moraleCap ? 'caution' : 'warning'}">${+(S.moraleCap).toFixed(1)}%</span></div>`);
+        if (total < S.moraleMin){
+            // Total di bawah batas minimum: Current ditahan di minimum, bukan di Total
+            container.append(`<div class="modal_bd"><span>${loc('morale_min')}</span> <span class="has-text-warning"> ${+(S.moraleMin).toFixed(1)}%</span></div>`);
+        }
         container.append(`<div class="modal_bd"><span>${loc('morale_current')}</span> <span class="has-text-warning"> ${+(global.city.morale.current).toFixed(1)}%</span></div>`);
 
         return undefined;
@@ -510,14 +399,18 @@ popover('morale',
 );
 
 popover('powerStatus',function(obj){
-        let drain = +(global.city.power_total - global.city.power).toFixed(2);
-        Object.keys(power_generated).forEach(function (k){
-            if (power_generated[k]){
-                let gen = +power_generated[k];
-                obj.popper.append(`<p class="modal_bd"><span>${k}</span> <span class="has-text-success">+${+gen.toFixed(2)}</span></p>`);
+        // Baris berasal dari buku besar listrik (systems/power_core.js) yang diisi tick di fast_loop_power_generation.js:
+        // tooltip ini tidak menghitung apa pun sendiri. Sumber yang sudah berhenti tidak ada di catatan tick berikutnya.
+        (S.powerParts || []).forEach(function (part){
+            if (part.value === 0){
+                return;
             }
+            let type = part.value > 0 ? 'success' : 'danger';
+            obj.popper.append(`<p class="modal_bd"><span>${part.label}</span> <span class="has-text-${type}">${part.value > 0 ? '+' : ''}${+part.value.toFixed(2)}</span></p>`);
         });
-        obj.popper.append(`<p class="modal_bd"><span>${loc('power_consumed')}</span> <span class="has-text-danger"> -${drain}</span></p>`);
+        // power_total adalah jumlah baris di atas; selisihnya dengan listrik tersedia adalah pemakaian
+        let drain = +(global.city.power_total - global.city.power).toFixed(2);
+        obj.popper.append(`<p class="modal_bd"><span>${loc('power_consumed')}</span> <span class="has-text-${drain > 0 ? 'danger' : 'success'}"> ${drain > 0 ? '-' : '+'}${Math.abs(drain)}</span></p>`);
         let avail = +(global.city.power).toFixed(2);
         if (global.city.power > 0){
             obj.popper.append(`<p class="modal_bd sum"><span>${loc('power_available')}</span> <span class="has-text-success">${avail}</span></p>`);

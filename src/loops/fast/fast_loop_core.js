@@ -10,6 +10,7 @@ import { govEffect } from '../../civics/gov_effect.js';
 import { calcPillar } from '../../functions/functions.js';
 import { calc_mastery } from '../../functions/calc_mastery.js';
 import { resetResBuffer, timeScale } from '../../functions/resource_mod.js';
+import { stockFlags } from '../../stocks/stocks_core.js';
 import { eventActive } from '../../functions/event_dates.js';
 import { easterEggBind, trickOrTreatBind } from '../../functions/icons_easter_eggs.js';
 import { jobName } from '../../civics/jobs/job_name.js';
@@ -128,8 +129,16 @@ export function fastLoopCore(){
             if (convert > 0){
                 global.prestige.Aether.count -= convert;
                 aetherMoneyGain = convert * 1000000000000000;
-                global.resource.Money.amount += aetherMoneyGain;
-                global.resource.Money.delta += aetherMoneyGain;
+                let aetherMoney = global.resource.Money;
+                aetherMoney.amount += aetherMoneyGain;
+                aetherMoney.delta += aetherMoneyGain;
+                // Uang ini tidak lewat modRes, jadi kelebihan di atas cap harus dipotong dan dicatat di sini juga. Kalau dibiarkan,
+                // pengeluaran Money berikutnya di tick yang sama memotongnya tanpa catatan: auto-convert Ocoin kehilangan
+                // sebagian "lost", Money malah terkuras dan Money/s yang tampil bukan 0 padahal sudah penuh.
+                if (aetherMoney.max >= 0 && aetherMoney.amount > aetherMoney.max){
+                    stockFlags.moneyLost += aetherMoney.amount - aetherMoney.max;
+                    aetherMoney.amount = aetherMoney.max;
+                }
             }
         }
     }

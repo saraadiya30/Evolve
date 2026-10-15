@@ -1,13 +1,9 @@
-// Status listrik per tick: bonus power dari stock portfolio, global.city.power dan penanda powerMeter.
+// Status listrik per tick: global.city.power, power_total, catatan sumber listrik untuk tooltip, dan penanda powerMeter.
 import { global } from '../../core/vars.js';
-import { POWER_BONUS_PER_LOT } from '../../stocks/stocks_core.js';
+import { S_loops as S } from '../../core/registries.js';
 
 export function fastLoopPowerState($ctx){
-        // Stock portfolio power bonus: a flat +1 Power (Watt) per lot held, added the same way as the morale
-        // bonus above - recomputed every tick from current holdings, so selling lots takes the Power away again.
-        if (global.stocks && global.stocks.market && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
-            $ctx.power_grid += global.stocks.market.Power.lots * POWER_BONUS_PER_LOT;
-        }
+        S.powerParts = $ctx.power_parts;
         // Power grid state
         global.city.power_total = -$ctx.max_power;
         global.city.power = $ctx.power_grid;

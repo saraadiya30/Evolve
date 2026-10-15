@@ -7,6 +7,7 @@ import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { loc } from '../../core/locale.js';
 import { workerScale } from '../../civics/jobs/worker_scale.js';
 import { MORALE_BONUS_PER_LOT } from '../../stocks/stocks_core.js';
+import { moraleAdd } from '../../systems/morale_core.js';
 
 export function fastLoopMoraleCap($ctx){
         let mBaseCap = 100;
@@ -79,7 +80,7 @@ export function fastLoopMoraleCap($ctx){
         if (global.civic.govern.fr > 0){
             let rev = $ctx.morale / 2;
             global.city.morale.rev = rev;
-            $ctx.morale -= rev;
+            moraleAdd($ctx, 'morale_rev', -rev);
             m_min -= 10;
         }
         else {
@@ -90,7 +91,7 @@ export function fastLoopMoraleCap($ctx){
             if ($ctx.morale > 100){
                 let excess = $ctx.morale - 100;
                 excess = Math.ceil(excess * traits.tormented.vars()[0] / 100);
-                $ctx.morale -= excess;
+                moraleAdd($ctx, 'trait_tormented_name', -excess);
                 global.city['tormented'] = excess;
             }
             else {
@@ -103,10 +104,22 @@ export function fastLoopMoraleCap($ctx){
 
         if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.bad > 0){
             let badPress = Math.floor(global.race.wishStats.bad / 75) + 1;
-            $ctx.morale -= badPress * 5;
+            moraleAdd($ctx, 'wish_bad', -(badPress * 5));
+        }
+
+        // Stock portfolio morale bonus: a flat +0.1 Morale per lot held (not added to the cap), recomputed fresh every
+        // time morale is computed, so selling lots removes it on the very next calculation.
+        // It is part of the morale total: it goes in before `potential` (which the governor reads) and before the minimum
+        // and the cap are applied, so current is always the total clamped to [minimum, cap].
+        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
+            moraleAdd($ctx, 'stock_bonus_label', global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT);
         }
 
         global.city.morale.potential = +($ctx.morale).toFixed(1);
+        // Untuk tooltip morale: barisnya adalah catatan yang menyusun `potential` di atas, jadi Total yang tampil di sana
+        // selalu sama dengan yang dipakai game dan governor.
+        S.moraleParts = $ctx.moraleParts;
+        S.moraleMin = m_min;
 
         let aetherMoraleMult = 1;
         if (global.prestige.hasOwnProperty('Aether') && global.settings.aetherMorale > 0){
@@ -126,16 +139,6 @@ export function fastLoopMoraleCap($ctx){
             $ctx.morale = S.moraleCap + ($ctx.morale - S.moraleCap) * gasVal / 100;
         }
         $ctx.morale *= aetherMoraleMult;
-        // Stock portfolio morale bonus: a flat +0.1 Morale per lot held, added to the current value (not the cap),
-        // recomputed fresh every time morale is computed - so selling lots removes the bonus on the very next
-        // calculation, the same way the production and storage bonuses above track your current holdings rather
-        // than a one-off transaction.
-        if (global.stocks && global.stocks.market && global.stocks.market.Morale && global.stocks.market.Morale.lots > 0){
-            $ctx.morale += global.stocks.market.Morale.lots * MORALE_BONUS_PER_LOT;
-            // The bonus is added after the cap clamp above, so it can push morale past moraleCap on its own -
-            // clamp again here so current never actually exceeds the cap it's displayed next to.
-            $ctx.morale = Math.min($ctx.morale, S.moraleCap);
-        }
         global.city.morale.cap = S.moraleCap;
         global.city.morale.current = $ctx.morale;
 

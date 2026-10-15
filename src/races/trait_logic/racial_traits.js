@@ -1,5 +1,5 @@
 import { races, traits, hooks } from '../../core/registries.js';
-import { global, active_rituals, seededRandom, power_generated } from '../../core/vars.js';
+import { global, active_rituals, seededRandom } from '../../core/vars.js';
 import { govActive } from '../../governor/gov_active.js';
 import { govEffect } from '../../civics/gov_effect.js';
 import { OCULAR_POWER_TELEKINESIS_BASE } from '../../config/constants.js';
@@ -11,7 +11,6 @@ import { removeFromQueue, removeFromRQueue } from '../../functions/queues.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
 import { checkTechQualifications } from '../../actions/challenge/tech_qualifications.js';
 import { actions } from '../../core/registries.js';
-import { loc } from '../../core/locale.js';
 import { setResourceName } from '../../resources/special_resources.js';
 import { planetTraits, biomes } from '../planet_data.js';
 import { fathomCheck } from './fathom_check.js';
@@ -557,7 +556,6 @@ export function adjustFood() {
         else {
             disabledTech.push('wind_plant');
             disabledCity.push('city-windmill');
-            delete power_generated[loc('city_mill_title2')];
         }
     }
 

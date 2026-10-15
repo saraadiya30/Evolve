@@ -10,6 +10,7 @@ import { midLoopExtractionCaps } from './mid_loop_extraction_caps.js';
 import { midLoopCasinoCaps } from './mid_loop_casino_caps.js';
 import { midLoopFactoryJobCaps } from './mid_loop_factory_job_caps.js';
 import { midLoopGarrisonCaps } from './mid_loop_garrison_caps.js';
+import { isMobileLayout } from '../../functions/mobile_layout.js';
 import { midLoopJobCaps } from './mid_loop_job_caps.js';
 import { midLoopHousingCaps } from './mid_loop_housing_caps.js';
 import { midLoopWarehouseCaps } from './mid_loop_warehouse_caps.js';
@@ -381,7 +382,8 @@ export function midLoop(){
         });
     });
 
-    {
+    // Di layout mobile tinggi panel diatur CSS (halaman scroll biasa); jangan hitung/simpan ulang tinggi desktop.
+    if (!isMobileLayout()){
         let msgHeight = $(`#msgQueue`).height();
         let buildHeight = $(`#buildQueue`).height();
         let totHeight = $(`.leftColumn`).height();
@@ -454,10 +456,10 @@ export function midLoop(){
         global.settings.buildQueueHeight = buildHeight;
     }
 
-    if ($(`#mechList`).length > 0){
+    if (!isMobileLayout() && $(`#mechList`).length > 0){
         $(`#mechList`).css('height',`calc(100vh - 11.5rem - ${$(`#mechAssembly`).height()}px)`);
     }
-    if ($(`#shipList`).length > 0){
+    if (!isMobileLayout() && $(`#shipList`).length > 0){
         $(`#shipList`).css('height',`calc(100vh - 11.5rem - ${$(`#shipPlans`).height()}px)`);
     }
 }

@@ -6,6 +6,7 @@ import { govActive } from '../../governor/gov_active.js';
 import { govEffect } from '../../civics/gov_effect.js';
 import { astroVal } from '../../functions/astrology.js';
 import { workerScale } from '../../civics/jobs/worker_scale.js';
+import { moraleAdd } from '../../systems/morale_core.js';
 
 export function fastLoopMoraleEntertainment($ctx){
         $ctx.entertainment = 0;
@@ -25,12 +26,17 @@ export function fastLoopMoraleEntertainment($ctx){
                 $ctx.entertainment *= traits.high_pop.vars()[1] / 100;
             }
         }
+        let entertainOpts;
         if (global.civic.govern.type === 'democracy'){
             let democracy = 1 + (govEffect.democracy()[0] / 100);
             $ctx.entertainment *= democracy;
+            entertainOpts = {
+                shown: $ctx.entertainment / democracy,
+                sub: { label: 'govern_democracy', text: `+${govEffect.democracy()[0]}%`, prefix: 'ᄂ' }
+            };
         }
         global.city.morale.entertain = $ctx.entertainment;
-        $ctx.morale += $ctx.entertainment;
+        moraleAdd($ctx, 'morale_entertain', $ctx.entertainment, entertainOpts);
 
         if (global.tech['broadcast'] && !global.race['joyless']){
             let gasVal = govActive('gaslighter',0) || 0;
@@ -48,7 +54,7 @@ export function fastLoopMoraleEntertainment($ctx){
                 signalVal = p_on['wardenclyffe'];
             }
             global.city.morale.broadcast = signalVal * mVal;
-            $ctx.morale += signalVal * mVal;
+            moraleAdd($ctx, 'morale_broadcast', signalVal * mVal);
         }
         else {
             global.city.morale.broadcast = 0;
@@ -60,28 +66,28 @@ export function fastLoopMoraleEntertainment($ctx){
                 vr_morale += 2;
             }
             global.city.morale.vr = support_on['vr_center'] * vr_morale;
-            $ctx.morale += support_on['vr_center'] * vr_morale;
+            moraleAdd($ctx, 'morale_vr', support_on['vr_center'] * vr_morale);
         }
         else {
             global.city.morale.vr = 0;
         }
         if (int_on['zoo'] && !global.race['fasting']){
             global.city.morale.zoo = int_on['zoo'] * 5;
-            $ctx.morale += int_on['zoo'] * 5;
+            moraleAdd($ctx, 'morale_zoo', int_on['zoo'] * 5);
         }
         else {
             global.city.morale.zoo = 0;
         }
         if (p_on['tavern'] && !global.race['joyless']){
             global.city.morale.tavern = p_on['tavern'] * p_on['shadow_mine'] * 0.35;
-            $ctx.morale += p_on['tavern'] * p_on['shadow_mine'] * 0.35;
+            moraleAdd($ctx, 'morale_tavern', p_on['tavern'] * p_on['shadow_mine'] * 0.35);
         }
         else {
             global.city.morale.tavern = 0;
         }
         if (support_on['bliss_den'] && !global.race['joyless']){
             global.city.morale.bliss_den = support_on['bliss_den'] * 8;
-            $ctx.morale += support_on['bliss_den'] * 8;
+            moraleAdd($ctx, 'morale_bliss_den', support_on['bliss_den'] * 8);
         }
         else {
             global.city.morale.bliss_den = 0;
@@ -92,7 +98,7 @@ export function fastLoopMoraleEntertainment($ctx){
             val += global.civic.elysium_miner.workers * 0.15;
             val += global.eden.hasOwnProperty('archive') && p_on['archive'] ? 0.4 * p_on['archive'] : 0;
             global.city.morale.restaurant = p_on['restaurant'] * val;
-            $ctx.morale += p_on['restaurant'] * val;
+            moraleAdd($ctx, 'morale_restaurant', p_on['restaurant'] * val);
         }
         else {
             global.city.morale.restaurant = 0;
@@ -100,7 +106,7 @@ export function fastLoopMoraleEntertainment($ctx){
         if (eventActive('summer')){
             let boost = (global.resource.Thermite.diff * 2.5) / (global.resource.Thermite.diff * 2.5 + 500) * 500;
             global.city.morale['bonfire'] = boost;
-            $ctx.morale += boost;
+            moraleAdd($ctx, 'morale_bonfire', boost);
         }
         else {
             delete global.city.morale['bonfire'];
@@ -130,26 +136,26 @@ export function fastLoopMoraleEntertainment($ctx){
 
         $ctx.stress = +($ctx.stress).toFixed(1);
         global.city.morale.stress = $ctx.stress;
-        $ctx.morale += $ctx.stress;
+        moraleAdd($ctx, 'morale_stress', $ctx.stress);
 
         global.city.morale.tax = 20 - global.civic.taxes.tax_rate;
-        $ctx.morale -= global.civic.taxes.tax_rate - 20;
+        moraleAdd($ctx, 'morale_tax', -(global.civic.taxes.tax_rate - 20));
         if (global.civic.taxes.tax_rate > 40){
             let high_tax = global.civic.taxes.tax_rate - 40;
             global.city.morale.tax -= high_tax * 0.5;
-            $ctx.morale -= high_tax * 0.5;
+            moraleAdd($ctx, 'morale_tax', -(high_tax * 0.5));
         }
         if (global.civic.govern.type === 'oligarchy' && global.civic.taxes.tax_rate > 20){
             let high_tax = global.civic.taxes.tax_rate - 20;
             global.city.morale.tax += high_tax * 0.5;
-            $ctx.morale += high_tax * 0.5;
+            moraleAdd($ctx, 'morale_tax', high_tax * 0.5);
         }
 
         if (((global.civic.govern.type !== 'autocracy' && !global.race['blood_thirst']) || global.race['immoral']) && global.civic.garrison.protest + global.civic.garrison.fatigue > 2){
             let immoral = global.race['immoral'] ? 1 + (traits.immoral.vars()[0] / 100) : 1;
             let warmonger = Math.round(Math.log2(global.civic.garrison.protest + global.civic.garrison.fatigue) * immoral);
             global.city.morale.warmonger = global.race['immoral'] ? warmonger : -(warmonger);
-            $ctx.morale += global.city.morale.warmonger;
+            moraleAdd($ctx, 'morale_warmonger', global.city.morale.warmonger);
         }
         else {
             global.city.morale.warmonger = 0;

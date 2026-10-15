@@ -3,20 +3,20 @@ import { loc } from '../core/locale.js';
 import { races } from '../core/registries.js';
 import { addATime } from './game_loop_timing.js';
 import { clearPopper } from './popover.js';
+import { isTouchMode } from './touch_mode.js';
 import { hoovedRename } from './run_stats_helpers.js';
 import { rName } from './resource_name.js';
 import { S_functions as S } from '../core/registries.js';
 
 S.popperRef = false;
 
-if ('ontouchstart' in document.documentElement && navigator.userAgent.match(/Mobi/ && global.settings.touch) ? true : false){
-    $(document).on('touchend',function(e){
-        if ($(`.popper`).length === 1){
-            clearPopper();
-            return;
-        }
-    });
-}
+// Dipasang selalu (bukan hanya saat load) supaya toggle "Touch Device" langsung berlaku.
+$(document).on('touchend',function(e){
+    if (isTouchMode() && $(`.popper`).length === 1){
+        clearPopper();
+        return;
+    }
+});
 
 
 window.exportGame = function exportGame(){

@@ -1,7 +1,7 @@
 import { loc } from '../core/locale.js';
 import { sizeApproximation, affix_list } from '../core/vars.js';
 import { infoBoxBuilder, sideMenu } from './functions.js';
-import { OCOIN_RATE, OCOIN_BUY_FEE, AETHER_OCOIN_RATE, LOT_BONUS, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, OCOIN_YIELD_PER_LOT, MAX_ORDERS } from '../stocks/stocks_core.js';
+import { OCOIN_RATE, OCOIN_BUY_FEE, AETHER_OCOIN_RATE, LOT_BONUS, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, OCOIN_YIELD_PER_LOT, MAX_ORDERS, AETHER_SOUL_GEM_RATE, AETHER_GENES_RATE } from '../stocks/stocks_core.js';
 
 // Money per Aether (aether_alchemy.js and fast_loop_core.js use this same literal; there is no shared constant yet).
 const AETHER_MONEY_RATE = 1e15;
@@ -57,7 +57,7 @@ export function miscPage(content){
     });
     sideMenu('add',`misc-gameplay`,'special',loc('wiki_misc_special'));
 
-    infoBoxBuilder(mainContent,{ name: 'aether', template: 'misc', paragraphs: 9,
+    infoBoxBuilder(mainContent,{ name: 'aether', template: 'misc', paragraphs: 11,
         para_data: {
             1: [loc('resource_Aether_name'),loc('resource_Plasmid_name'),loc('resource_Phage_name')],
             2: [loc('resource_Aether_name')],
@@ -67,7 +67,9 @@ export function miscPage(content){
             6: ['0.00000000001'],
             7: ['0.000000001'],
             8: ['0.00000000001'],
-            9: [loc('aether_speed_label')]
+            9: [loc('aether_speed_label')],
+            10: [loc('resource_Soul_Gem_name'),rateText(AETHER_SOUL_GEM_RATE)],
+            11: [loc('resource_Genes_name'),rateText(AETHER_GENES_RATE)]
         }
     });
     sideMenu('add',`misc-gameplay`,'aether',loc('resource_Aether_name'));

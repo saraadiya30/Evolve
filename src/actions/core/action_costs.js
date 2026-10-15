@@ -8,6 +8,7 @@ import { actions, hooks } from '../../core/registries.js';
 import { garrisonSize } from '../../civics/military/garrison.js';
 import { govActive } from '../../governor/gov_active.js';
 import { getStructNumActive } from '../evolution/struct_active.js';
+import { isTouchMode } from '../../functions/touch_mode.js';
 
 
 
@@ -17,7 +18,7 @@ export function actionDesc(parent,c_action,obj,old,action,a_type,bres){
     bres = bres || false;
     
     let touch = false;
-    if (action && a_type && 'ontouchstart' in document.documentElement && navigator.userAgent.match(/Mobi/) && global.settings.touch ? true : false){
+    if (action && a_type && isTouchMode()){
         touch = $(`<a id="touchButton" class="button is-dark touchButton">${c_action.hasOwnProperty('touchlabel') ? c_action.touchlabel : loc('construct')}</a>`);
         parent.append(touch);
 

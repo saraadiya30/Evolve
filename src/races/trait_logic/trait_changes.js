@@ -1,4 +1,4 @@
-import { global, power_generated, save, webWorker } from '../../core/vars.js';
+import { global, save, webWorker } from '../../core/vars.js';
 import { traits, races, hooks } from '../../core/registries.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
 import { setJobName } from '../../civics/jobs/job_definitions.js';
@@ -99,11 +99,6 @@ export function cleanAddTrait(trait){
         case 'apex_predator':
             removeFromRQueue(['armor']);
             setPurgatory('tech','armor');
-            break;
-        case 'environmentalist':
-            delete power_generated[loc('city_coal_power')];
-            delete power_generated[loc('city_mana_engine')];
-            delete power_generated[loc('city_oil_power')];
             break;
         case 'terrifying':
             Object.keys(global.resource).forEach(function (res){
@@ -376,10 +371,6 @@ export function cleanRemoveTrait(trait,rank){
             break;
         case 'apex_predator':
             checkPurgatory('tech','armor');
-            break;
-        case 'environmentalist':
-            delete power_generated[loc('city_hydro_power')];
-            delete power_generated[loc('city_wind_power')];
             break;
         case 'terrifying':
             checkPurgatory('tech','trade');

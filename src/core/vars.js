@@ -42,7 +42,6 @@ export let breakdown = {
     c: {},
     p: {}
 };
-export let power_generated = {};
 export let p_on = {};
 export let support_on = {};
 export let int_on = {};

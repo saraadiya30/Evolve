@@ -8,12 +8,12 @@ import { planetTraits } from '../../races/planet_data.js';
 import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { govActive } from '../../governor/gov_active.js';
 import { govEffect } from '../../civics/gov_effect.js';
-import { petMorale } from '../../systems/morale_core.js';
+import { petMorale, moraleBegin, moraleAdd, MORALE_LABEL_CHEESE } from '../../systems/morale_core.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
 
 export function fastLoopMorale($ctx){
         $ctx.zigVal = zigguratBonus();
-        $ctx.morale = 100;
+        moraleBegin($ctx);
         $ctx.q_multiplier = 1;
         $ctx.qs_multiplier = 1;
         if (global.race['quarantine'] && global.race['qDays']){
@@ -46,20 +46,20 @@ export function fastLoopMorale($ctx){
 
         if (global.city.calendar.season === 0 && global.city.calendar.year > 0){ // Spring
             let spring = global.race['chilled'] || global.race['smoldering'] ? 0 : SPRING_MORALE_BONUS;
-            $ctx.morale += spring;
+            moraleAdd($ctx, 'morale_spring', spring);
             global.city.morale.season = spring;
         }
         else if (global.city.calendar.season === 1 && global.race['smoldering']){ // Summer
-            $ctx.morale += traits.smoldering.vars()[0];
+            moraleAdd($ctx, 'morale_summer', traits.smoldering.vars()[0]);
             global.city.morale.season = traits.smoldering.vars()[0];
         }
         else if (global.city.calendar.season === 3){ // Winter
             if (global.race['chilled']){
-                $ctx.morale += traits.chilled.vars()[0];
+                moraleAdd($ctx, 'morale_winter', traits.chilled.vars()[0]);
                 global.city.morale.season = traits.chilled.vars()[0];
             }
             else {
-                $ctx.morale -= global.race['leathery'] ? traits.leathery.vars()[0] : WINTER_MORALE_PENALTY;
+                moraleAdd($ctx, 'morale_winter', global.race['leathery'] ? -(traits.leathery.vars()[0]) : -WINTER_MORALE_PENALTY);
                 global.city.morale.season = global.race['leathery'] ? -(traits.leathery.vars()[0]) : -WINTER_MORALE_PENALTY;
             }
         }
@@ -70,23 +70,23 @@ export function fastLoopMorale($ctx){
         if (global.race['cheese']){
             let raw_cheese = global.stats.hasOwnProperty('reset') ? global.stats.reset + 1 : 1;
             let cheese = +(raw_cheese / (raw_cheese + 10) * 11).toFixed(2);
-            $ctx.morale += cheese;
+            moraleAdd($ctx, MORALE_LABEL_CHEESE, cheese, { prec: 2 });
         }
 
         if (global.civic['homeless']){
-            $ctx.morale -= global.civic.homeless / 2;
+            moraleAdd($ctx, 'homeless', -(global.civic.homeless / 2));
         }
 
         if (global.tech['vax_c'] || global.tech['vax_f']){
-            $ctx.morale -= global.tech['vax_c'] ? VAX_C_MORALE_PENALTY : VAX_F_MORALE_PENALTY;
+            moraleAdd($ctx, global.tech['vax_c'] ? 'tech_vax_strat4_bd' : 'tech_vax_strat2_bd', -(global.tech['vax_c'] ? VAX_C_MORALE_PENALTY : VAX_F_MORALE_PENALTY));
         }
         else if (global.tech['vax_s']){
-            $ctx.morale += VAX_S_MORALE_BONUS;
+            moraleAdd($ctx, 'tech_vax_strat3_bd', VAX_S_MORALE_BONUS);
         }
 
         if (global.tech['m_boost']){
             global.city.morale.leadership = MORALE_BOOST_TECH_BONUS;
-            $ctx.morale += MORALE_BOOST_TECH_BONUS;
+            moraleAdd($ctx, 'morale_leadership', MORALE_BOOST_TECH_BONUS);
         }
         else {
             global.city.morale.leadership = 0;
@@ -95,7 +95,7 @@ export function fastLoopMorale($ctx){
         if (shrineBonusActive()){
             let shrineMorale = getShrineBonus('morale');
             global.city.morale.shrine = shrineMorale.add;
-            $ctx.morale += shrineMorale.add;
+            moraleAdd($ctx, 'morale_shrine', shrineMorale.add);
         }
         else {
             global.city.morale.shrine = 0;
@@ -103,22 +103,22 @@ export function fastLoopMorale($ctx){
 
         let milVal = govActive('militant',1);
         if (milVal){
-            $ctx.morale -= milVal;
+            moraleAdd($ctx, 'gov_trait_militant', -milVal);
         }
         if (global.civic.govern.type === 'corpocracy'){
-            $ctx.morale -= govEffect.corpocracy()[3];
+            moraleAdd($ctx, 'govern_corpocracy', -govEffect.corpocracy()[3]);
         }
         if (global.civic.govern.type === 'republic'){
-            $ctx.morale += govEffect.republic()[1];
+            moraleAdd($ctx, 'govern_republic', govEffect.republic()[1]);
         }
         if (global.civic.govern.type === 'federation'){
-            $ctx.morale += govEffect.federation()[1];
+            moraleAdd($ctx, 'govern_federation', govEffect.federation()[1]);
         }
 
         if (global.race['blood_thirst'] && global.race.blood_thirst_count >= 1){
             let blood_thirst = Math.ceil(Math.log2(global.race.blood_thirst_count));
             global.city.morale.blood_thirst = blood_thirst;
-            $ctx.morale += blood_thirst;
+            moraleAdd($ctx, 'morale_blood_thirst', blood_thirst);
         }
         else {
             global.city.morale.blood_thirst = 0;
@@ -165,25 +165,25 @@ export function fastLoopMorale($ctx){
         }
 
         global.city.morale.weather = global.race['submerged'] ? 0 : weather_morale;
-        $ctx.morale += global.race['submerged'] ? 0 : weather_morale;
+        moraleAdd($ctx, 'morale_weather', global.race['submerged'] ? 0 : weather_morale);
 
         if (global.race['motivated']){
             let boost = Math.ceil(global.race['motivated'] ** 0.4);
-            $ctx.morale += boost;
+            moraleAdd($ctx, 'event_motivation_bd', boost);
         }
 
         if (global.race['pet']){
             let petBonus = petMorale(global.race.pet);
             global.city.morale.pet = petBonus;
-            $ctx.morale += petBonus;
+            moraleAdd($ctx, `event_pet_${global.race.pet.type}_owner`, petBonus);
         }
 
         if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.fame !== 0){
-            $ctx.morale += global.race.wishStats.fame;
+            moraleAdd($ctx, global.race.wishStats.fame > 0 ? 'wish_reputable' : 'wish_notorious', global.race.wishStats.fame);
         }
 
         if (global.race['artisan'] && !global.race['joyless']){
-            $ctx.morale += traits.artisan.vars()[2] * global.civic.craftsman.workers;
+            moraleAdd($ctx, 'trait_artisan_name', traits.artisan.vars()[2] * global.civic.craftsman.workers, { prec: 2 });
         }
 
         $ctx.stress = 0;
@@ -192,7 +192,7 @@ export function fastLoopMorale($ctx){
         global.city.morale.unemployed = 0;
         if (!global.city.ptrait.includes('mellow')){
             let unemployed = global.civic.unemployed.workers / (global.race['high_pop'] ? traits.high_pop.vars()[0] : 1);
-            $ctx.morale -= unemployed;
+            moraleAdd($ctx, 'morale_unemployed', -unemployed);
             global.city.morale.unemployed = -(unemployed);
         }
         else {
@@ -208,7 +208,7 @@ export function fastLoopMorale($ctx){
             if (global.race['playful']){
                 val += traits.playful.vars()[0];
             }
-            $ctx.morale += global.civic.hunter.workers * val;
+            moraleAdd($ctx, 'morale_hunter', global.civic.hunter.workers * val);
             global.city.morale.unemployed = global.civic.hunter.workers * val;
         }
         else {

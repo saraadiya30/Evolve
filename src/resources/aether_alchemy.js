@@ -1,9 +1,9 @@
-// Contains: loadAlchemy(), aetherLetterCode(), aetherFormat(), aetherMoneyUnitOptions(), initAether(), faithTempleCount(), faithBonus(), templePlasmidBonus()
+// Contains: loadAlchemy(), aetherLetterCode(), aetherFormat(), aetherExact(), aetherMoneyUnitOptions(), initAether(), faithTempleCount(), faithBonus(), templePlasmidBonus()
 import { global, keyMultiplier } from '../core/vars.js';
 import { vBind, clearElement } from '../functions/dom_helpers.js';
 import { popover } from '../functions/popover.js';
 import { loc } from '../core/locale.js';
-import { AETHER_OCOIN_RATE } from '../stocks/stocks_core.js';
+import { AETHER_OCOIN_RATE, AETHER_SOUL_GEM_RATE, AETHER_GENES_RATE } from '../stocks/stocks_core.js';
 import { templeCount } from '../functions/temple_count.js';
 import { workerScale } from '../civics/jobs/worker_scale.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
@@ -114,6 +114,12 @@ export function aetherFormat(value){
     return sign + (+scaled.toFixed(3)) + suffix;
 }
 
+export function aetherExact(value){
+    if (value === Infinity || value === -Infinity){ return value > 0 ? '∞' : '-∞'; }
+    if (!value || !isFinite(value)){ return '0'; }
+    return value.toLocaleString('en-US', { useGrouping: true, maximumFractionDigits: 20 });
+}
+
 function aetherMoneyUnitOptions(){
     let tiers = [
         ['-12', loc('aether_unit_pico_short')],
@@ -152,6 +158,14 @@ export function initAether(){
     if (typeof global.settings.aetherOcoinQtyCoef === 'undefined'){
         global.settings.aetherOcoinQtyCoef = 1;
         global.settings.aetherOcoinQtyExp = -12;
+    }
+    if (typeof global.settings.aetherSoulGemQtyCoef === 'undefined'){
+        global.settings.aetherSoulGemQtyCoef = 1;
+        global.settings.aetherSoulGemQtyExp = -12;
+    }
+    if (typeof global.settings.aetherGenesQtyCoef === 'undefined'){
+        global.settings.aetherGenesQtyCoef = 1;
+        global.settings.aetherGenesQtyExp = -9;
     }
     ['aetherPlasmidRate','aetherPhageRate','aetherPower','aetherStorage','aetherSpeed','aetherMorale','aetherProd'].forEach(function(k){
         if (typeof global.settings[k] === 'undefined'){
@@ -203,6 +217,20 @@ export function initAether(){
     ocoinBuyRow.append($(`<input type="number" min="0" step="any" v-model.number="s.aetherOcoinQtyCoef" @change="clampNonNeg('aetherOcoinQtyCoef')" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
     ocoinBuyRow.append($(`<select v-model.number="s.aetherOcoinQtyExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">${aetherMoneyUnitOptions()}</select>`));
     ocoinBuyRow.append($(`<b-tooltip :label="ocoinLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: p.Aether.count < ocoinQty() }" @click="buyOcoin()">${loc('resource_market_buy')}</span></b-tooltip>`));
+
+    // Soul Gem: a one-off purchase too, whole gems only (1 pico Aether = 1 Soul Gem)
+    let soulGemBuyRow = $(`<div id="aetherSoulGemBuy" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('resource_Soul_Gem_name')}</h3></div>`);
+    wrap.append(soulGemBuyRow);
+    soulGemBuyRow.append($(`<input type="number" min="0" step="any" v-model.number="s.aetherSoulGemQtyCoef" @change="clampNonNeg('aetherSoulGemQtyCoef')" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    soulGemBuyRow.append($(`<select v-model.number="s.aetherSoulGemQtyExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">${aetherMoneyUnitOptions()}</select>`));
+    soulGemBuyRow.append($(`<b-tooltip :label="soulGemLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: soulGemGems() < 1 }" @click="buySoulGem()">${loc('resource_market_buy')}</span></b-tooltip>`));
+
+    // Genes: a one-off purchase as well, whole genes only (1 nano Aether = 1 Genes)
+    let genesBuyRow = $(`<div id="aetherGenesBuy" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('resource_Genes_name')}</h3></div>`);
+    wrap.append(genesBuyRow);
+    genesBuyRow.append($(`<input type="number" min="0" step="any" v-model.number="s.aetherGenesQtyCoef" @change="clampNonNeg('aetherGenesQtyCoef')" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
+    genesBuyRow.append($(`<select v-model.number="s.aetherGenesQtyExp" style="background:#1a1a1a;color:inherit;border:1px solid #555;margin-right:.5rem;">${aetherMoneyUnitOptions()}</select>`));
+    genesBuyRow.append($(`<b-tooltip :label="genesLabel()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: genesAmount() < 1 }" @click="buyGenes()">${loc('resource_market_buy')}</span></b-tooltip>`));
 
     let powerRow = $(`<div id="aetherPower" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('aether_power_label')}</h3></div>`);
     wrap.append(powerRow);
@@ -294,6 +322,46 @@ export function initAether(){
             ocoinLabel(){
                 let qty = this.ocoinQty();
                 return loc('aether_exchange_ocoin',[aetherFormat(qty), aetherFormat(qty * AETHER_OCOIN_RATE)]);
+            },
+            // Aether picked in the input, limited to what you have; only whole Soul Gems are sold (rounded down)
+            soulGemQty(){
+                let qty = global.settings.aetherSoulGemQtyCoef * (10 ** global.settings.aetherSoulGemQtyExp);
+                return Math.min(qty, global.prestige.Aether.count);
+            },
+            soulGemGems(){
+                return Math.floor(this.soulGemQty() * AETHER_SOUL_GEM_RATE + 1e-6);
+            },
+            buySoulGem(){
+                let gems = this.soulGemGems();
+                if (gems >= 1){
+                    global.prestige.Aether.count = Math.max(0, global.prestige.Aether.count - gems / AETHER_SOUL_GEM_RATE);
+                    global.resource.Soul_Gem.amount += gems;
+                    global.resource.Soul_Gem.display = true;
+                }
+            },
+            soulGemLabel(){
+                let qty = global.settings.aetherSoulGemQtyCoef * (10 ** global.settings.aetherSoulGemQtyExp);
+                return loc('aether_exchange_soul_gem',[aetherFormat(qty), aetherFormat(Math.floor(qty * AETHER_SOUL_GEM_RATE + 1e-6)), loc('resource_Soul_Gem_name')]);
+            },
+            // Same idea as the Soul Gem purchase: the Aether you picked (limited to what you have), whole Genes only
+            genesQty(){
+                let qty = global.settings.aetherGenesQtyCoef * (10 ** global.settings.aetherGenesQtyExp);
+                return Math.min(qty, global.prestige.Aether.count);
+            },
+            genesAmount(){
+                return Math.floor(this.genesQty() * AETHER_GENES_RATE + 1e-6);
+            },
+            buyGenes(){
+                let genes = this.genesAmount();
+                if (genes >= 1){
+                    global.prestige.Aether.count = Math.max(0, global.prestige.Aether.count - genes / AETHER_GENES_RATE);
+                    global.resource.Genes.amount += genes;
+                    global.resource.Genes.display = true;
+                }
+            },
+            genesLabel(){
+                let qty = global.settings.aetherGenesQtyCoef * (10 ** global.settings.aetherGenesQtyExp);
+                return loc('aether_exchange_genes',[aetherFormat(qty), aetherFormat(Math.floor(qty * AETHER_GENES_RATE + 1e-6)), loc('resource_Genes_name')]);
             },
             moneyRateLabel(){
                 let rate = global.settings.aetherMoneyRateCoef * (10 ** global.settings.aetherMoneyRateExp);

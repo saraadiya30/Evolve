@@ -4,6 +4,8 @@
 // --- Tunable constants ---------------------------------------------------------------------------------------------
 export const OCOIN_RATE = 1000;     // 1 Ocoin = 1000 Money (both directions)
 export const OCOIN_BUY_FEE = 0.05;  // fee on Money -> Ocoin only. Ocoin -> Money is free.
+export const AETHER_GENES_RATE = 1e9; // Genes you get for 1 Aether (the Aether tab): 1 nano Aether = 1 Genes
+export const AETHER_SOUL_GEM_RATE = 1e12; // Soul Gems you get for 1 Aether (the Aether tab): 1 pico Aether = 1 Soul Gem
 export const AETHER_OCOIN_RATE = 1e12; // Ocoin you get for 1 Aether (the Aether tab). Same value as 1 Aether = 1e15 Money at the 1000:1
                                         // exchange, without the 5% fee.
 export const LOT_BONUS = 0.001;     // each lot on production adds +0.1% production to that stock's resource (additive, no cap)
@@ -37,11 +39,13 @@ export function ocoinYield(ocoin, lots){
 }
 // Net Ocoin change per game second from the two automatic sources, for the balance indicator in the Stocks tab.
 // autoFlow: smoothed Money/s moved by Auto Convert (positive = Money converted into Ocoin, negative = Money topped up from
-// Ocoin). Only counted while Auto is on. The Compoundia payout happens once per game day, so it is spread over daySeconds.
+// Ocoin). A positive flow always counts, because Money that the storage cap would throw away is converted even while Auto is
+// off (see capOverflowStep); a negative flow (top-up from Ocoin) only exists, and only counts, while Auto is on.
+// The Compoundia payout happens once per game day, so it is spread over daySeconds.
 // One-off movements (buying/selling Ocoin, filled orders, Aether purchases) are not rates and are not counted.
 export function ocoinFlowPerSecond(autoFlow, autoOn, ocoin, dividendLots, daySeconds){
     let auto = 0;
-    if (autoOn && isFinite(autoFlow) && autoFlow !== 0){
+    if (isFinite(autoFlow) && autoFlow !== 0 && (autoOn || autoFlow > 0)){
         auto = autoFlow > 0 ? moneyToOcoin(autoFlow) : autoFlow / OCOIN_RATE;
     }
     let perDay = daySeconds > 0 ? ocoinYield(ocoin, dividendLots) : 0;
@@ -51,17 +55,27 @@ export function ocoinFlowPerSecond(autoFlow, autoOn, ocoin, dividendLots, daySec
 export const HIST_LEN = 240;        // how many past prices (one per tick) are kept for the price chart
 
 // --- Order book ---------------------------------------------------------------------------------------------------
-// Every stock has an ask side (sellers) and a bid side (buyers). Each side is a ladder of price levels, LEVEL_STEP apart.
-// The best level has a queue of `aq` / `bq` lots; every deeper level holds `dA` / `dB` lots. A market order eats through
-// the levels: a level can only fill as many lots as it holds, the rest moves on to the next (worse) price. There is no
-// cap on the total number of lots, only a worse and worse price.
-// Lots you take from the book push that side's best quote away from the mid price; it drifts back over time.
-export const LEVEL_STEP = 0.1;      // flat Ocoin gap between two order-book levels (e.g. asks 10.5, 10.4, 10.3, ...)
-export const BASE_DEPTH = 10;       // lots per level (before mode/event/random factors)
-export const BASE_SPREAD = 0.01;    // relative spread between best bid and best ask (before factors)
+// Every stock has a persistent order book: an ask side (sellers) and a bid side (buyers). Each side is a ladder of price
+// levels, one tick size (`st.step`) apart, holding a number of lots. The book is the market: the price is the middle of
+// the best bid and the best ask, and it only moves when lots are actually traded away.
+//  - NPC "flow" (driven by the hidden market mode, boom/crash events and the pull towards fair value) buys or sells at
+//    market every tick and eats through the levels. A thick level holds the price up, a thin one lets it gap through.
+//  - NPC market makers slowly refill liquidity around the price after that.
+//  - Your limit orders are real resting orders: they sit in the book (behind the NPC lots at the same level), they
+//    count as depth, and they only fill when the flow reaches their level.
+// The tick size is relative to the stock's fair value (about 0.2%, rounded to 1/2/5 x 10^n), so a cheap stock and a very
+// expensive one both get a sensible ladder. Order prices are rounded to the nearest level.
+export const REL_STEP = 0.002;       // tick size as a share of the fair value
+export const MIN_STEP = 0.01;        // smallest tick size
+export const BASE_DEPTH = 10;        // lots per level for a stock priced at DEPTH_REF_PRICE or below (before factors)
+export const DEPTH_REF_PRICE = 100;  // more expensive stocks get proportionally deeper levels
+export const BOOK_WINDOW = 80;       // how many levels each side keeps liquidity for (around the price)
+export const BOOK_REFILL = 0.3;      // share of a missing level that the market makers refill per tick
+export const BOOK_DECAY = 0.1;       // share of an over-thick level that is pulled away per tick
+export const BASE_SPREAD = 0.01;     // relative spread between best bid and best ask (before factors)
 export const MAX_SPREAD = 0.10;
-export const QUOTE_RELAX = 0.02;    // per tick, how much of your price push disappears again
-export const MAX_ORDERS = 10;       // open orders per stock
+export const MAX_ORDERS = 10;        // open orders per stock
+const MAX_TAIL_LEVELS = 20000;       // how far past the real book a single huge order may still walk (see sweep)
 
 // Random boom / crash events. A boom is a gradual rise, a crash is a sharp drop; afterwards the price drifts back.
 const EVENT_CHANCE = 0.015;         // per stock, per tick
@@ -73,7 +87,6 @@ const CRASH_DUR = [2, 3];           // ticks
 
 const BASE_VOL = 0.01;              // base volatility per tick (1%)
 const REVERT = 0.02;                // pull-back strength towards the stock's fair value per tick
-const MIN_PRICE_RATIO = 1e-9;       // price can never hit zero, even after a huge sell-off
 const MODE_MIN = 20;                // a hidden market mode lasts between MODE_MIN and MODE_MAX ticks
 const MODE_MAX = 60;
 
@@ -110,7 +123,7 @@ export const stockModes = [
 
 // Book factors while a boom / crash is running (multiplied with the mode factors above). The gap between bid and
 // ask here is deliberately large (>4x) so the lopsided book (more buyers piling in on a boom, more sellers
-// dumping in a crash) stays visible even combined with a bearish/bullish underlying mode - see refreshBook.
+// dumping in a crash) stays visible even combined with a bearish/bullish underlying mode - see refill.
 const EVENT_BOOK = {
     boom: { bid: 1.6, ask: 0.25, spr: 2 },
     crash: { bid: 0.25, ask: 1.6, spr: 3 }
@@ -145,6 +158,7 @@ export function newStock(def, rand = Math.random){
     let price = def.fair * (0.9 + rand() * 0.2);
     let st = {
         fair: def.fair,
+        step: stepForFair(def.fair),
         price: price,
         prev: price,
         mode: pickMode(rand),
@@ -154,24 +168,24 @@ export function newStock(def, rand = Math.random){
         lots: 0,
         storeLots: 0,   // how many of the held lots are put on the storage bonus; the rest are on the production bonus
         spent: 0,
-        ap: 0,          // how far (log) your buying pushed the best ask up
-        bp: 0,          // how far (log) your selling pushed the best bid down
+        rev: 0,         // bumped whenever the order book changes (the UI watches it, see bump)
         orders: []
     };
-    refreshBook(st, rand);
+    buildBook(st, rand);
     return st;
 }
 
-// Fills in the order-book fields for stocks saved before the order book existed.
+// Fills in the order-book fields for stocks saved before the persistent order book existed (the price, the history and
+// your orders are kept; the book itself is rebuilt around the current price).
 export function upgradeStock(st, rand = Math.random){
-    if (typeof st.ap !== 'number'){ st.ap = 0; }
-    if (typeof st.bp !== 'number'){ st.bp = 0; }
     if (!Array.isArray(st.orders)){ st.orders = []; }
     // Saves from before lots could be split between production and storage: every lot stays on production
     if (typeof st.storeLots !== 'number' || !isFinite(st.storeLots) || st.storeLots < 0){ st.storeLots = 0; }
     st.storeLots = Math.min(Math.floor(st.storeLots), st.lots || 0);
-    if (typeof st.spread !== 'number' || typeof st.aq !== 'number'){
-        refreshBook(st, rand);
+    if (!(st.step > 0)){ st.step = stepForFair(st.fair); }
+    if (typeof st.rev !== 'number'){ st.rev = 0; }
+    if (!st.asks || !st.bids || typeof st.kr !== 'number'){
+        buildBook(st, rand);
     }
     return st;
 }
@@ -212,6 +226,7 @@ export function stepStock(st, rand = Math.random){
         st.left = MODE_MIN + Math.floor(rand() * (MODE_MAX - MODE_MIN + 1));
     }
     let m = stockModes[st.mode];
+    let f = bookFactors(st);
     let evDrift = 0;
     if (st.ev){
         evDrift = st.ev.drift;
@@ -220,17 +235,30 @@ export function stepStock(st, rand = Math.random){
             st.ev = null;
         }
     }
+    // The pressure on the price this tick (log return): market mode, boom/crash, the pull back towards fair value and
+    // noise. It is not applied to the price directly: it becomes NPC market orders that have to eat through the book,
+    // so a thick book (yours or the market's) absorbs it and a thin one lets the price run.
     let r = m.drift + evDrift + REVERT * (Math.log(st.fair) - Math.log(st.price)) + BASE_VOL * m.vol * randNormal(rand);
-    // No upper clamp: player buying can legitimately push the price far above fair value. The pull back towards
-    // fair value is done in log space, so it stays stable.
-    let p = Math.max(st.fair * MIN_PRICE_RATIO, st.price * Math.exp(r));
+    let side = r >= 0 ? 'ask' : 'bid';
+    let levels = Math.abs(r) * st.price / stepOf(st);
+    // The market makers' levels get thicker the further they are from the price (see topUp), so crossing `levels`
+    // levels takes depth * (levels + levels^2 / window) lots: with a book as thick as the market makers keep it, the price
+    // moves by about r. Anything thicker in the way (your orders) stops it sooner, anything thinner lets it run further.
+    let vol = Math.round(baseDepth(st) * (side === 'ask' ? f.ask : f.bid) * (levels + levels * levels / BOOK_WINDOW));
+    if (vol > 0){
+        let out = sweep(st, side, vol, true, Infinity);
+        if (out.lots > 0){
+            st.kr = out.last;
+        }
+    }
+    refill(st, rand);
+    let p = (askPrice(st) + bidPrice(st)) / 2;
     st.prev = st.price;
     st.price = p;
     st.hist.push(+p.toFixed(4));
     while (st.hist.length > HIST_LEN){
         st.hist.shift();
     }
-    refreshBook(st, rand);
 }
 
 // Advance the whole market by one tick: every stock moves, and boom/crash events may start.
@@ -289,227 +317,393 @@ export function storageBonus(lots){
     return 1 + STORAGE_BONUS * lots;
 }
 
-// --- Order book: quotes ---------------------------------------------------------------------------------------------
-export const MIN_LEVEL_PRICE = LEVEL_STEP;  // a bid ladder is never allowed to reach zero or below - floors at one grid step
-const MAX_LEVELS = 100000;                  // generic guard against a pathologically large single order
-const STEP_DECIMALS = (LEVEL_STEP.toString().split('.')[1] || '').length;
-
-// Snaps a price onto the LEVEL_STEP grid (so 10.53 becomes 10.5, matching the flat step used between levels) and
-// rounds off the float dust `Math.round` can leave behind (e.g. 10.499999999999998).
-function snapToGrid(price){
-    let snapped = Math.round(price / LEVEL_STEP) * LEVEL_STEP;
-    return Math.max(MIN_LEVEL_PRICE, +snapped.toFixed(STEP_DECIMALS));
+// --- Order book: levels ---------------------------------------------------------------------------------------------
+// Prices live on a grid: level k is the price k * step. The NPC liquidity is stored per level in st.asks / st.bids
+// ({ level: lots }, empty levels are simply absent). Your resting limit orders are not stored there: they are read from
+// st.orders and added on top, queued behind the NPC lots of the same level. st.kr is the level of the last trade, the
+// reference the market makers post their liquidity around.
+export function stepForFair(fair){
+    let raw = Math.max(MIN_STEP, fair * REL_STEP);
+    let base = Math.pow(10, Math.floor(Math.log10(raw) + 1e-9));
+    let mant = raw / base;
+    return +((mant >= 5 ? 5 : mant >= 2 ? 2 : 1) * base).toPrecision(12);
 }
 
-// Re-rolls the book for a new tick: spread, lots per level, queues at the best prices, and lets your price push fade.
-export function refreshBook(st, rand = Math.random){
-    let m = stockModes[st.mode];
-    let e = st.ev ? EVENT_BOOK[st.ev.type] : { bid: 1, ask: 1, spr: 1 };
-    st.spread = Math.min(MAX_SPREAD, BASE_SPREAD * m.spr * e.spr);
-    // While a boom/crash is running, keep the per-level noise band tighter so the lopsided book reads clearly
-    // (thick bid / thin ask on a boom, thin bid / thick ask on a crash) instead of getting blurred by the usual
-    // +/-30% randomness. Normal days keep the wider range for organic-looking day-to-day depth.
-    let noise = st.ev ? [0.85, 0.3] : [0.7, 0.6];
-    let depth = (factor) => Math.max(1, Math.round(BASE_DEPTH * factor * (noise[0] + noise[1] * rand())));
-    st.dB = depth(m.bid * e.bid);
-    st.dA = depth(m.ask * e.ask);
-    st.bq = Math.max(1, Math.round(st.dB * (0.4 + 0.6 * rand())));
-    st.aq = Math.max(1, Math.round(st.dA * (0.4 + 0.6 * rand())));
-    st.ap = (st.ap || 0) * (1 - QUOTE_RELAX);
-    st.bp = (st.bp || 0) * (1 - QUOTE_RELAX);
-    if (st.ap < 1e-9){ st.ap = 0; }
-    if (st.bp < 1e-9){ st.bp = 0; }
+export function stepOf(st){
+    return st.step > 0 ? st.step : stepForFair(st.fair);
 }
 
-// Base quotes (without your price push): what the market makers quote around the mid price.
-function baseAsk(st){ return st.price * (1 + st.spread / 2); }
-function baseBid(st){ return st.price * (1 - st.spread / 2); }
-
-// Both quotes are snapped onto the LEVEL_STEP grid, so the best price and every level after it are always a
-// clean multiple of LEVEL_STEP (e.g. 10.5, 10.4, 10.3, ... instead of an arbitrary decimal like 10.4732).
-export function askPrice(st){ return snapToGrid(baseAsk(st) * Math.exp(st.ap)); }
-export function bidPrice(st){ return snapToGrid(baseBid(st) * Math.exp(-st.bp)); }
-
-// Deterministic per-level jitter for the depth table only (never touches the trade math below, which keeps a
-// single dA/dB per side so buy/sell math stays a closed form). Stable between re-renders since it's derived from
-// this tick's base depth and price, and moves again the next time the book re-rolls (dA/dB/price change).
-function levelDepth(base, priceSeed, i){
-    let h = Math.sin((priceSeed + i * 37.1) * 12.9898) * 43758.5453;
-    h -= Math.floor(h);
-    return Math.max(1, Math.round(base * (0.5 + h)));
+export function levelOf(st, price){
+    return Math.max(1, Math.round(price / stepOf(st) + 1e-9));
 }
 
-// Lists the first `n` price levels on one side of the book (for display only - does not change any state).
-// Level 0 is the best price with `aq`/`bq` lots; each level after that is one flat LEVEL_STEP further away, e.g.
-// asks 10.5, 10.4, 10.3, 10.2, 10.1 for LEVEL_STEP = 0.1. Levels past the first show a jittered depth rather than
-// a flat repeat of dA/dB, so the table doesn't read as the same number down every row.
+export function priceAtLevel(st, k){
+    return +(k * stepOf(st)).toPrecision(12);
+}
+
+// Rounds a price to the nearest price level of this stock. Orders are always placed on the grid.
+export function snapPrice(st, price){
+    if (!(price > 0) || !isFinite(price)){
+        return price;
+    }
+    return priceAtLevel(st, levelOf(st, price));
+}
+
+function bump(st){
+    st.rev = (st.rev || 0) + 1;    // lets the UI know the book changed (levels are added/removed without Vue noticing)
+}
+
+// Lots per level for this stock: expensive stocks have proportionally deeper levels, so a lot of an expensive stock
+// moves the price about as little as it always did.
+export function baseDepth(st){
+    return BASE_DEPTH * Math.max(1, st.fair / DEPTH_REF_PRICE);
+}
+
+function addOwn(map, k, o, q){
+    (map[k] = map[k] || []).push({ o: o, q: q });
+}
+
+// Your resting limit orders as book liquidity: { bid: { level: [{ o, q }] }, ask: { ... } }.
+// A sell limit can only rest with lots you actually hold.
+function ownLevels(st){
+    let own = { bid: {}, ask: {} };
+    let hold = st.lots || 0;
+    (st.orders || []).slice().sort((a, b) => a.id - b.id).forEach(function(o){
+        if (!(o.lots > 0)){
+            return;
+        }
+        if (o.type === 'buyLimit'){
+            addOwn(own.bid, levelOf(st, o.price), o, o.lots);
+        }
+        else if (o.type === 'sellLimit'){
+            let q = Math.min(o.lots, hold);
+            hold -= q;
+            if (q > 0){
+                addOwn(own.ask, levelOf(st, o.price), o, q);
+            }
+        }
+    });
+    return own;
+}
+
+// Every non-empty level of one side, best price first: { k, n (NPC lots), o (your lots), list (your orders there) }.
+function sideLevels(st, side, own){
+    let npc = side === 'ask' ? st.asks : st.bids;
+    let ow = side === 'ask' ? own.ask : own.bid;
+    let seen = {};
+    for (let key in npc){
+        if (npc[key] > 0){ seen[key] = true; }
+    }
+    for (let key in ow){
+        seen[key] = true;
+    }
+    let ks = Object.keys(seen).map(Number);
+    ks.sort(side === 'ask' ? (a, b) => a - b : (a, b) => b - a);
+    return ks.map(function(k){
+        let list = ow[k] || [];
+        let o = 0;
+        list.forEach(function(e){ o += e.q; });
+        return { k: k, n: npc[k] > 0 ? npc[k] : 0, o: o, list: list };
+    });
+}
+
+function bestLevel(st, side, own){
+    own = own || ownLevels(st);
+    let npc = side === 'ask' ? st.asks : st.bids;
+    let ow = side === 'ask' ? own.ask : own.bid;
+    let better = side === 'ask' ? (a, b) => a < b : (a, b) => a > b;
+    let best = null;
+    for (let key in npc){
+        if (npc[key] > 0){
+            let k = +key;
+            if (best === null || better(k, best)){ best = k; }
+        }
+    }
+    for (let key in ow){
+        let k = +key;
+        if (best === null || better(k, best)){ best = k; }
+    }
+    return best;
+}
+
+// Only used if a side of the book is completely empty (everything was bought/sold out): one level past the last trade.
+function fallbackLevel(st, side){
+    let kr = typeof st.kr === 'number' ? st.kr : levelOf(st, st.price);
+    return side === 'ask' ? kr + 1 : Math.max(1, kr - 1);
+}
+
+export function askPrice(st){
+    let k = bestLevel(st, 'ask');
+    return priceAtLevel(st, k === null ? fallbackLevel(st, 'ask') : k);
+}
+
+export function bidPrice(st){
+    let k = bestLevel(st, 'bid');
+    return priceAtLevel(st, k === null ? fallbackLevel(st, 'bid') : k);
+}
+
+// The first n price levels of one side, best price first, for the depth table: { price, qty (all lots), own (your lots),
+// cum (lots from the best price through this level) }. Missing levels (a thin book) come back with qty 0.
 export function bookLevels(st, side, n = 5){
-    let levels = [];
-    if (side === 'ask'){
-        let price = askPrice(st);
-        for (let i = 0; i < n; i++){
-            levels.push({ price: price, qty: i === 0 ? st.aq : levelDepth(st.dA, st.price, i) });
-            price += LEVEL_STEP;
+    let levels = sideLevels(st, side, ownLevels(st));
+    let out = [];
+    let cum = 0;
+    for (let i = 0; i < n; i++){
+        let L = levels[i];
+        if (L){
+            cum += L.n + L.o;
+            out.push({ price: priceAtLevel(st, L.k), qty: L.n + L.o, own: L.o, cum: cum });
+        }
+        else {
+            out.push({ price: 0, qty: 0, own: 0, cum: cum });
         }
     }
-    else {
-        let price = bidPrice(st);
-        for (let i = 0; i < n; i++){
-            levels.push({ price: price, qty: i === 0 ? st.bq : levelDepth(st.dB, st.price, i) });
-            price = Math.max(MIN_LEVEL_PRICE, price - LEVEL_STEP);
-        }
-    }
-    return levels;
+    return out;
 }
 
-// --- Order book: market orders --------------------------------------------------------------------------------------
-// Buying m lots: q lots at the best ask, then full levels of d lots each LEVEL_STEP higher, the last one partial.
-// Returns the total cost and what the ask side looks like afterwards (nothing is changed here).
+// --- Order book: matching --------------------------------------------------------------------------------------------
+// Takes up to `want` lots from one side of the book, best price first (side 'ask' = buying, 'bid' = selling), stopping
+// early when `budget` (Ocoin, buys only) runs out or the book has no more liquidity.
+// commit = false only measures it. With commit = true the NPC lots at each level go first, then your own resting orders
+// there (oldest first): those are reduced right away and the lots are booked in order.pend, which settleOrders pays out.
+// Returns { lots, cost (Ocoin spent or received), last (level of the last lot taken), nextK (best level left, or null) }.
+function sweep(st, side, want, commit, budget){
+    let out = { lots: 0, cost: 0, last: null, nextK: null };
+    if (!(want > 0)){
+        return out;
+    }
+    let limited = isFinite(budget) && budget >= 0;
+    let book = side === 'ask' ? st.asks : st.bids;
+    let levels = sideLevels(st, side, ownLevels(st));
+    for (let i = 0; i < levels.length; i++){
+        let L = levels[i];
+        let price = priceAtLevel(st, L.k);
+        let avail = L.n + L.o;
+        let take = Math.min(avail, want);
+        if (limited){
+            take = Math.min(take, Math.floor(budget / price + 1e-9));
+        }
+        if (take <= 0){
+            out.nextK = L.k;
+            return out;
+        }
+        out.lots += take;
+        out.cost += take * price;
+        out.last = L.k;
+        want -= take;
+        if (limited){
+            budget -= take * price;
+        }
+        if (commit){
+            let fromNpc = Math.min(L.n, take);
+            if (fromNpc > 0){
+                if (L.n - fromNpc > 0){ book[L.k] = L.n - fromNpc; }
+                else { delete book[L.k]; }
+            }
+            let rest = take - fromNpc;
+            for (let e = 0; e < L.list.length && rest > 0; e++){
+                let x = Math.min(L.list[e].q, rest);
+                L.list[e].o.lots -= x;
+                L.list[e].o.pend = (L.list[e].o.pend || 0) + x;
+                rest -= x;
+            }
+        }
+        if (take < avail){
+            out.nextK = L.k;
+            return out;
+        }
+        if (want <= 0){
+            out.nextK = levels[i + 1] ? levels[i + 1].k : null;
+            return out;
+        }
+    }
+    // Past the last real level there is always more to trade, just at a worse and worse price (the market makers would
+    // keep quoting further out): there is no cap on how many lots you can buy or sell, only on how much it costs.
+    // These levels are not stored; whatever is left of the real book after the trade is what the market makers rebuild from.
+    let dir = side === 'ask' ? 1 : -1;
+    let k = levels.length > 0 ? levels[levels.length - 1].k : fallbackLevel(st, side) - dir;
+    let tailDepth = Math.max(1, Math.round(baseDepth(st) * 3));
+    for (let n = 0; n < MAX_TAIL_LEVELS && want > 0; n++){
+        k += dir;
+        if (k < 1){
+            break;
+        }
+        let price = priceAtLevel(st, k);
+        let take = Math.min(tailDepth, want);
+        if (limited){
+            take = Math.min(take, Math.floor(budget / price + 1e-9));
+        }
+        if (take <= 0){
+            out.nextK = k;
+            return out;
+        }
+        out.lots += take;
+        out.cost += take * price;
+        out.last = k;
+        want -= take;
+        if (limited){
+            budget -= take * price;
+        }
+        if (take < tailDepth || want <= 0){
+            out.nextK = take < tailDepth ? k : k + dir;
+            return out;
+        }
+    }
+    return out;
+}
+
+// Lots a market order of up to `m` would get, with the total cost, the average price and the best price left behind.
 export function buyQuote(st, m){
     m = Math.floor(m);
     let ask0 = askPrice(st);
     if (!(m > 0)){
-        return { cost: 0, ap: st.ap, aq: st.aq, avg: ask0 };
+        return { cost: 0, avg: ask0, filled: 0, next: ask0 };
     }
-    let q = st.aq, d = st.dA, step = LEVEL_STEP;
-    let cost, finalAsk, finalQ;
-    if (m < q){
-        cost = m * ask0; finalAsk = ask0; finalQ = q - m;
+    let r = sweep(st, 'ask', m, false, Infinity);
+    let next = ask0;
+    if (r.last !== null){
+        next = priceAtLevel(st, r.nextK !== null ? r.nextK : r.last + 1);
     }
-    else if (m === q){
-        cost = q * ask0; finalAsk = ask0 + step; finalQ = d;
-    }
-    else {
-        let r = m - q;
-        let n = Math.floor(r / d);
-        let p = r - n * d;
-        if (n > MAX_LEVELS){
-            return { cost: Infinity, ap: st.ap, aq: st.aq, avg: Infinity };
-        }
-        // Full levels 1..n each hold d lots, priced ask0+step, ask0+2*step, ... - an arithmetic series.
-        let fullCost = d * n * ask0 + d * step * n * (n + 1) / 2;
-        let nextPrice = ask0 + (n + 1) * step;
-        cost = q * ask0 + fullCost + p * nextPrice;
-        finalAsk = nextPrice;
-        finalQ = p > 0 ? d - p : d;
-    }
-    return { cost: cost, ap: Math.max(0, Math.log(finalAsk / baseAsk(st))), aq: finalQ, avg: cost / m };
+    return { cost: r.cost, avg: r.lots > 0 ? r.cost / r.lots : ask0, filled: r.lots, next: next };
 }
 
-// Selling m lots into the bid side (mirror image of buyQuote).
 export function sellQuote(st, m){
     m = Math.floor(m);
     let bid0 = bidPrice(st);
     if (!(m > 0)){
-        return { proceeds: 0, bp: st.bp, bq: st.bq, avg: bid0 };
+        return { proceeds: 0, avg: bid0, filled: 0, next: bid0 };
     }
-    let q = st.bq, d = st.dB, step = LEVEL_STEP;
-    let proceeds, finalBid, finalQ;
-    if (m < q){
-        proceeds = m * bid0; finalBid = bid0; finalQ = q - m;
+    let r = sweep(st, 'bid', m, false, Infinity);
+    let next = bid0;
+    if (r.last !== null){
+        next = priceAtLevel(st, r.nextK !== null ? r.nextK : Math.max(1, r.last - 1));
     }
-    else if (m === q){
-        proceeds = q * bid0; finalBid = Math.max(MIN_LEVEL_PRICE, bid0 - step); finalQ = d;
-    }
-    else {
-        let r = m - q;
-        let n = Math.min(Math.floor(r / d), MAX_LEVELS);
-        let p = r - n * d;
-        // The descending ladder bottoms out at MIN_LEVEL_PRICE: levels 1..nCap still step down by `step`, anything
-        // past that trades at the floor price instead of going to zero or negative.
-        let nCap = Math.max(0, Math.floor((bid0 - MIN_LEVEL_PRICE) / step + 1e-9));
-        if (n <= nCap){
-            // Full levels 1..n each hold d lots, priced bid0-step, bid0-2*step, ... - the descending mirror of buyQuote.
-            let fullProceeds = d * n * bid0 - d * step * n * (n + 1) / 2;
-            let nextPrice = Math.max(MIN_LEVEL_PRICE, bid0 - (n + 1) * step);
-            proceeds = q * bid0 + fullProceeds + p * nextPrice;
-            finalBid = nextPrice;
-        }
-        else {
-            let descProceeds = d * nCap * bid0 - d * step * nCap * (nCap + 1) / 2;
-            let floorLevels = n - nCap;
-            proceeds = q * bid0 + descProceeds + floorLevels * d * MIN_LEVEL_PRICE + p * MIN_LEVEL_PRICE;
-            finalBid = MIN_LEVEL_PRICE;
-        }
-        finalQ = p > 0 ? d - p : d;
-    }
-    return { proceeds: proceeds, bp: Math.max(0, Math.log(baseBid(st) / finalBid)), bq: finalQ, avg: proceeds / m };
+    return { proceeds: r.cost, avg: r.lots > 0 ? r.cost / r.lots : bid0, filled: r.lots, next: next };
 }
 
-// Largest number of lots that `budget` Ocoin can buy right now (closed form, no loop over levels).
+// The most lots you can buy at market with `budget` Ocoin (limited by the liquidity in the book too).
 export function maxBuyLots(st, budget){
-    if (!(budget > 0)){ return 0; }
-    let ask0 = askPrice(st), q = st.aq, d = st.dA, step = LEVEL_STEP;
-    let m;
-    if (budget < q * ask0){
-        m = Math.floor(budget / ask0);
+    if (!(budget > 0)){
+        return 0;
     }
-    else {
-        let b2 = budget - q * ask0;
-        // Solve (d*step/2)*n^2 + d*(ask0+step/2)*n - b2 = 0 for the largest whole number of full levels affordable.
-        let a = d * step / 2;
-        let b = d * (ask0 + step / 2);
-        let n = a > 0 ? Math.floor((-b + Math.sqrt(b * b + 4 * a * b2)) / (2 * a)) : Math.floor(b2 / b);
-        n = Math.max(0, Math.min(n, MAX_LEVELS));
-        let b3 = b2 - (d * n * ask0 + d * step * n * (n + 1) / 2);
-        let nextPrice = ask0 + (n + 1) * step;
-        let p = Math.min(Math.max(0, Math.floor(b3 / nextPrice)), d - 1);
-        m = q + n * d + p;
-    }
-    // Fix floating point drift
-    let guard = 0;
-    while (m > 0 && buyQuote(st, m).cost > budget && guard++ < 8){ m--; }
-    guard = 0;
-    while (guard++ < 8 && buyQuote(st, m + 1).cost <= budget){ m++; }
-    return Math.max(0, m);
+    return sweep(st, 'ask', Infinity, false, budget).lots;
 }
 
-// Executes a market buy / sell on the stock: moves the quotes, updates the position. Returns what was paid / received.
+// Puts `x` lots less on your position (average cost stays the same), keeping the storage lots within what you hold.
+function reducePosition(st, x){
+    st.spent = st.lots > x ? st.spent * (st.lots - x) / st.lots : 0;
+    st.lots -= x;
+    if (st.storeLots > st.lots){
+        st.storeLots = st.lots;
+    }
+}
+
+// Market buy: takes lots off the ask side (which pushes the price up for real). Returns { lots, cost }.
+export function buyMarket(st, m){
+    let r = sweep(st, 'ask', Math.floor(m), true, Infinity);
+    if (r.lots > 0){
+        st.lots += r.lots;
+        st.spent += r.cost;
+        st.kr = r.last;
+        bump(st);
+    }
+    return { lots: r.lots, cost: r.cost };
+}
+
+// Market sell: hits the bid side. Returns { lots, proceeds }.
+export function sellMarket(st, m){
+    m = Math.min(Math.floor(m), st.lots);
+    let r = sweep(st, 'bid', m, true, Infinity);
+    if (r.lots > 0){
+        reducePosition(st, r.lots);
+        st.kr = r.last;
+        bump(st);
+    }
+    return { lots: r.lots, proceeds: r.cost };
+}
+
 export function executeBuy(st, m){
-    let q = buyQuote(st, m);
-    st.ap = q.ap;
-    st.aq = q.aq;
-    st.lots += m;
-    st.spent += q.cost;
-    return q.cost;
+    return buyMarket(st, m).cost;
 }
 
 export function executeSell(st, m){
-    let q = sellQuote(st, m);
-    st.bp = q.bp;
-    st.bq = q.bq;
-    // Cost basis is reduced proportionally (average cost)
-    st.spent = st.lots > m ? st.spent * (st.lots - m) / st.lots : 0;
-    st.lots -= m;
-    // Lots that no longer exist cannot stay allocated to storage (production lots are sold first)
-    if (st.storeLots > st.lots){ st.storeLots = st.lots; }
-    return q.proceeds;
+    return sellMarket(st, m).proceeds;
 }
 
-// --- Order book: how many lots can fill at a limit price -------------------------------------------------------------
-// A limit order can only take lots from levels that are at or better than its price, so its size per tick is capped by
-// the queues at those levels.
-export function limitBuyCapacity(st, limit){
-    let ask0 = askPrice(st);
-    if (limit < ask0){ return 0; }
-    let n = Math.floor((limit - ask0) / LEVEL_STEP + 1e-9);
-    return st.aq + Math.min(n, MAX_LEVELS) * st.dA;
+// --- Order book: market makers ---------------------------------------------------------------------------------------
+function bookFactors(st){
+    let m = stockModes[st.mode] || stockModes[0];
+    let e = st.ev ? EVENT_BOOK[st.ev.type] : { bid: 1, ask: 1, spr: 1 };
+    return { bid: m.bid * e.bid, ask: m.ask * e.ask, spr: m.spr * e.spr };
 }
 
-export function limitSellCapacity(st, limit){
-    let bid0 = bidPrice(st);
-    if (limit > bid0){ return 0; }
-    let n = Math.floor((bid0 - limit) / LEVEL_STEP + 1e-9);
-    return st.bq + Math.min(n, MAX_LEVELS) * st.dB;
+// Tops the levels from `start` outwards (dir +1 asks, -1 bids) up towards a target depth that gets thicker further from
+// the price. Levels that are already thicker stay (slowly pulled back), levels past the window are cancelled.
+function topUp(book, start, dir, depth, noise, rand){
+    for (let j = 0; j <= BOOK_WINDOW; j++){
+        let k = start + dir * j;
+        if (k < 1){
+            break;
+        }
+        let target = Math.max(1, Math.round(depth * (1 + 2 * j / BOOK_WINDOW) * (noise[0] + noise[1] * rand())));
+        let cur = book[k] || 0;
+        if (cur < target){
+            book[k] = cur + Math.max(1, Math.ceil((target - cur) * BOOK_REFILL));
+        }
+        else if (cur > target * 1.5){
+            book[k] = Math.round(cur - (cur - target * 1.5) * BOOK_DECAY);
+        }
+    }
+    for (let key in book){
+        if ((+key - start) * dir > BOOK_WINDOW + 5){
+            delete book[key];
+        }
+    }
+}
+
+// The market makers repost liquidity around the last trade, never crossing the book. Liquidity that is already closer to
+// the price (yours included) stays where it is, so the spread tightens when someone posts inside it.
+function refill(st, rand){
+    let f = bookFactors(st);
+    st.spread = Math.min(MAX_SPREAD, BASE_SPREAD * f.spr);
+    let depth = baseDepth(st);
+    let noise = st.ev ? [0.85, 0.3] : [0.7, 0.6];
+    let half = Math.max(1, Math.round(st.price * st.spread / 2 / stepOf(st)));
+    let own = ownLevels(st);
+    let bestBid = bestLevel(st, 'bid', own);
+    let bestAsk = bestLevel(st, 'ask', own);
+    let askStart = st.kr + half;
+    if (bestBid !== null){
+        askStart = Math.max(askStart, bestBid + 1);
+    }
+    let bidStart = st.kr - half;
+    if (bestAsk !== null){
+        bidStart = Math.min(bidStart, bestAsk - 1);
+    }
+    topUp(st.asks, askStart, 1, depth * f.ask, noise, rand);
+    topUp(st.bids, Math.max(1, bidStart), -1, depth * f.bid, noise, rand);
+    bump(st);
+}
+
+// Builds a fresh book around the stock's current price.
+function buildBook(st, rand){
+    st.asks = {};
+    st.bids = {};
+    st.kr = levelOf(st, st.price);
+    for (let i = 0; i < 8; i++){
+        refill(st, rand);
+    }
 }
 
 // --- Orders (buy limit / buy stop / sell limit / sell stop) ----------------------------------------------------------
 // S is the whole stock state: { ocoin, oid, market }. Orders are checked every tick after the prices moved.
-//   buyLimit  : buy when the ask is at/below your price (buy a dip). Fills only the lots queued at those prices.
+//   buyLimit  : a resting bid below the ask (buy a dip). It sits in the book as real depth and fills at your price when the
+//               market sells down to its level - it holds the price up as long as it is there.
 //   buyStop   : buy when the ask rises to your price (buy a breakout). Then becomes a market buy.
-//   sellLimit : sell when the bid is at/above your price (take profit). Fills only the lots queued at those prices.
+//   sellLimit : a resting ask above the bid (take profit). Sits in the book and fills at your price when the market buys up to it.
 //   sellStop  : sell when the bid falls to your price (stop loss). Then becomes a market sell, so a thin bid in a crash
 //               can fill far below your stop price.
+// Order prices are rounded to the nearest price level of the stock (see snapPrice).
 export const ORDER_TYPES = ['buyLimit', 'buyStop', 'sellLimit', 'sellStop'];
 
 export function isBuyOrder(type){
@@ -519,11 +713,14 @@ export function isBuyOrder(type){
 // The price a new order of this type must be placed on the right side of (otherwise it would fire immediately).
 export function orderPriceOk(st, type, price){
     if (!(price > 0) || !isFinite(price)){ return false; }
+    let k = levelOf(st, price);
+    let ka = levelOf(st, askPrice(st));
+    let kb = levelOf(st, bidPrice(st));
     switch (type){
-        case 'buyLimit': return price < askPrice(st);
-        case 'buyStop': return price > askPrice(st);
-        case 'sellLimit': return price > bidPrice(st);
-        case 'sellStop': return price < bidPrice(st);
+        case 'buyLimit': return k < ka;
+        case 'buyStop': return k > ka;
+        case 'sellLimit': return k > kb;
+        case 'sellStop': return k < kb;
     }
     return false;
 }
@@ -558,6 +755,7 @@ export function validateOrder(S, res, type, price, lots){
     lots = Math.floor(lots);
     if (!(lots >= 1) || !isFinite(lots)){ return 'lots'; }
     if (!(price > 0) || !isFinite(price)){ return 'price'; }
+    price = snapPrice(st, price);
     if (!orderPriceOk(st, type, price)){ return 'side'; }
     if (st.orders.length >= MAX_ORDERS){ return 'max'; }
     if (isBuyOrder(type)){
@@ -580,13 +778,20 @@ export function placeOrder(S, res, type, price, lots, bracket){
     if (reason){
         return { ok: false, reason: reason };
     }
+    let st = S.market[res];
+    price = snapPrice(st, price);
+    if (bracket){
+        bracket = {
+            tpPrice: bracket.tpPrice != null ? snapPrice(st, bracket.tpPrice) : null,
+            slPrice: bracket.slPrice != null ? snapPrice(st, bracket.slPrice) : null
+        };
+    }
     if (bracket && isBuyOrder(type)){
         let br = validateBracket(price, bracket.tpPrice, bracket.slPrice);
         if (br){
             return { ok: false, reason: br };
         }
     }
-    let st = S.market[res];
     lots = Math.floor(lots);
     let reserved = 0;
     if (isBuyOrder(type)){
@@ -599,6 +804,7 @@ export function placeOrder(S, res, type, price, lots, bracket){
         order.bracket = { tpPrice: bracket.tpPrice != null ? bracket.tpPrice : null, slPrice: bracket.slPrice != null ? bracket.slPrice : null, tpId: null, slId: null };
     }
     st.orders.push(order);
+    bump(st);
     return { ok: true, order: order };
 }
 
@@ -607,6 +813,7 @@ export function placeOrder(S, res, type, price, lots, bracket){
 export function cancelOrder(S, res, id){
     let st = S.market[res];
     if (!st){ return false; }
+    settleOrders(S, res);    // lots that already traded while the order was resting are paid out first
     let i = st.orders.findIndex(o => o.id === id);
     if (i === -1){ return false; }
     let order = st.orders[i];
@@ -618,6 +825,7 @@ export function cancelOrder(S, res, id){
     }
     S.ocoin += order.reserved;
     st.orders.splice(i, 1);
+    bump(st);
     return true;
 }
 
@@ -635,6 +843,7 @@ function removeOrder(st, order){
             }
         }
         st.orders.splice(i, 1);
+        bump(st);
     }
 }
 
@@ -702,6 +911,8 @@ export function placeExitOrders(S, res, lots, tpPrice, slPrice){
     if (slPrice !== null && (!(slPrice > 0) || !isFinite(slPrice))){
         return { ok: false, reason: 'price' };
     }
+    if (tpPrice !== null){ tpPrice = snapPrice(st, tpPrice); }
+    if (slPrice !== null){ slPrice = snapPrice(st, slPrice); }
     if (tpPrice !== null && !orderPriceOk(st, 'sellLimit', tpPrice)){
         return { ok: false, reason: 'side' };
     }
@@ -729,6 +940,7 @@ export function placeExitOrders(S, res, lots, tpPrice, slPrice){
     if (tp && sl){
         linkOco(tp, sl);
     }
+    bump(st);
     return { ok: true, tp: tp, sl: sl };
 }
 
@@ -784,43 +996,72 @@ function applyBracket(S, res, bo, filled){
     /* eslint-enable eqeqeq */
 }
 
-// Checks every open order of one stock against the current book and fills what can be filled.
-// Returns notes: { kind: 'fill'|'trigger'|'nofunds'|'noholdings', res, type, lots, avg?, done? }
+// Pays out what your orders did since the last check and triggers the stop orders. Limit orders rest in the book, so
+// the market flow (or your own market orders) fills them while the tick runs; the lots are waiting in order.pend.
+// Returns notes: { kind: 'fill'|'trigger'|'nofunds'|'noholdings'|'ocoCancel', res, type, lots, avg?, done? }
 export function settleOrders(S, res){
     let st = S.market[res];
     let notes = [];
     if (!st || !st.orders || st.orders.length === 0){
         return notes;
     }
+    // Resting limit orders: they fill at their own price, exactly what was reserved/held for them.
+    let settleFills = function(){
+        st.orders.slice().forEach(function(o){
+            if (st.orders.indexOf(o) === -1){ return; }
+            let pend = o.pend || 0;
+            if (!(pend > 0)){ return; }
+            o.pend = 0;
+            if (o.type === 'buyLimit'){
+                let cost = pend * o.price;
+                o.reserved = Math.max(0, o.reserved - cost);
+                st.lots += pend;
+                st.spent += cost;
+                let done = o.lots <= 0;
+                if (done){
+                    S.ocoin += o.reserved;
+                    o.reserved = 0;
+                    removeOrder(st, o);
+                }
+                applyBracket(S, res, o, pend);
+                notes.push({ kind: 'fill', res: res, type: o.type, lots: pend, avg: o.price, done: done });
+            }
+            else if (o.type === 'sellLimit'){
+                let m = Math.min(pend, st.lots);
+                S.ocoin += m * o.price;
+                reducePosition(st, m);
+                let done = o.lots <= 0;
+                if (done){
+                    removeOrder(st, o);
+                }
+                let cancel = reduceOcoSibling(st, o, pend);
+                notes.push({ kind: 'fill', res: res, type: o.type, lots: m, avg: o.price, done: done });
+                if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
+            }
+        });
+    };
+    settleFills();
     st.orders.slice().forEach(function(o){
         if (st.orders.indexOf(o) === -1){ return; }
-        if (o.type === 'buyLimit'){
-            let m = Math.min(o.lots, limitBuyCapacity(st, o.price));
-            if (m <= 0){ return; }
-            let cost = executeBuy(st, m);
-            let paidFromReserve = m * o.price;
-            S.ocoin += Math.max(0, paidFromReserve - cost);    // price improvement is refunded
-            o.reserved = Math.max(0, o.reserved - paidFromReserve);
-            o.lots -= m;
-            if (o.lots <= 0){ removeOrder(st, o); }
-            applyBracket(S, res, o, m);
-            notes.push({ kind: 'fill', res: res, type: o.type, lots: m, avg: cost / m, done: o.lots <= 0 });
-        }
-        else if (o.type === 'buyStop'){
+        if (o.type === 'buyStop'){
             if (askPrice(st) < o.price){ return; }
             let avail = o.reserved + S.ocoin;
             let m = Math.min(o.lots, maxBuyLots(st, avail));
-            removeOrder(st, o);
-            S.ocoin += o.reserved;
-            o.reserved = 0;
             if (m <= 0){
+                removeOrder(st, o);
+                S.ocoin += o.reserved;
+                o.reserved = 0;
                 notes.push({ kind: 'nofunds', res: res, type: o.type, lots: o.lots });
                 return;
             }
-            let cost = executeBuy(st, m);
-            S.ocoin = Math.max(0, S.ocoin - cost);
-            applyBracket(S, res, o, m);
-            notes.push({ kind: 'trigger', res: res, type: o.type, lots: m, avg: cost / m, done: true, partial: m < o.lots });
+            // Becomes a market buy now: pay with what was reserved for it, plus your free Ocoin if the book is thin
+            S.ocoin += o.reserved;
+            o.reserved = 0;
+            let r = buyMarket(st, m);
+            S.ocoin = Math.max(0, S.ocoin - r.cost);
+            removeOrder(st, o);
+            applyBracket(S, res, o, r.lots);
+            notes.push({ kind: 'trigger', res: res, type: o.type, lots: r.lots, avg: r.lots > 0 ? r.cost / r.lots : 0, done: true, partial: r.lots < o.lots });
         }
         else if (o.type === 'sellLimit'){
             if (st.lots <= 0){
@@ -828,35 +1069,30 @@ export function settleOrders(S, res){
                 let cancel = reduceOcoSibling(st, o, o.lots);
                 notes.push({ kind: 'noholdings', res: res, type: o.type, lots: o.lots });
                 if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
-                return;
             }
-            let m = Math.min(o.lots, st.lots, limitSellCapacity(st, o.price));
-            if (m <= 0){ return; }
-            let gain = executeSell(st, m);
-            S.ocoin += gain;
-            o.lots -= m;
-            if (o.lots <= 0){ removeOrder(st, o); }
-            let cancel = reduceOcoSibling(st, o, m);
-            notes.push({ kind: 'fill', res: res, type: o.type, lots: m, avg: gain / m, done: o.lots <= 0 });
-            if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
         }
         else if (o.type === 'sellStop'){
             if (bidPrice(st) > o.price){ return; }
-            removeOrder(st, o);
             let m = Math.min(o.lots, st.lots);
             if (m <= 0){
+                removeOrder(st, o);
                 let cancel = reduceOcoSibling(st, o, o.lots);
                 notes.push({ kind: 'noholdings', res: res, type: o.type, lots: o.lots });
                 if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
                 return;
             }
-            let gain = executeSell(st, m);
-            S.ocoin += gain;
-            let cancel = reduceOcoSibling(st, o, m);
-            notes.push({ kind: 'trigger', res: res, type: o.type, lots: m, avg: gain / m, done: true, partial: m < o.lots });
+            let r = sellMarket(st, m);
+            if (r.lots <= 0){
+                return;    // nobody is bidding at all right now: the stop stays and tries again next tick
+            }
+            S.ocoin += r.proceeds;
+            removeOrder(st, o);
+            let cancel = reduceOcoSibling(st, o, r.lots);
+            notes.push({ kind: 'trigger', res: res, type: o.type, lots: r.lots, avg: r.proceeds / r.lots, done: true, partial: r.lots < o.lots });
             if (cancel){ notes.push({ kind: 'ocoCancel', res: res, type: cancel.type }); }
         }
     });
+    settleFills();    // a stop that hit your own resting order
     return notes;
 }
 
@@ -922,8 +1158,14 @@ export function autoTradeStep(S, money, natural, keepPerTick, lost = 0, start = 
                 money.amount = avail - move;
                 money.delta -= move;
             }
+            // The part that is kept does not fit in the storage (Money is already full or nearly so): it would just be thrown
+            // away by the cap, so it is converted into Ocoin as well and the Money rate shown drops accordingly.
             if (money.max >= 0 && money.amount > money.max){
+                let extra = money.amount - money.max;
                 money.amount = money.max;
+                money.delta -= extra;
+                move += extra;
+                gained = moneyToOcoin(move);
             }
             S.ocoin += gained;
             out = { kind: 'convert', money: move, ocoin: gained };
@@ -943,5 +1185,56 @@ export function autoTradeStep(S, money, natural, keepPerTick, lost = 0, start = 
     return out;
 }
 
+// Money the storage cap threw away this tick (`lost`) is converted into Ocoin, whether or not Auto Convert is on: otherwise it
+// is simply gone. Used when Auto is off, and when Auto is on but had nothing to convert (income below the amount you keep while
+// Money is full). `natural` is the Money income of the tick and `lost` the part of it the cap cut off; money.amount is already
+// clamped, so only money.delta changes: the Money rate shown becomes the rate you actually end up with (0 while Money is full).
+export function capOverflowStep(S, money, natural, lost){
+    let out = { kind: 'none', money: 0, ocoin: 0 };
+    if (!isFinite(natural) || !isFinite(lost) || !(lost > 0)){
+        return out;
+    }
+    let left = natural - lost;
+    // With a huge income `natural` and `lost` are enormous and almost equal, so their difference is only rounding noise
+    money.delta = Math.abs(left) <= 1e-12 * Math.abs(natural) ? 0 : money.delta - natural + left;
+    let gained = moneyToOcoin(lost);
+    S.ocoin += gained;
+    return { kind: 'overflow', money: lost, ocoin: gained };
+}
 
+// --- Gold Bar ------------------------------------------------------------------------------------------------------------
+// A plain medium of exchange: 1 Gold Bar = GOLD_BAR_OCOIN Ocoin, no fee, whole bars only. The balance lives in
+// global.settings.goldBars, which (unlike global.stocks.ocoin) is kept through every reset.
+export const GOLD_BAR_OCOIN = 1000000;
 
+export function goldBarCount(settings){
+    let n = settings ? settings.goldBars : 0;
+    return typeof n === 'number' && isFinite(n) && n > 0 ? Math.floor(n) : 0;
+}
+
+// Most bars the current Ocoin balance can pay for.
+export function maxGoldBarsFromOcoin(S){
+    return S && S.ocoin > 0 ? Math.floor(S.ocoin / GOLD_BAR_OCOIN) : 0;
+}
+
+// Ocoin -> Gold Bar. Returns true when something was converted.
+export function ocoinToGoldBars(S, settings, bars){
+    bars = Math.floor(bars);
+    if (!(bars >= 1) || bars > maxGoldBarsFromOcoin(S)){
+        return false;
+    }
+    S.ocoin = Math.max(0, S.ocoin - bars * GOLD_BAR_OCOIN);
+    settings.goldBars = goldBarCount(settings) + bars;
+    return true;
+}
+
+// Gold Bar -> Ocoin. Returns true when something was converted.
+export function goldBarsToOcoin(S, settings, bars){
+    bars = Math.floor(bars);
+    if (!(bars >= 1) || bars > goldBarCount(settings)){
+        return false;
+    }
+    settings.goldBars = goldBarCount(settings) - bars;
+    S.ocoin += bars * GOLD_BAR_OCOIN;
+    return true;
+}

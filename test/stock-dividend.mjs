@@ -67,7 +67,9 @@ check('net: jumlah', f.net, core.moneyToOcoin(10000) + 20);
 f = core.ocoinFlowPerSecond(-5000, true, 1000, 0, 5);
 check('net: top-up dari Ocoin (defisit)', f.net, -5000 / core.OCOIN_RATE);
 f = core.ocoinFlowPerSecond(10000, false, 1000, 0, 5);
-check('net: Auto mati tidak dihitung', f.net, 0);
+check('net: Auto mati tetap menghitung kelebihan cap yang dikonversi', f.net, core.moneyToOcoin(10000));
+f = core.ocoinFlowPerSecond(-5000, false, 1000, 0, 5);
+check('net: Auto mati tidak menghitung top-up', f.net, 0);
 f = core.ocoinFlowPerSecond(NaN, true, 1000, 0, 5);
 check('net: NaN aman', f.net, 0);
 

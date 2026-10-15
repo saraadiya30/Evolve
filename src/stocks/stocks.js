@@ -3,10 +3,8 @@ import { loc } from '../core/locale.js';
 import { messageQueue } from '../functions/message_log.js';
 import { resource_values } from '../config/constants.js';
 import { aetherFormat } from '../resources/aether_alchemy.js';
-import { LOT_BONUS, productionLots, LEVEL_STEP, newStock, upgradeStock, stepMarket, settleAllOrders, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ocoinYield } from './stocks_core.js';
+import { LOT_BONUS, productionLots, newStock, upgradeStock, stepMarket, settleAllOrders, settleOrders, snapPrice, stepOf, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, capOverflowStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ocoinYield } from './stocks_core.js';
 import { hooks } from '../core/registries.js';
-
-export const LEVEL_STEP_DISPLAY = LEVEL_STEP.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
 
 // Chart size in SVG units (the SVG scales to the width of its container)
 export const CHART_W = 640;
@@ -141,6 +139,10 @@ export function initStocks(){
     if (typeof s.autoAdj !== 'number'){
         s.autoAdj = 0;
     }
+    // Gold Bar balance also lives in global.settings so it survives a reset (see goldBarCount)
+    if (typeof global.settings.goldBars !== 'number' || !isFinite(global.settings.goldBars) || global.settings.goldBars < 0){
+        setDefault('goldBars', 0);
+    }
     // Auto-balance settings live in global.settings so they survive a reset
     if (typeof global.settings.stockAutoOn !== 'boolean'){
         setDefault('stockAutoOn', false);
@@ -239,16 +241,26 @@ export function stockAutoTrade(delta, seconds = AUTO_TICK_SECONDS, lost = 0, sta
     // delta is the real income of this tick: this feature changes it only after reading it, within the same tick
     let natural = delta;
     let flow = 0;
+    let out = { kind: 'none', money: 0, ocoin: 0 };
     if (global.settings.stockAutoOn){
-        let out = autoTradeStep(s, money, natural, global.settings.stockAutoKeep * seconds, lost, start);
-        if (out.kind === 'convert'){
-            flow = out.money;
-        }
-        else if (out.kind === 'topup'){
-            flow = -out.money;
-        }
+        out = autoTradeStep(s, money, natural, global.settings.stockAutoKeep * seconds, lost, start);
+    }
+    // Money the storage cap would throw away is converted into Ocoin even while Auto is off (or had nothing to do)
+    if (out.kind === 'none'){
+        out = capOverflowStep(s, money, natural, lost);
+    }
+    if (out.kind === 'convert' || out.kind === 'overflow'){
+        flow = out.money;
+    }
+    else if (out.kind === 'topup'){
+        flow = -out.money;
     }
     s.autoAdj = 0; // kept in the save for compatibility; the adjustment is no longer carried to the next tick
+    // Show in the Money breakdown popover where the Money went (breakdown is rebuilt every fast tick, so no cleanup is needed).
+    // This tick's rate, so it matches the Money/s that diffCalc displays right after.
+    if (flow !== 0 && breakdown.p && breakdown.p.consume && breakdown.p.consume.Money){
+        breakdown.p.consume.Money[loc(out.kind === 'overflow' ? 'stock_auto_bd_overflow' : flow > 0 ? 'stock_auto_bd_convert' : 'stock_auto_bd_topup')] = -flow / seconds;
+    }
     // Smoothed per-second numbers for the status line (about 10 ticks)
     s.autoNat = s.autoNat * 0.9 + natural / seconds * 0.1;
     s.autoFlow = s.autoFlow * 0.9 + flow / seconds * 0.1;
@@ -267,13 +279,24 @@ export function applyStockBreakdown(){
     });
 }
 
+// Pays out and reports the orders of one stock right after you traded at market: a market order can fill your own
+// resting limit orders (and may trigger stops), the same way the tick does.
+export function settleStock(res){
+    settleOrders(global.stocks, res).forEach(function(n){
+        let msg = orderNote(n);
+        messageQueue(msg[0], msg[1], false, ['minor_events']);
+    });
+}
+
+export { snapPrice, stepOf };
+
 // Sensible starting price for the order form: a bit away from the current quote, on the correct side.
 export function suggestPrice(st, type){
     switch (type){
-        case 'buyLimit': return askPrice(st) * 0.95;
-        case 'buyStop': return askPrice(st) * 1.05;
-        case 'sellLimit': return bidPrice(st) * 1.05;
-        default: return bidPrice(st) * 0.95;
+        case 'buyLimit': return snapPrice(st, askPrice(st) * 0.95);
+        case 'buyStop': return snapPrice(st, askPrice(st) * 1.05);
+        case 'sellLimit': return snapPrice(st, bidPrice(st) * 1.05);
+        default: return snapPrice(st, bidPrice(st) * 0.95);
     }
 }
 

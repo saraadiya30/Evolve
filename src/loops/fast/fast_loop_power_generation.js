@@ -1,5 +1,5 @@
-// Pembangkitan listrik per tick: inisialisasi $ctx.power_grid/$ctx.max_power, megastruktur (ringworld, elysanite sphere, stellar engine), dan seluruh pembangkit.
-import { global, breakdown, power_generated, p_on, support_on } from '../../core/vars.js';
+// Pembangkitan listrik per tick: semua sumber masuk buku besar listrik (powerAdd). Megastruktur (ringworld, elysanite sphere, stellar engine), dan seluruh pembangkit.
+import { global, breakdown, p_on, support_on } from '../../core/vars.js';
 import { modRes } from '../../functions/resource_mod.js';
 import { powerModifier } from '../../functions/power_modifiers.js';
 import { actions, traits } from '../../core/registries.js';
@@ -8,16 +8,15 @@ import { convertSpaceSector } from '../../space/space_requirements.js';
 import { production } from '../../resources/prod.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { loc } from '../../core/locale.js';
+import { powerBegin, powerAdd } from '../../systems/power_core.js';
+import { POWER_BONUS_PER_LOT } from '../../stocks/stocks_core.js';
 
 export function fastLoopPowerGeneration($ctx){
-        $ctx.power_grid = 0;
-        $ctx.max_power = 0;
+        powerBegin($ctx);
 
         if (global.tauceti['ringworld'] && global.tauceti.ringworld.count >= 1000){
             let output = global.race['lone_survivor'] ? 100 : 10000;
-            $ctx.max_power -= output;
-            $ctx.power_grid += output;
-            power_generated[loc('tau_star_ringworld')] = output;
+            powerAdd($ctx, loc('tau_star_ringworld'), output);
         }
 
         if (global.interstellar['elysanite_sphere'] && global.interstellar.elysanite_sphere.count > 0){
@@ -28,10 +27,7 @@ export function fastLoopPowerGeneration($ctx){
             else {
                 output = powerModifier(1750 + (global.interstellar.elysanite_sphere.count * 18));
             }
-            $ctx.max_power -= output;
-            $ctx.power_grid += output;
-            power_generated[loc('interstellar_dyson_sphere_title')] = output;
-            delete power_generated[loc('tech_dyson_net')];
+            powerAdd($ctx, loc('interstellar_dyson_sphere_title'), output);
         }
         else if (global.interstellar['orichalcum_sphere'] && global.interstellar.orichalcum_sphere.count > 0){
             let output = 0;
@@ -41,10 +37,7 @@ export function fastLoopPowerGeneration($ctx){
             else {
                 output = powerModifier(750 + (global.interstellar.orichalcum_sphere.count * 8));
             }
-            $ctx.max_power -= output;
-            $ctx.power_grid += output;
-            power_generated[loc('interstellar_dyson_sphere_title')] = output;
-            delete power_generated[loc('tech_dyson_net')];
+            powerAdd($ctx, loc('interstellar_dyson_sphere_title'), output);
         }
         else if (global.interstellar['dyson_sphere'] && global.interstellar.dyson_sphere.count > 0){
             let output = 0;
@@ -54,10 +47,7 @@ export function fastLoopPowerGeneration($ctx){
             else {
                 output = powerModifier(175 + (global.interstellar.dyson_sphere.count * 5));
             }
-            $ctx.max_power -= output;
-            $ctx.power_grid += output;
-            power_generated[loc('interstellar_dyson_sphere_title')] = output;
-            delete power_generated[loc('tech_dyson_net')];
+            powerAdd($ctx, loc('interstellar_dyson_sphere_title'), output);
         }
         else if (global.interstellar['dyson'] && global.interstellar.dyson.count >= 1){
             let output = 0;
@@ -67,16 +57,12 @@ export function fastLoopPowerGeneration($ctx){
             else {
                 output = powerModifier(global.interstellar.dyson.count * 1.25);
             }
-            $ctx.max_power -= output;
-            $ctx.power_grid += output;
-            power_generated[loc('tech_dyson_net')] = output;
+            powerAdd($ctx, loc('tech_dyson_net'), output);
         }
 
         if (global.interstellar['stellar_engine'] && global.interstellar.stellar_engine.count >= 100){
             let output = actions.interstellar.int_blackhole.stellar_engine.powered();
-            $ctx.max_power += output;
-            $ctx.power_grid -= output;
-            power_generated[loc('tech_stellar_engine')] = -output;
+            powerAdd($ctx, loc('tech_stellar_engine'), -output);
         }
 
         [
@@ -117,9 +103,7 @@ export function fastLoopPowerGeneration($ctx){
                 }
 
                 let power = p_on[generator.s] * watts;
-                $ctx.max_power += power;
-                $ctx.power_grid -= power;
-                power_generated[title] = -(power);
+                powerAdd($ctx, title, -power);
 
                 if (p_on[generator.s] !== global[region][generator.s].on){
                     $(`#${region}-${generator.s} .on`).addClass('warn');
@@ -131,7 +115,6 @@ export function fastLoopPowerGeneration($ctx){
                 }
             }
             else {
-                power_generated[title] = 0;
                 p_on[generator.s] = 0;
                 $(`#${region}-${generator.s} .on`).removeClass('warn');
                 $(`#${region}-${generator.s} .on`).prop('title',`ON`);
@@ -160,17 +143,13 @@ export function fastLoopPowerGeneration($ctx){
                 global.space.hydrogen_plant.on = global.space.electrolysis.on;
             }
             let power = global.space.hydrogen_plant.on * output;
-            $ctx.max_power += power;
-            $ctx.power_grid -= power;
-            power_generated[loc('space_hydrogen_plant_title')] = -(power);
+            powerAdd($ctx, loc('space_hydrogen_plant_title'), -power);
         }
 
         if (global.portal['incinerator']){
             let output = actions.portal.prtl_wasteland.incinerator.powered();
             let power = global.portal.incinerator.on * output;
-            $ctx.max_power += power;
-            $ctx.power_grid -= power;
-            power_generated[loc('portal_incinerator_title')] = -(power);
+            powerAdd($ctx, loc('portal_incinerator_title'), -power);
         }
 
         if (global.portal['inferno_power']){
@@ -188,16 +167,12 @@ export function fastLoopPowerGeneration($ctx){
             });
             let power = operating * actions.portal.prtl_ruins.inferno_power.powered();
 
-            $ctx.max_power += power;
-            $ctx.power_grid -= power;
-            power_generated[loc('portal_inferno_power_title')] = -(power);
+            powerAdd($ctx, loc('portal_inferno_power_title'), -power);
         }
 
         if (global.eden['soul_engine'] && global.tech['asphodel'] && global.tech.asphodel >= 4){
             let power = (support_on['soul_engine'] || 0) * actions.eden.eden_asphodel.soul_engine.powered();
-            $ctx.max_power += power;
-            $ctx.power_grid -= power;
-            power_generated[loc('eden_soul_engine_title')] = -(power);
+            powerAdd($ctx, loc('eden_soul_engine_title'), -power);
         }
 
         if (global.space['swarm_satellite'] && global.space['swarm_control']){
@@ -216,37 +191,27 @@ export function fastLoopPowerGeneration($ctx){
             }
             solar = +(solar).toFixed(2);
             let output = powerModifier(active * solar);
-            $ctx.max_power -= output;
-            $ctx.power_grid += output;
-            power_generated[loc('space_sun_swarm_satellite_title')] = output;
+            powerAdd($ctx, loc('space_sun_swarm_satellite_title'), output);
         }
 
         if (global.race['wish'] && global.race['wishStats'] && global.race.wishStats.potato){
             let power = powerModifier(global.race.wishStats.potato);
-            $ctx.max_power -= power;
-            $ctx.power_grid += power;
-            power_generated[loc('wish_potato')] = power;
+            powerAdd($ctx, loc('wish_potato'), power);
         }
 
         if (global.city['mill'] && global.tech['agriculture'] && global.tech['agriculture'] >= 6){
             let power = powerModifier(global.city.mill.on * actions.city.mill.powered());
-            $ctx.max_power += power;
-            $ctx.power_grid -= power;
-            power_generated[loc('city_mill_title2')] = -(power);
+            powerAdd($ctx, loc('city_mill_title2'), -power);
         }
 
         if (global.city['windmill'] && global.tech['wind_plant']){
             let power = powerModifier(global.city.windmill.count * actions.city.windmill.powered());
-            $ctx.max_power += power;
-            $ctx.power_grid -= power;
-            power_generated[loc('city_mill_title2')] = -(power);
+            powerAdd($ctx, loc('city_mill_title2'), -power);
         }
 
         if (global.race['elemental'] && traits.elemental.vars()[0] === 'electric'){
             let power = powerModifier(highPopAdjust((global.resource[global.race.species].amount * traits.elemental.vars()[1]) ** 1.28));
-            $ctx.max_power -= power;
-            $ctx.power_grid += power;
-            power_generated[loc('trait_elemental_name')] = power;
+            powerAdd($ctx, loc('trait_elemental_name'), power);
         }
 
         if (global.prestige.hasOwnProperty('Aether') && global.settings.aetherPower > 0){
@@ -254,10 +219,15 @@ export function fastLoopPowerGeneration($ctx){
             if (draw > 0){
                 global.prestige.Aether.count -= draw;
                 let power = draw * 100000000; // 0.00001 Aether = 1000 watts
-                $ctx.max_power -= power;
-                $ctx.power_grid += power;
-                power_generated[loc('resource_Aether_name')] = power;
+                powerAdd($ctx, loc('resource_Aether_name'), power);
             }
+        }
+
+        // Stock portfolio power bonus: a flat +1 Watt per lot held, recomputed every tick from current holdings, so selling lots
+        // takes it away again. It is a source like any other and goes in here, before fastLoopPowerUsage decides which
+        // buildings keep running.
+        if (global.stocks && global.stocks.market && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
+            powerAdd($ctx, loc('stock_bonus_label'), global.stocks.market.Power.lots * POWER_BONUS_PER_LOT);
         }
 
         if (global.race['powered']){

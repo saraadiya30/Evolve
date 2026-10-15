@@ -1,8 +1,10 @@
-import { initStocks, CHART_W, CHART_H, orderLabel, liveStockDefs, listed, stockName, fmt, isSpecial, specialBonusPerLot, signed, LEVEL_STEP_DISPLAY, moneyRoom, suggestPrice } from '../../stocks/stocks.js';
+import { initStocks, CHART_W, CHART_H, orderLabel, liveStockDefs, listed, stockName, fmt, isSpecial, specialBonusPerLot, signed, snapPrice, stepOf, settleStock, moneyRoom, suggestPrice } from '../../stocks/stocks.js';
 import { loc } from '../../core/locale.js';
-import { OCOIN_RATE, OCOIN_BUY_FEE, ORDER_TYPES, askPrice, bidPrice, maxBuyLots, sellQuote, buyQuote, committedSellLots, tpPriceFromPct, slPriceFromPct, MAX_ORDERS, LOT_BONUS, isBuyOrder, bookLevels, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, OCOIN_YIELD_PER_LOT, ocoinYield, moneyToOcoin, ocoinCostInMoney, ocoinToMoney, executeBuy, executeSell, validateOrder, validateBracket, placeOrder, cancelOrder, placeExitOrders } from '../../stocks/stocks_core.js';
+import { OCOIN_RATE, OCOIN_BUY_FEE, ORDER_TYPES, askPrice, bidPrice, maxBuyLots, sellQuote, buyQuote, committedSellLots, tpPriceFromPct, slPriceFromPct, MAX_ORDERS, LOT_BONUS, isBuyOrder, bookLevels, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, OCOIN_YIELD_PER_LOT, ocoinYield, moneyToOcoin, ocoinCostInMoney, ocoinToMoney, GOLD_BAR_OCOIN, goldBarCount, maxGoldBarsFromOcoin, ocoinToGoldBars, goldBarsToOcoin, executeBuy, executeSell, validateOrder, validateBracket, placeOrder, cancelOrder, placeExitOrders } from '../../stocks/stocks_core.js';
 import { storageLots, productionLots, setStorageLots, ocoinFlowPerSecond, AUTO_TICK_SECONDS } from '../../stocks/stocks_core.js';
 import { vBind } from '../../functions/dom_helpers.js';
+import { aetherExact } from '../../resources/aether_alchemy.js';
+import { popover } from '../../functions/popover.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { global, keyMultiplier, webWorker } from '../../core/vars.js';
 
@@ -10,6 +12,63 @@ import { global, keyMultiplier, webWorker } from '../../core/vars.js';
 function ocoinFlow(){
     let d = global.stocks.market.Dividend;
     return ocoinFlowPerSecond(global.stocks.autoFlow, !!global.settings.stockAutoOn, global.stocks.ocoin, d ? d.lots : 0, webWorker.longRatio * AUTO_TICK_SECONDS);
+}
+
+
+const GOLD_BTN_STYLE = 'background:transparent;border:1px solid currentColor;border-radius:.25rem;padding:.125rem .75rem;font:inherit;';
+const GOLD_INPUT_STYLE = 'background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;';
+
+// Gold Bar popup: whole bars only, 1 bar = GOLD_BAR_OCOIN Ocoin, no fee.
+function drawGoldModal(){
+    $('#modalBox').append($(`<p id="modalBoxTitle" class="has-text-warning modalTitle">${loc('stock_gold_title')}</p>`));
+    let body = $('<div id="goldModal" class="modalBody"></div>');
+    $('#modalBox').append(body);
+    // Invisible table: one grid, so labels, buttons and previews line up in columns
+    let btn = (cls, on, label, click) => `<button type="button" class="${cls}" style="${GOLD_BTN_STYLE}" :style="{ opacity: ${on} ? 1 : .4, cursor: ${on} ? 'pointer' : 'not-allowed' }" @click="${click}">${label}</button>`;
+    body.append($(`<div style="display:grid;grid-template-columns:max-content max-content 1fr;column-gap:.75rem;row-gap:.5rem;align-items:center;text-align:left;">
+        <span>${loc('resource_Ocoin_name')}</span><b style="grid-column:2 / 4;" :title="exactOcoin()">{{ ocoinText() }}</b>
+        <span>${loc('stock_gold_have')}</span><b style="grid-column:2 / 4;" :title="exactBars()">{{ barsText() }}</b>
+        <span>${loc('stock_gold_qty')}</span><input type="number" min="1" step="1" v-model.number="q.n" @change="clampN()" style="width:100%;min-width:9rem;box-sizing:border-box;${GOLD_INPUT_STYLE}"><span></span>
+        ${btn('has-text-success', 'canBuy()', loc('stock_gold_to_bar'), 'buy()')}${btn('has-text-success', 'maxBuy() >= 1', loc('stock_gold_max'), 'buyMax()')}<span :title="exactBuy()">{{ buyText() }}</span>
+        ${btn('has-text-danger', 'canSell()', loc('stock_gold_to_ocoin'), 'sell()')}${btn('has-text-danger', 'bars() >= 1', loc('stock_gold_all'), 'sellAll()')}<span :title="exactSell()">{{ sellText() }}</span>
+    </div>`));
+    vBind({
+        el: '#goldModal',
+        data: { st: global.stocks, s: global.settings, q: { n: 1 } },
+        methods: {
+            ocoinText(){ return fmt(global.stocks.ocoin); },
+            exactOcoin(){ return aetherExact(global.stocks.ocoin); },
+            bars(){ return goldBarCount(global.settings); },
+            barsText(){ return fmt(this.bars()); },
+            exactBars(){ return aetherExact(this.bars()); },
+            qty(){ return Math.max(0, Math.floor(this.q.n || 0)); },
+            maxBuy(){ return maxGoldBarsFromOcoin(global.stocks); },
+            clampN(){ this.q.n = Math.max(1, Math.floor(this.q.n || 1)); },
+            canBuy(){ return this.qty() >= 1 && this.qty() <= this.maxBuy(); },
+            canSell(){ return this.qty() >= 1 && this.qty() <= this.bars(); },
+            buyText(){ return loc('stock_gold_cost',[fmt(this.qty() * GOLD_BAR_OCOIN)]); },
+            sellText(){ return loc('stock_gold_gain',[fmt(this.qty() * GOLD_BAR_OCOIN)]); },
+            exactBuy(){ return aetherExact(this.qty() * GOLD_BAR_OCOIN); },
+            exactSell(){ return aetherExact(this.qty() * GOLD_BAR_OCOIN); },
+            buy(){ ocoinToGoldBars(global.stocks, global.settings, this.qty()); },
+            buyMax(){ ocoinToGoldBars(global.stocks, global.settings, this.maxBuy()); },
+            sell(){ goldBarsToOcoin(global.stocks, global.settings, this.qty()); },
+            sellAll(){ goldBarsToOcoin(global.stocks, global.settings, this.bars()); }
+        }
+    });
+}
+
+// Breakdown-style popover for the net Ocoin rate (same look as the resource breakdown popovers).
+function netBreakdownHtml(){
+    let f = ocoinFlow();
+    let row = (label, n, extra) => `<div class="modal_bd"><span>${label}</span><span class="has-text-${n < 0 ? 'danger' : 'success'}">${Math.abs(n) < 1e-9 ? '0' : signed(n)}${extra || ''}</span></div>`;
+    let html = `<div class="resBreakdown"><div class="has-text-info">${loc('stock_net_title')}</div><div class="parent"><div>`;
+    html += row(loc('stock_net_auto'), f.auto);
+    html += row(loc('stock_net_dividend'), f.dividend);
+    html += `</div>`;
+    html += `</div><div class="modal_bd sum"><span>${loc('stock_net_total')}</span><span class="has-text-${f.net < -1e-9 ? 'danger' : 'success'}">${Math.abs(f.net) < 1e-9 ? '0' : signed(f.net)}/s</span></div>`;
+    html += `<div style="font-size:.75rem;opacity:.75;max-width:16rem;white-space:normal;">${loc('stock_net_note')}</div></div>`;
+    return html;
 }
 
 // Variabel yang dibagi antar bagian ada di $ctx.
@@ -24,6 +83,7 @@ export function drawStocks_s1($ctx){
         $('head').append($(`<style id="stockStyle">
         #stockExchange .stk-top{display:flex;align-items:baseline;margin:0 0 .25rem 1rem}
         #stockExchange .stk-help{cursor:help;display:inline-block;width:1.1rem;height:1.1rem;line-height:1rem;text-align:center;border:.0625rem solid;border-radius:50%;font-size:.75rem;margin-left:.375rem}
+        #stockExchange .stk-gold{margin-left:.5rem;cursor:pointer;font-size:.875rem}
         #stockExchange .stk-toggle{margin-left:auto;cursor:pointer;font-size:.875rem}
         #stockExchange .stk-toggle:hover{text-decoration:underline}
         #stockExchange .stk-wallet{margin:.25rem 0 .5rem 0;padding:.25rem 0;border-top:.0625rem solid rgba(128,128,128,.4);border-bottom:.0625rem solid rgba(128,128,128,.4)}
@@ -57,6 +117,7 @@ export function drawStocks_s1($ctx){
         #stockExchange .stk-alloc td:first-child{min-width:5.5rem}
         #stockExchange .stk-alloc .current{min-width:calc(9ch + .75rem);padding:0 .375rem;box-sizing:border-box}
         #stockExchange .stk-btns{margin:.375rem 0 .25rem -.25rem}
+        #stockExchange .stk-net{cursor:help}
         #stockExchange .stk-title{margin:.5rem 0 .25rem 0;padding-top:.375rem;border-top:.0625rem solid rgba(128,128,128,.4)}
         #stockExchange .market-item.stk-plain{margin:.25rem 0 0 0}
         #stockExchange .stk-orderline{display:flex;align-items:center;font-size:.875rem;margin:.125rem 0 0 0}
@@ -85,7 +146,7 @@ export function drawStocks_s1($ctx){
     let inputStyle = 'background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;';
 
     // Top bar: balance and the wallet toggle
-    wrap.append($(`<div class="stk-top"><h3 class="has-text-info">${loc('resource_Ocoin_name')}: <span>{{ ocoinText() }}</span>&nbsp;<b-tooltip :label="netTip()" position="is-bottom" size="is-large" multilined animated><span :class="netClass()">({{ netText() }})</span></b-tooltip></h3>&nbsp;<span v-if="reservedOcoin() > 0" class="has-text-warning">({{ reservedText() }})</span><b-tooltip :label="helpText()" position="is-bottom" size="is-large" multilined animated><span class="stk-help has-text-warning">?</span></b-tooltip><span role="button" class="stk-toggle" @click="toggleWallet()">{{ s.stockWalletOpen ? '▾' : '▸' }} ${loc('stock_wallet')}</span></div>`));
+    wrap.append($(`<div class="stk-top"><h3 class="has-text-info">${loc('resource_Ocoin_name')}: <span>{{ ocoinText() }}</span>&nbsp;<span id="stkNet" class="stk-net" :class="netClass()">({{ netText() }})</span></h3>&nbsp;<span v-if="reservedOcoin() > 0" class="has-text-warning">({{ reservedText() }})</span><b-tooltip :label="helpText()" position="is-bottom" size="is-large" multilined animated><span class="stk-help has-text-warning">?</span></b-tooltip><span id="stkGold" role="button" class="stk-gold order has-text-warning" @click="openGold()">${loc('stock_gold_button')}: {{ goldText() }}</span><span role="button" class="stk-toggle" @click="toggleWallet()">{{ s.stockWalletOpen ? '▾' : '▸' }} ${loc('stock_wallet')}</span></div>`));
 
     // Wallet: Money <-> Ocoin and the auto balance
     let wallet = $(`<div v-if="s.stockWalletOpen" class="stk-wallet"></div>`);
@@ -207,7 +268,8 @@ export function drawStocks_s1($ctx){
     form.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.pct" style="width:5rem;margin-right:.5rem;${inputStyle}" placeholder="%">`));
     form.append($(`<input type="number" min="1" step="1" v-model.number="st.form.lots" style="width:4.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
     form.append($(`<b-tooltip :label="orderTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: orderError() !== '' }" @click="place()">${loc('stock_order_place')}</span></b-tooltip>`));
-    main.append($(`<div v-if="st.form.priceMode === 'pct'" class="stk-note has-text-warning" style="margin-left:0;">${loc('stock_pct_resolved')} <b>{{ fmtPrice(effPrice()) }}</b></div>`));
+    main.append($(`<div v-if="st.form.priceMode === 'pct'" class="stk-note has-text-warning" style="margin-left:0;">${loc('stock_pct_resolved')} <b>{{ fmtPrice(effSnapPrice()) }}</b></div>`));
+    main.append($(`<div v-if="roundNote() !== ''" class="stk-note" style="margin-left:0;"><span class="has-text-warning">{{ roundNote() }}</span></div>`));
     main.append($(`<div v-if="orderHint() !== ''" class="stk-note" style="margin-left:0;"><span class="has-text-warning">{{ orderHint() }}</span></div>`));
 
     // Optional take-profit / stop-loss attached to a pending buy: activates once the buy fills, covering whatever
@@ -301,6 +363,7 @@ export function drawStocks_s2($ctx){
                     return {};
                 }
                 let st = global.stocks.market[res];
+                void st.rev;    // the book changes without Vue seeing individual levels come and go
                 let q = keyMultiplier();
                 let ask = askPrice(st);
                 let bid = bidPrice(st);
@@ -322,6 +385,8 @@ export function drawStocks_s2($ctx){
                 let ex = global.stocks.exit;
                 let tpPrice = ex.tpMode === 'price' ? ex.tpPrice : (st.spent > 0 ? tpPriceFromPct(st.spent / st.lots, ex.tpPct) : 0);
                 let slPrice = ex.slMode === 'price' ? ex.slPrice : (st.spent > 0 ? slPriceFromPct(st.spent / st.lots, ex.slPct) : 0);
+                tpPrice = snapPrice(st, tpPrice);
+                slPrice = snapPrice(st, slPrice);
                 // 'side' has no generic stock_order_err_side string (only per-order-type variants like
                 // stock_order_err_side_buyLimit exist, which don't apply here), so it needs its own message -
                 // otherwise loc() falls back to returning the raw key as text.
@@ -369,10 +434,10 @@ export function drawStocks_s2($ctx){
                     canSell: sellN > 0,
                     buyBtn: `${loc('resource_market_buy')} ×${q}`,
                     sellBtn: `${loc('resource_market_sell')} ×${q}`,
-                    buyTip: loc('stock_buy_tip',[fmt(buyShow, 0), fmt(buyQ.cost), fmt(buyQ.avg), fmt(askPrice(st) * Math.exp(buyQ.ap - st.ap))]),
-                    buyMaxTip: loc('stock_buy_tip',[fmt(buyMax, 0), fmt(buyMaxQ.cost), fmt(buyMaxQ.avg), fmt(askPrice(st) * Math.exp(buyMaxQ.ap - st.ap))]),
-                    sellTip: loc('stock_sell_tip',[fmt(sellN, 0), fmt(sellQ.proceeds), fmt(sellQ.avg), fmt(bidPrice(st) * Math.exp(st.bp - sellQ.bp))]),
-                    sellAllTip: loc('stock_sell_tip',[fmt(st.lots, 0), fmt(sellAllQ.proceeds), fmt(sellAllQ.avg), fmt(bidPrice(st) * Math.exp(st.bp - sellAllQ.bp))])
+                    buyTip: loc('stock_buy_tip',[fmt(buyShow, 0), fmt(buyQ.cost), fmt(buyQ.avg), fmt(buyQ.next)]),
+                    buyMaxTip: loc('stock_buy_tip',[fmt(buyMax, 0), fmt(buyMaxQ.cost), fmt(buyMaxQ.avg), fmt(buyMaxQ.next)]),
+                    sellTip: loc('stock_sell_tip',[fmt(sellN, 0), fmt(sellQ.proceeds), fmt(sellQ.avg), fmt(sellQ.next)]),
+                    sellAllTip: loc('stock_sell_tip',[fmt(st.lots, 0), fmt(sellAllQ.proceeds), fmt(sellAllQ.avg), fmt(sellAllQ.next)])
                 };
             },
             // Line chart of the selected stock: price line, grid, your average cost and your open orders
@@ -477,12 +542,13 @@ export function drawStocks_s2($ctx){
             depthRows(st){
                 let asks = bookLevels(st, 'ask', 5);
                 let bids = bookLevels(st, 'bid', 5);
+                let cell = function(L){
+                    // ★ marks how many of the lots at that price are your own resting orders
+                    return L.qty > 0 ? `${fmt(L.price)} ×${fmt(L.qty, 0)}${L.own > 0 ? ` ★${fmt(L.own, 0)}` : ''}` : '–';
+                };
                 let rows = [];
                 for (let i = 0; i < 5; i++){
-                    rows.push({
-                        ask: `${fmt(asks[i].price)} ×${asks[i].qty}`,
-                        bid: `${fmt(bids[i].price)} ×${bids[i].qty}`
-                    });
+                    rows.push({ ask: cell(asks[i]), bid: cell(bids[i]) });
                 }
                 return rows;
             },
@@ -492,8 +558,24 @@ export function drawStocks_s2($ctx){
                     loc('stock_lot_hint',[LOT_BONUS * 100, STORAGE_BONUS * 100]),
                     loc('stock_special_hint',[MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT]),
                     loc('stock_dividend_hint',[+(OCOIN_YIELD_PER_LOT * 100).toFixed(2)]),
-                    loc('stock_book_hint',[LEVEL_STEP_DISPLAY])
+                    loc('stock_book_hint')
                 ].join(' ');
+            },
+            goldText(){
+                return fmt(goldBarCount(global.settings));
+            },
+            // Popup to swap Ocoin <-> Gold Bar
+            openGold(){
+                this.$buefy.modal.open({
+                    parent: this,
+                    component: { template: '<div id="modalBox" class="modalBox"></div>' }
+                });
+                let checkExist = setInterval(function(){
+                    if ($('#modalBox').length > 0){
+                        clearInterval(checkExist);
+                        drawGoldModal();
+                    }
+                }, 50);
             },
             toggleWallet(){
                 global.settings.stockWalletOpen = !global.settings.stockWalletOpen;
@@ -550,7 +632,7 @@ export function drawStocks_s2($ctx){
             autoStatus(){
                 let nat = global.stocks.autoNat;
                 let flow = global.stocks.autoFlow;
-                if (!global.settings.stockAutoOn || Math.abs(flow) < 1e-9){
+                if (Math.abs(flow) < 1e-9 || (flow < 0 && !global.settings.stockAutoOn)){
                     return loc('stock_auto_status_even',[signed(nat)]);
                 }
                 if (flow > 0){
@@ -568,10 +650,6 @@ export function drawStocks_s2($ctx){
             netClass(){
                 let net = ocoinFlow().net;
                 return net > 1e-9 ? 'has-text-success' : net < -1e-9 ? 'has-text-danger' : '';
-            },
-            netTip(){
-                let f = ocoinFlow();
-                return loc('stock_net_tip',[signed(f.net),signed(f.auto),signed(f.dividend),fmt(f.perDay)]);
             },
             reservedOcoin(){
                 let total = 0;
@@ -658,6 +736,7 @@ export function drawStocks_s2($ctx){
                 // Walks up the ask side: each level only fills the lots queued there, the rest goes to a higher price.
                 let cost = executeBuy(st, m);
                 global.stocks.ocoin = Math.max(0, global.stocks.ocoin - cost);
+                settleStock(res);
             },
             sellLots(all){
                 let res = this.cur;
@@ -670,27 +749,24 @@ export function drawStocks_s2($ctx){
                     return;
                 }
                 global.stocks.ocoin += executeSell(st, m);
+                settleStock(res);
             },
             // --- Order-book depth: click level i to buy/sell everything from the best price through that level.
-            // Row 0 is the best ask/bid (aq/bq lots); each row after that is one more full LEVEL_STEP chunk (dA/dB),
-            // matching how buyQuote/sellQuote actually walk the book - the depth table's own qty column adds a
-            // little jitter per row for display so it doesn't look like the same number repeated, but the fill
-            // amount here always uses the real chunk size so the trade math stays exact.
+            // Row i is the i-th price level of the book: the lots to fill are everything from the best price through it
+            // (the quote walks the same levels, so the numbers match exactly).
             askFillLots(i){
                 let res = this.cur;
                 if (!res){
                     return 0;
                 }
-                let st = global.stocks.market[res];
-                return Math.floor(st.aq + i * st.dA);
+                return bookLevels(global.stocks.market[res], 'ask', i + 1)[i].cum;
             },
             bidFillLots(i){
                 let res = this.cur;
                 if (!res){
                     return 0;
                 }
-                let st = global.stocks.market[res];
-                return Math.floor(st.bq + i * st.dB);
+                return bookLevels(global.stocks.market[res], 'bid', i + 1)[i].cum;
             },
             canFillAsk(i){
                 let res = this.cur;
@@ -719,7 +795,7 @@ export function drawStocks_s2($ctx){
                     return loc('stock_order_err_funds');
                 }
                 let q = buyQuote(st, m);
-                return loc('stock_buy_tip',[fmt(m, 0), fmt(q.cost), fmt(q.avg), fmt(askPrice(st) * Math.exp(q.ap - st.ap))]);
+                return loc('stock_buy_tip',[fmt(m, 0), fmt(q.cost), fmt(q.avg), fmt(q.next)]);
             },
             bidFillTip(i){
                 let res = this.cur;
@@ -732,7 +808,7 @@ export function drawStocks_s2($ctx){
                     return loc('stock_order_err_holdings');
                 }
                 let q = sellQuote(st, m);
-                return loc('stock_sell_tip',[fmt(m, 0), fmt(q.proceeds), fmt(q.avg), fmt(bidPrice(st) * Math.exp(st.bp - q.bp))]);
+                return loc('stock_sell_tip',[fmt(m, 0), fmt(q.proceeds), fmt(q.avg), fmt(q.next)]);
             },
             fillAsk(i){
                 let res = this.cur;
@@ -746,6 +822,7 @@ export function drawStocks_s2($ctx){
                 }
                 let cost = executeBuy(st, m);
                 global.stocks.ocoin = Math.max(0, global.stocks.ocoin - cost);
+                settleStock(res);
             },
             fillBid(i){
                 let res = this.cur;
@@ -758,6 +835,7 @@ export function drawStocks_s2($ctx){
                     return;
                 }
                 global.stocks.ocoin += executeSell(st, m);
+                settleStock(res);
             },
             // --- Limit / stop orders on the selected stock ---
             fmtPrice(p){
@@ -778,14 +856,14 @@ export function drawStocks_s2($ctx){
                 let st = global.stocks.market[res];
                 let f = global.stocks.form;
                 if (f.priceMode === 'price'){
-                    f.price = +suggestPrice(st, f.type).toPrecision(4);
+                    f.price = suggestPrice(st, f.type);
                 }
                 else {
                     // A sensible default % on the correct side of the current quote for this order type
                     f.pct = 5;
                 }
-                f.tpPrice = +(askPrice(st) * 1.1).toPrecision(4);
-                f.slPrice = +(askPrice(st) * 0.9).toPrecision(4);
+                f.tpPrice = snapPrice(st, askPrice(st) * 1.1);
+                f.slPrice = snapPrice(st, askPrice(st) * 0.9);
             },
             // The actual price the form will use: resolves the % mode against the live book, same direction as
             // suggestPrice (buy limit = below the ask, buy stop = above it, sell limit = above the bid, sell stop
@@ -808,13 +886,36 @@ export function drawStocks_s2($ctx){
                     default: return bidPrice(st) * (1 - pct / 100);
                 }
             },
+            // The price that will really be placed: the typed price rounded to the nearest price level of this stock
+            effSnapPrice(){
+                let res = this.cur;
+                let p = this.effPrice();
+                return res ? snapPrice(global.stocks.market[res], p) : p;
+            },
+            // Shown when the typed price (or the price a % resolves to) is not exactly on a price level
+            roundNote(){
+                let res = this.cur;
+                if (!res){
+                    return '';
+                }
+                let st = global.stocks.market[res];
+                let p = this.effPrice();
+                if (!(p > 0) || !isFinite(p)){
+                    return '';
+                }
+                let snapped = snapPrice(st, p);
+                if (Math.abs(snapped - p) <= stepOf(st) * 1e-6){
+                    return '';
+                }
+                return loc('stock_price_rounded',[fmt(stepOf(st)), fmt(snapped)]);
+            },
             orderError(){
                 let res = this.cur;
                 let f = global.stocks.form;
                 if (!res){
                     return 'type';
                 }
-                return validateOrder(global.stocks, res, f.type, this.effPrice(), f.lots) || '';
+                return validateOrder(global.stocks, res, f.type, this.effSnapPrice(), f.lots) || '';
             },
             orderTip(){
                 let f = global.stocks.form;
@@ -823,7 +924,7 @@ export function drawStocks_s2($ctx){
                 }
                 let lots = Math.max(0, Math.floor(f.lots || 0));
                 return isBuyOrder(f.type)
-                    ? loc('stock_order_tip_buy',[fmt(lots, 0), fmt(lots * (this.effPrice() || 0))])
+                    ? loc('stock_order_tip_buy',[fmt(lots, 0), fmt(lots * (this.effSnapPrice() || 0))])
                     : loc('stock_order_tip_sell',[fmt(lots, 0)]);
             },
             // What the chosen order type does (tooltip on the type dropdown)
@@ -854,7 +955,7 @@ export function drawStocks_s2($ctx){
                 if (!isBuyOrder(f.type)){
                     return { tpPrice: null, slPrice: null };
                 }
-                let buyPrice = this.effPrice();
+                let buyPrice = this.effSnapPrice();
                 let tpPrice = f.tpOn ? (f.tpMode === 'price' ? f.tpPrice : tpPriceFromPct(buyPrice, f.tpPct)) : null;
                 let slPrice = f.slOn ? (f.slMode === 'price' ? f.slPrice : slPriceFromPct(buyPrice, f.slPct)) : null;
                 return { tpPrice: tpPrice, slPrice: slPrice };
@@ -865,7 +966,13 @@ export function drawStocks_s2($ctx){
                     return '';
                 }
                 let { tpPrice, slPrice } = this.bracketPrices();
-                let bad = validateBracket(this.effPrice(), tpPrice, slPrice);
+                let res = this.cur;
+                let st = res ? global.stocks.market[res] : null;
+                if (st){
+                    tpPrice = tpPrice !== null ? snapPrice(st, tpPrice) : null;
+                    slPrice = slPrice !== null ? snapPrice(st, slPrice) : null;
+                }
+                let bad = validateBracket(this.effSnapPrice(), tpPrice, slPrice);
                 if (bad === 'tp'){
                     return loc('stock_bracket_err_tp');
                 }
@@ -880,7 +987,7 @@ export function drawStocks_s2($ctx){
                 }
                 let f = global.stocks.form;
                 let res = this.cur;
-                let price = this.effPrice();
+                let price = this.effSnapPrice();
                 let bracket = isBuyOrder(f.type) && (f.tpOn || f.slOn) ? this.bracketPrices() : null;
                 let out = placeOrder(global.stocks, res, f.type, price, f.lots, bracket);
                 if (out.ok){
@@ -964,10 +1071,33 @@ export function drawStocks_s2($ctx){
 }
 
 export function drawStocks_s3($ctx){
+    let netTimer = null;
+    popover('stkNet', function(){
+        return $(netBreakdownHtml());
+    }, {
+        elm: '#stkNet',
+        classes: 'breakdown has-background-light has-text-dark',
+        in: function(){
+            // Keep the numbers live while the popover is open
+            clearInterval(netTimer);
+            netTimer = setInterval(function(){
+                let pop = $('#popper');
+                if (pop.length === 0 || pop.data('id') !== 'stkNet'){
+                    clearInterval(netTimer);
+                    return;
+                }
+                pop.empty().append($(netBreakdownHtml()));
+            }, 500);
+        },
+        out: function(){
+            clearInterval(netTimer);
+        }
+    });
+
         if (!(global.stocks.form.price > 0)){
         let first = liveStockDefs().filter(listed)[0];
         if (first){
-            global.stocks.form.price = +suggestPrice(global.stocks.market[first.res], global.stocks.form.type).toPrecision(4);
+            global.stocks.form.price = suggestPrice(global.stocks.market[first.res], global.stocks.form.type);
         }
     }
 }

@@ -14,7 +14,7 @@ import { traits } from '../core/registries.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
 import { plasmidBonus, spatialReasoning } from './resources.js';
 import { tradeRatio, resource_values } from '../config/constants.js';
-import { aetherFormat } from './aether_alchemy.js';
+import { aetherFormat, aetherExact } from './aether_alchemy.js';
 import { astroVal, astrologySign } from '../functions/astrology.js';
 import { tradeRouteColor } from './crate_value.js';
 import { tradeSellPrice, tradeBuyPrice, galacticTrade } from './crate_assignment.js';
@@ -296,6 +296,10 @@ export function loadSpecialResource(name,color) {
                 }
                 break;
     
+            case 'Aether':
+                desc.append($(`<span>${aetherExact(global.prestige.Aether.count)}</span>`));
+                break;
+
             case 'Harmony':
                 desc.append($(`<span>${loc(`resource_${name}_desc`,[global.race.universe === 'standard' ? 0.1 : 1, harmonyEffect()])}</span>`));
                 break;
