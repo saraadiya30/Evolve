@@ -1,6 +1,6 @@
 // Konsumsi bahan bakar kapal shipyard dan discharge trait emfield per tick.
 import { global, breakdown } from '../../core/vars.js';
-import { modRes } from '../../functions/resource_mod.js';
+import { modRes, timeScale } from '../../functions/resource_mod.js';
 import { loc } from '../../core/locale.js';
 import { shipFuelUse } from '../../truepath/ship_stats.js';
 
@@ -38,14 +38,17 @@ export function fastLoopShipyardFuel($ctx){
         }
 
         if (global.race['emfield']){
-            if (global.race['discharge'] && global.race['discharge'] > 0){
-                global.race.discharge--;
-            }
-            else {
-                global.race.emfield++;
-                if (Math.rand(0,500) === 0){
-                    global.race['discharge'] = global.race.emfield;
-                    global.race.emfield = 1;
+            // The field charge/discharge cycle counts ticks of game time, so it advances once per tick of timeScale()
+            for (let step = timeScale(); step > 0; step--){
+                if (global.race['discharge'] && global.race['discharge'] > 0){
+                    global.race.discharge--;
+                }
+                else {
+                    global.race.emfield++;
+                    if (Math.rand(0,500) === 0){
+                        global.race['discharge'] = global.race.emfield;
+                        global.race.emfield = 1;
+                    }
                 }
             }
         }

@@ -1,7 +1,7 @@
 import { loc } from '../core/locale.js';
 import { sizeApproximation, affix_list } from '../core/vars.js';
 import { infoBoxBuilder, sideMenu } from './functions.js';
-import { OCOIN_RATE, OCOIN_BUY_FEE, AETHER_OCOIN_RATE, LOT_BONUS, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, OCOIN_YIELD_PER_LOT, MAX_ORDERS, AETHER_SOUL_GEM_RATE, AETHER_GENES_RATE } from '../stocks/stocks_core.js';
+import { OCOIN_RATE, OCOIN_BUY_FEE, AETHER_OCOIN_RATE, LOT_BONUS, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, OCOIN_YIELD_PER_LOT, MAX_ORDERS, AETHER_SOUL_GEM_RATE, AETHER_GENES_RATE } from '../stocks/stocks_core.js';
 
 // Money per Aether (aether_alchemy.js and fast_loop_core.js use this same literal; there is no shared constant yet).
 const AETHER_MONEY_RATE = 1e15;
@@ -47,12 +47,13 @@ export function miscPage(content){
     });
     sideMenu('add',`misc-gameplay`,'lots',loc('wiki_misc_lots'));
 
-    infoBoxBuilder(mainContent,{ name: 'special', template: 'misc', paragraphs: 5,
+    infoBoxBuilder(mainContent,{ name: 'special', template: 'misc', paragraphs: 6,
         para_data: {
             2: [loc('stock_Morale_name'),MORALE_BONUS_PER_LOT],
             3: [loc('stock_Power_name'),POWER_BONUS_PER_LOT],
             4: [loc('stock_Birthrate_name'),BIRTH_BONUS_PER_LOT],
-            5: [loc('stock_Dividend_name'),+(OCOIN_YIELD_PER_LOT * 100).toFixed(2),loc('resource_Ocoin_name')]
+            5: [loc('stock_Army_name'),ARMY_BONUS_PER_LOT],
+            6: [loc('stock_Dividend_name'),+(OCOIN_YIELD_PER_LOT * 100).toFixed(2),loc('resource_Ocoin_name')]
         }
     });
     sideMenu('add',`misc-gameplay`,'special',loc('wiki_misc_special'));

@@ -1,6 +1,6 @@
-import { initStocks, CHART_W, CHART_H, orderLabel, liveStockDefs, listed, stockName, fmt, isSpecial, specialBonusPerLot, signed, snapPrice, stepOf, settleStock, moneyRoom, suggestPrice } from '../../stocks/stocks.js';
+import { initStocks, CHART_W, CHART_H, orderLabel, liveStockDefs, listed, stockName, fmt, isSpecial, specialBonusPerLot, signed, snapPrice, stepOf, settleStock, moneyRoom, suggestPrice, joinNotes } from '../../stocks/stocks.js';
 import { loc } from '../../core/locale.js';
-import { OCOIN_RATE, OCOIN_BUY_FEE, ORDER_TYPES, askPrice, bidPrice, maxBuyLots, sellQuote, buyQuote, committedSellLots, tpPriceFromPct, slPriceFromPct, MAX_ORDERS, LOT_BONUS, isBuyOrder, bookLevels, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, OCOIN_YIELD_PER_LOT, ocoinYield, moneyToOcoin, ocoinCostInMoney, ocoinToMoney, GOLD_BAR_OCOIN, goldBarCount, maxGoldBarsFromOcoin, ocoinToGoldBars, goldBarsToOcoin, executeBuy, executeSell, validateOrder, validateBracket, placeOrder, cancelOrder, placeExitOrders } from '../../stocks/stocks_core.js';
+import { OCOIN_RATE, OCOIN_BUY_FEE, ORDER_TYPES, askPrice, bidPrice, maxBuyLots, sellQuote, buyQuote, committedSellLots, tpPriceFromPct, slPriceFromPct, MAX_ORDERS, LOT_BONUS, isBuyOrder, bookLevels, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, armyCapBonus, OCOIN_YIELD_PER_LOT, ocoinYield, moneyToOcoin, ocoinCostInMoney, ocoinToMoney, GOLD_BAR_OCOIN, goldBarCount, maxGoldBarsFromOcoin, ocoinToGoldBars, goldBarsToOcoin, executeBuy, executeSell, validateOrder, validateBracket, placeOrder, cancelOrder, placeExitOrders } from '../../stocks/stocks_core.js';
 import { storageLots, productionLots, setStorageLots, ocoinFlowPerSecond, AUTO_TICK_SECONDS } from '../../stocks/stocks_core.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { aetherExact } from '../../resources/aether_alchemy.js';
@@ -103,20 +103,21 @@ export function drawStocks_s1($ctx){
         #stockExchange .stk-iname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-right:.5rem}
         #stockExchange .stk-row2{font-size:.75rem}
         #stockExchange .stk-badges>*{margin-right:.5rem}
-        #stockExchange .stk-head{display:flex;flex-wrap:wrap;align-items:baseline}
-        #stockExchange .stk-name{font-weight:700;font-size:1.05rem;margin-right:.75rem}
+        #stockExchange .stk-head{display:flex;flex-wrap:nowrap;align-items:baseline;min-height:1.75rem}
+        #stockExchange .stk-head>*{flex:none;white-space:nowrap}
+        #stockExchange .stk-name{font-weight:700;font-size:1.05rem;margin-right:.75rem;flex:0 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis}
         #stockExchange .stk-rng{margin-left:auto}
         #stockExchange .stk-rng>span{cursor:pointer;padding:0 .4rem;margin-left:.125rem;border:.0625rem solid transparent;border-radius:.25rem;font-size:.8125rem}
         #stockExchange .stk-rng>span.on{border-color:currentColor}
         #stockExchange .stk-chart{display:block;width:100%;height:auto;margin:.25rem 0}
-        #stockExchange .stk-line{display:flex;flex-wrap:wrap;margin-top:.125rem;font-size:.875rem}
-        #stockExchange .stk-line>*{margin-right:1.25rem}
+        #stockExchange .stk-line{display:flex;flex-wrap:nowrap;margin-top:.125rem;font-size:.875rem;min-height:1.3rem;line-height:1.3rem;overflow:hidden;white-space:nowrap}
+        #stockExchange .stk-line>*{margin-right:1.25rem;min-width:0;overflow:hidden;text-overflow:ellipsis}
         #stockExchange .stk-line>.b-tooltip{min-width:8.5rem}
         #stockExchange .stk-alloc{border-collapse:collapse;width:auto;margin:.25rem 0;font-size:.875rem}
         #stockExchange .stk-alloc td{border:0;padding:.125rem 1rem .125rem 0;white-space:nowrap;vertical-align:middle}
         #stockExchange .stk-alloc td:first-child{min-width:5.5rem}
         #stockExchange .stk-alloc .current{min-width:calc(9ch + .75rem);padding:0 .375rem;box-sizing:border-box}
-        #stockExchange .stk-btns{margin:.375rem 0 .25rem -.25rem}
+        #stockExchange .stk-btns{margin:.375rem 0 .25rem -.25rem;min-height:2rem}
         #stockExchange .stk-net{cursor:help}
         #stockExchange .stk-title{margin:.5rem 0 .25rem 0;padding-top:.375rem;border-top:.0625rem solid rgba(128,128,128,.4)}
         #stockExchange .market-item.stk-plain{margin:.25rem 0 0 0}
@@ -135,9 +136,10 @@ export function drawStocks_s1($ctx){
         #stockExchange .stk-modebtn.off{opacity:.4}
         #stockExchange .stk-side{margin-bottom:.375rem}
         #stockExchange .stk-side-head{display:flex;align-items:center;flex-wrap:wrap;margin-bottom:.125rem}
-        #stockExchange .stk-side-row{display:flex;align-items:center;flex-wrap:wrap;margin-left:1.35rem}
+        #stockExchange .stk-side-row{display:flex;align-items:center;flex-wrap:nowrap;margin-left:1.35rem}
         #stockExchange .stk-side input{width:4.5rem;margin-right:.375rem;flex:none}
-        #stockExchange .stk-side .stk-resolved{white-space:nowrap}
+        #stockExchange .stk-side .stk-resolved{white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+        #stockExchange .stk-msg{min-height:1.3rem;line-height:1.3rem;font-size:.875rem;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
     </style>`));
     }
 
@@ -208,8 +210,20 @@ export function drawStocks_s1($ctx){
     depth.find('tbody').append(depthRow);
     depthRow.append($(`<td><b-tooltip :label="askFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-danger stk-depth-cell" :class="{ off: !canFillAsk(i) }" @click="fillAsk(i)">{{ row.ask }}</span></b-tooltip></td>`));
     depthRow.append($(`<td><b-tooltip :label="bidFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-success stk-depth-cell" :class="{ off: !canFillBid(i) }" @click="fillBid(i)">{{ row.bid }}</span></b-tooltip></td>`));
-    main.append($(`<div class="stk-line"><span>{{ d.spreadText }}</span></div>`));
-    main.append($(`<div class="stk-line"><span>{{ d.holdText }}</span><span :class="d.plClass">{{ d.plText }}</span></div>`));
+    // These three lines are always there and always one line tall (long text is cut off with an ellipsis and stays readable in
+    // the title tooltip), so nothing above the Buy/Sell buttons changes height while you trade.
+    main.append($(`<div class="stk-line" :title="d.spreadText"><span>{{ d.spreadText }}</span></div>`));
+    main.append($(`<div class="stk-line" :title="d.holdText"><span>{{ d.holdText }}</span></div>`));
+    main.append($(`<div class="stk-line" :title="d.plText"><span :class="d.plClass">{{ d.plText }}</span></div>`));
+    // Buy/Sell sit right under those fixed-height lines and above everything that grows or shrinks (the allocation table, the
+    // take-profit/stop-loss panel that only exists while you hold lots, the order form), so the buttons stay put while you trade.
+    let btns = $(`<div class="market-item stk-flow stk-btns"></div>`);
+    main.append(btns);
+    btns.append($(`<b-tooltip :label="d.buyTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(false)">{{ d.buyBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="d.buyMaxTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(true)">${loc('stock_buy_max')}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="d.sellTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(false)">{{ d.sellBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip :label="d.sellAllTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(true)">${loc('stock_sell_all')}</span></b-tooltip>`));
+
     // Lots are split between the production bonus and the storage bonus (one or the other per lot). Not for the special
     // stocks (Morale/Power/Birthrate), which have their own flat bonus per lot.
     main.append($(`<table v-if="d.canAlloc" class="stk-alloc"><tbody>
@@ -247,14 +261,11 @@ export function drawStocks_s1($ctx){
     slRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="ex.slPct" style="${inputStyle}" placeholder="%">`));
     slRow.append($(`<input type="number" min="1" step="1" v-model.number="ex.slLots" style="${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
     slRow.append($(`<span class="stk-resolved has-text-warning">{{ d.slPriceText }}</span>`));
-    exitPanel.append($(`<div style="display:flex;align-items:center;flex-wrap:wrap;"><b-tooltip :label="d.exitTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !d.exitOk }" @click="placeExit()">${loc('stock_order_place')}</span></b-tooltip><span v-if="d.exitErr" class="has-text-warning" style="margin-left:.5rem;">{{ d.exitErr }}</span></div>`));
+    exitPanel.append($(`<div style="display:flex;align-items:center;flex-wrap:nowrap;"><b-tooltip :label="d.exitTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !d.exitOk }" @click="placeExit()">${loc('stock_order_place')}</span></b-tooltip></div>`));
+    // The "why can't I place this" message has its own always-present one-line slot instead of appearing next to the button, so
+    // neither the button nor anything below it moves when the message shows up or changes length (full text on hover).
+    exitPanel.append($(`<div class="stk-msg has-text-warning" :title="d.exitErr">{{ d.exitErr }}</div>`));
 
-    let btns = $(`<div class="market-item stk-flow stk-btns"></div>`);
-    main.append(btns);
-    btns.append($(`<b-tooltip :label="d.buyTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(false)">{{ d.buyBtn }}</span></b-tooltip>`));
-    btns.append($(`<b-tooltip :label="d.buyMaxTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(true)">${loc('stock_buy_max')}</span></b-tooltip>`));
-    btns.append($(`<b-tooltip :label="d.sellTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(false)">{{ d.sellBtn }}</span></b-tooltip>`));
-    btns.append($(`<b-tooltip :label="d.sellAllTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(true)">${loc('stock_sell_all')}</span></b-tooltip>`));
 
     // Orders for the selected stock
     main.append($(`<div class="stk-title"><h3 class="has-text-info">${loc('stock_orders')}</h3></div>`));
@@ -268,9 +279,9 @@ export function drawStocks_s1($ctx){
     form.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.pct" style="width:5rem;margin-right:.5rem;${inputStyle}" placeholder="%">`));
     form.append($(`<input type="number" min="1" step="1" v-model.number="st.form.lots" style="width:4.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
     form.append($(`<b-tooltip :label="orderTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: orderError() !== '' }" @click="place()">${loc('stock_order_place')}</span></b-tooltip>`));
-    main.append($(`<div v-if="st.form.priceMode === 'pct'" class="stk-note has-text-warning" style="margin-left:0;">${loc('stock_pct_resolved')} <b>{{ fmtPrice(effSnapPrice()) }}</b></div>`));
-    main.append($(`<div v-if="roundNote() !== ''" class="stk-note" style="margin-left:0;"><span class="has-text-warning">{{ roundNote() }}</span></div>`));
-    main.append($(`<div v-if="orderHint() !== ''" class="stk-note" style="margin-left:0;"><span class="has-text-warning">{{ orderHint() }}</span></div>`));
+    // The notes under the order form (percent resolved to a price, rounding, why the order is not allowed) share one always-present
+    // one-line slot, so the order list and the bracket panel below do not jump when a note appears or disappears (full text on hover).
+    main.append($(`<div class="stk-note stk-msg has-text-warning" :title="formNote()" style="margin-left:0;">{{ formNote() }}</div>`));
 
     // Optional take-profit / stop-loss attached to a pending buy: activates once the buy fills, covering whatever
     // it actually bought (all of it - a partially filled buy protects only the part that went through).
@@ -298,7 +309,7 @@ export function drawStocks_s1($ctx){
     bslSide.append(bslRow);
     bslRow.append($(`<input v-if="st.form.slMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.slPrice" style="${inputStyle}" placeholder="${loc('stock_order_price')}">`));
     bslRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.slPct" style="${inputStyle}" placeholder="%">`));
-    bracket.append($(`<div v-if="bracketErr()" class="has-text-warning" style="margin-top:.25rem;">{{ bracketErr() }}</div>`));
+    bracket.append($(`<div class="stk-msg has-text-warning" :title="bracketErr()" style="margin-top:.25rem;">{{ bracketErr() }}</div>`));
     main.append($(`<div v-for="o in orders" :key="o.id" class="market-item stk-orderline"><span>{{ o.text }}</span><span role="button" class="order has-text-danger" @click="cancel(o.id)">${loc('stock_order_cancel')}</span></div>`));
 
     // Watchlist
@@ -426,7 +437,7 @@ export function drawStocks_s2($ctx){
                     holdText: res === 'Dividend'
                         ? loc('stock_hold_dividend',[fmt(st.lots, 0), +(st.lots * OCOIN_YIELD_PER_LOT * 100).toFixed(2), fmt(ocoinYield(global.stocks.ocoin, st.lots))])
                         : isSpecial(res)
-                        ? loc('stock_hold_special',[fmt(st.lots, 0), fmt(st.lots * specialBonusPerLot(res)), loc(`stock_stat_${res}`)])
+                        ? loc('stock_hold_special',[fmt(st.lots, 0), fmt(res === 'Army' ? armyCapBonus(st.lots) : st.lots * specialBonusPerLot(res)), loc(`stock_stat_${res}`)])
                         : loc('stock_hold',[fmt(st.lots, 0), +(productionLots(st) * LOT_BONUS * 100).toFixed(2), loc(`resource_${res}_name`)]),
                     plText: st.lots > 0 ? loc('stock_pl',[fmt(st.spent), fmt(value), signed(pl), plPct.toFixed(1)]) : '',
                     plClass: st.lots === 0 ? '' : (pl >= 0 ? 'has-text-success' : 'has-text-danger'),
@@ -556,7 +567,7 @@ export function drawStocks_s2($ctx){
                 return [
                     loc('stock_ocoin_rate',[OCOIN_RATE, OCOIN_BUY_FEE * 100]),
                     loc('stock_lot_hint',[LOT_BONUS * 100, STORAGE_BONUS * 100]),
-                    loc('stock_special_hint',[MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT]),
+                    loc('stock_special_hint',[MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT]),
                     loc('stock_dividend_hint',[+(OCOIN_YIELD_PER_LOT * 100).toFixed(2)]),
                     loc('stock_book_hint')
                 ].join(' ');
@@ -932,6 +943,16 @@ export function drawStocks_s2($ctx){
                 return loc(`stock_order_hint_${global.stocks.form.type}`);
             },
             // Only shown when the order cannot be placed yet
+            // Everything worth saying about the order being typed, as one line (see the single note slot under the form)
+            formNote(){
+                let parts = [];
+                if (global.stocks.form.priceMode === 'pct'){
+                    parts.push(loc('stock_pct_resolved') + ' ' + this.fmtPrice(this.effSnapPrice()));
+                }
+                parts.push(this.roundNote());
+                parts.push(this.orderHint());
+                return joinNotes(parts);
+            },
             orderHint(){
                 let res = this.cur;
                 if (!res){

@@ -19,6 +19,7 @@ import { fortressModules } from '../../core/registries.js';
 import { spireCreep, renderFortress } from '../hell/fortress_defense.js';
 import { genSpireFloor, updateMechbay } from '../mech/mechbay.js';
 import { bossResists } from '../mech/hellguard.js';
+import { TRADE_ROUTE_MULT } from '../../config/constants.js';
 
 export const fortressModules_prtl_spire = {
         info: {
@@ -600,7 +601,7 @@ export const fortressModules_prtl_spire = {
                 let desc = `<div>${loc('plus_max_resource',[`\$${vault.toLocaleString()}`,loc('resource_Money_name')])}</div>`;
                 desc += `<div>${loc('city_tourist_center_effect2',[mon,loc(`arpa_project_monument_title`)])}</div>`;
                 desc += `<div>${loc('plus_max_resource',[containers,global.resource.Crates.name])}</div><div>${loc('plus_max_resource',[containers,global.resource.Containers.name])}</div>`;
-                desc += `<div>${loc('city_trade_effect',[(global.portal?.spire?.count || 1)])}</div>`;
+                desc += `<div>${loc('city_trade_effect',[(global.portal?.spire?.count || 1) * TRADE_ROUTE_MULT])}</div>`;
 
                 return desc;
             },

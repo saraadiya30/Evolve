@@ -2,6 +2,7 @@
 import { global, int_on, support_on, p_on } from '../../core/vars.js';
 import { actions } from '../../core/registries.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
+import { armyCapBonus } from '../../stocks/stocks_core.js';
 
 export function midLoopGarrisonCaps($ctx){
         if (global.city['garrison']){
@@ -32,5 +33,11 @@ export function midLoopGarrisonCaps($ctx){
         }
         if (global.eden['fire_support_base'] && global.eden.fire_support_base.count === 100){
             $ctx.lCaps['garrison'] += actions.eden.eden_elysium.fire_support_base.soldiers();
+        }
+        // Army stock: holding lots raises the soldier cap (recruiting still follows the normal rate). Computed fresh from the
+        // lots held, so selling them takes the capacity away on the next tick. This runs before the occupation upkeep in
+        // midLoopJobCaps, so the extra capacity counts like any other soldier source.
+        if (global.stocks && global.stocks.market && global.stocks.market.Army && global.civic['garrison'] && global.civic.garrison.display){
+            $ctx.lCaps['garrison'] += armyCapBonus(global.stocks.market.Army.lots);
         }
 }

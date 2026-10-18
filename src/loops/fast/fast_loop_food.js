@@ -1,6 +1,6 @@
 // Produksi makanan per tick (farm, soul well, hunter, trait ras, dan sumber lain).
 import { global, breakdown, p_on, support_on, int_on } from '../../core/vars.js';
-import { modRes } from '../../functions/resource_mod.js';
+import { modRes, timeScale } from '../../functions/resource_mod.js';
 import { flib } from '../../functions/run_stats_helpers.js';
 import { traits, hooks, actions } from '../../core/registries.js';
 import { planetTraits, biomes } from '../../races/planet_data.js';
@@ -431,40 +431,52 @@ export function fastLoopFood($ctx){
                         }
                         // threshold can be thought of as the inverse of nutrition ratio per unit of food.
                         // So if the generated food doesn't have enough nutrition for the consuming population, they starve.
-                        if (Math.rand(0, 10) === 0){
-                            if(global.race['fasting']){
-                                let starved = (global.resource[global.race.species].amount) / 100 * food_consume_mod - threshold;
-                                if(starved < 0){
-                                    starved = 0;
-                                }
-                                if(starved%1 > Math.random()){
-                                    starved = Math.ceil(starved);
-                                }
-                                else{
-                                    starved = Math.floor(starved);
-                                }
-                                if(starved > global.resource[global.race.species].amount){
-                                    starved = global.resource[global.race.species].amount;
-                                }
-                                global.resource[global.race.species].amount -= starved;
-                                global.stats.starved += starved;
-                                blubberFill(starved);
+                        // Accelerated time: one real tick is worth several ticks, so the starvation roll is made once per tick of game time
+                        for (let roll = timeScale(); roll > 0; roll--){
+                            if (global.resource[global.race.species].amount <= 0){
+                                break;
                             }
-                            else if (generated < consume / threshold){
-                                global['resource'][global.race.species].amount--;
-                                global.stats.starved++;
-                                blubberFill(1);
+                            if (Math.rand(0, 10) === 0){
+                                if(global.race['fasting']){
+                                    let starved = (global.resource[global.race.species].amount) / 100 * food_consume_mod - threshold;
+                                    if(starved < 0){
+                                        starved = 0;
+                                    }
+                                    if(starved%1 > Math.random()){
+                                        starved = Math.ceil(starved);
+                                    }
+                                    else{
+                                        starved = Math.floor(starved);
+                                    }
+                                    if(starved > global.resource[global.race.species].amount){
+                                        starved = global.resource[global.race.species].amount;
+                                    }
+                                    global.resource[global.race.species].amount -= starved;
+                                    global.stats.starved += starved;
+                                    blubberFill(starved);
+                                }
+                                else if (generated < consume / threshold){
+                                    global['resource'][global.race.species].amount--;
+                                    global.stats.starved++;
+                                    blubberFill(1);
+                                }
                             }
                         }
                     }
                 }
             }
 
-            if (global.race['anthropophagite'] && global.resource[global.race.species].amount > 1 && Math.rand(0,400) === 0){
-                global.resource[global.race.species].amount--;
-                modRes('Food', 10000 * traits.anthropophagite.vars()[0]);
-                global.stats.murders++;
-                blubberFill(1);
+            if (global.race['anthropophagite']){
+                // One roll per tick of game time (see timeScale). modRes already multiplies production by timeScale(), so each
+                // success passes its Food divided by it and still adds exactly one murder's worth.
+                for (let roll = timeScale(); roll > 0; roll--){
+                    if (global.resource[global.race.species].amount > 1 && Math.rand(0,400) === 0){
+                        global.resource[global.race.species].amount--;
+                        modRes('Food', 10000 * traits.anthropophagite.vars()[0] / timeScale());
+                        global.stats.murders++;
+                        blubberFill(1);
+                    }
+                }
             }
         }
 }

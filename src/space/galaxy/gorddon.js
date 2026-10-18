@@ -13,6 +13,7 @@ import { galaxyProjects } from '../../core/registries.js';
 import { int_fuel_adjust } from '../planet_generation.js';
 import { xeno_race, incrementStruct, piracy } from '../space_requirements.js';
 import { isStargateOn } from '../terraform_lab.js';
+import { TRADE_ROUTE_MULT } from '../../config/constants.js';
 
 export const galaxyProjects_gxy_gorddon = {
         info: {
@@ -229,7 +230,7 @@ export const galaxyProjects_gxy_gorddon = {
                 if (global.tech.banking >= 13){
                     bank = `<div>${loc('interstellar_exchange_boost',[3])}</div>`;
                 }
-                return `<div class="has-text-caution">${loc(`requires_res`,[loc('galaxy_embassy')])}</div><div>${loc('galaxy_freighter_effect',[2,races[global.galaxy.hasOwnProperty('alien1') ? global.galaxy.alien1.id : global.race.species].name])}</div>${bank}<div class="has-text-caution">${loc('galaxy_starbase_civ_crew',[$(this)[0].ship.civ()])}</div><div class="has-text-caution">${loc('spend',[helium,global.resource.Helium_3.name])}</div>`;
+                return `<div class="has-text-caution">${loc(`requires_res`,[loc('galaxy_embassy')])}</div><div>${loc('galaxy_freighter_effect',[2 * TRADE_ROUTE_MULT,races[global.galaxy.hasOwnProperty('alien1') ? global.galaxy.alien1.id : global.race.species].name])}</div>${bank}<div class="has-text-caution">${loc('galaxy_starbase_civ_crew',[$(this)[0].ship.civ()])}</div><div class="has-text-caution">${loc('spend',[helium,global.resource.Helium_3.name])}</div>`;
             },
             ship: {
                 civ(){ return global.race['high_pop'] ? traits.high_pop.vars()[0] * 3 : 3; },

@@ -6,6 +6,7 @@ import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { workerScale } from '../../civics/jobs/worker_scale.js';
 import { piracy } from '../../space/space_requirements.js';
 import { galaxy_ship_types, gatewayArmada } from '../../space/space.js';
+import { TRADE_ROUTE_MULT } from '../../config/constants.js';
 
 export function midLoopOmniscienceCaps($ctx){
         //Omniscience
@@ -61,7 +62,8 @@ export function midLoopOmniscienceCaps($ctx){
 
         if (p_on['embassy'] && global.galaxy['symposium']){
             let dorm = 1750 * p_on['dormitory'];
-            let gtrade = 650 * global.galaxy.trade.cur;
+            // Routes are counted TRADE_ROUTE_MULT times higher than the original game, so divide it back out to keep the Knowledge cap as before
+            let gtrade = 650 * global.galaxy.trade.cur / TRADE_ROUTE_MULT;
             let leave = 0;
             if (global.tech.xeno >= 7){
                 for (let j = 0; j < galaxy_ship_types.length; j++){

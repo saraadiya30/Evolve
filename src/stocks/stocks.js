@@ -3,7 +3,7 @@ import { loc } from '../core/locale.js';
 import { messageQueue } from '../functions/message_log.js';
 import { resource_values } from '../config/constants.js';
 import { aetherFormat } from '../resources/aether_alchemy.js';
-import { LOT_BONUS, productionLots, newStock, upgradeStock, stepMarket, settleAllOrders, settleOrders, snapPrice, stepOf, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, capOverflowStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ocoinYield } from './stocks_core.js';
+import { LOT_BONUS, productionLots, newStock, upgradeStock, stepMarket, settleAllOrders, settleOrders, snapPrice, stepOf, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, capOverflowStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, ocoinYield } from './stocks_core.js';
 import { hooks } from '../core/registries.js';
 
 // Chart size in SVG units (the SVG scales to the width of its container)
@@ -56,7 +56,7 @@ export function liveStockDefs(){
     let materials = Object.keys(tmp_vars.resource)
         .filter(res => tmp_vars.resource[res].tradable || tmp_vars.resource[res].stackable || (resource_values[res] || 0) > 0)
         .map(res => ({ res: res, fair: resource_values[res] || 1 }));
-    // Special (non-resource) companies lead the list - Morale, Power, Birthrate, in that order (see SPECIAL_STOCKS) -
+    // Special (non-resource) companies lead the list - Morale, Power, Birthrate, Army, Dividend, in that order (see SPECIAL_STOCKS) -
     // followed by every material company in normal resource order.
     return SPECIAL_STOCKS.concat(materials);
 }
@@ -68,12 +68,18 @@ export function listed(def){
         return !!(global.city && global.city.morale && global.city.morale.current);
     }
     if (def.res === 'Power'){
-        return !!(global.city && global.city.powered);
+        // Electricity must actually be researched: `powered` alone is not enough (it is also forced on by some stage setups,
+        // which all set high_tech well above 1 at the same time).
+        return !!(global.city && global.city.powered && global.tech && global.tech.high_tech >= 2);
     }
     if (def.res === 'Birthrate'){
         // Tied to the same citizen-growth mechanic Morale/Power piggyback on: listed once the race has a
         // population resource to grow at all (mirrors the growth check in longLoop's citizen growth step).
         return !!(global.resource[global.race.species] && global.resource[global.race.species].display);
+    }
+    if (def.res === 'Army'){
+        // Raises the soldier cap, so it only means something once the soldiers job (garrison) is unlocked.
+        return !!(global.civic && global.civic.garrison && global.civic.garrison.display);
     }
     if (def.res === 'Dividend'){
         // Pays in Ocoin, which only means something once Money itself is unlocked.
@@ -83,8 +89,13 @@ export function listed(def){
     return !!(resource && resource.display);
 }
 
+// Joins the non-empty notes into one line (used where several optional notes share a single fixed-height slot).
+export function joinNotes(parts){
+    return (parts || []).filter(p => typeof p === 'string' && p.trim() !== '').join(' · ');
+}
+
 export function isSpecial(res){
-    return res === 'Morale' || res === 'Power' || res === 'Birthrate' || res === 'Dividend';
+    return res === 'Morale' || res === 'Power' || res === 'Birthrate' || res === 'Army' || res === 'Dividend';
 }
 
 export function specialBonusPerLot(res){
@@ -93,6 +104,9 @@ export function specialBonusPerLot(res){
     }
     if (res === 'Power'){
         return POWER_BONUS_PER_LOT;
+    }
+    if (res === 'Army'){
+        return ARMY_BONUS_PER_LOT;
     }
     return BIRTH_BONUS_PER_LOT;
 }

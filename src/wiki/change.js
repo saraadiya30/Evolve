@@ -17,7 +17,6 @@ export const changeList = [
             `Stock market numbers now use the game's single-letter unit suffixes (K, M, B, t, ...) instead of SI units (K, M, G, T).`,
             `Crates now hold 1000x and Containers 10000x as much as before.`,
             `Storage Yard, Warehouse, Trade Post and Wharf costs no longer increase as you build more of them.`,
-            `Supercollider now boosts Warehouse (and Garage) capacity by 100% instead of 5%.`,
             `Trade Posts give 100x more trade routes, and Wharves and GPS Satellites give 200.`,
             `Removed the cap on time accumulated while offline.`,
             `Fixed Auto Convert producing a different amount of Money than the displayed max, and wrong Money to Ocoin conversion at very high income.`,

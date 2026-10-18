@@ -7,9 +7,23 @@ import { stockFlags, productionLots, lotBonus } from '../stocks/stocks_core.js';
 // Speed of accelerated time (atrack.t > 0): game time runs this many times faster than real time.
 export const TIME_ACCELERATION_FACTOR = 2;
 
-// How many ticks of game time one real fast tick is worth right now (1 normally, 2 while accelerated time is active).
-export function timeScale(){
+// Ticks of game time the fast loop that is running right now stands for. Only set by execGameLoops while it runs a chunk
+// (null the rest of the time): a period can be worth more ticks than one fast loop is allowed to cover, see MAX_FAST_SCALE.
+let tickScale = null;
+
+export function setTickScale(scale){
+    tickScale = scale;
+}
+
+// Ticks of game time one real period is worth from accelerated time alone (1 normally, 2 while accelerated time is active).
+export function baseTimeScale(){
     return atrack.t > 0 ? TIME_ACCELERATION_FACTOR : 1;
+}
+
+// How many ticks of game time one real fast tick is worth right now. Inside a running chunk this is that chunk's size
+// (which also includes any Aether speed); outside of one it is the accelerated time scale.
+export function timeScale(){
+    return tickScale !== null ? tickScale : baseTimeScale();
 }
 
 export function resetResBuffer(){

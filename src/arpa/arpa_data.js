@@ -22,7 +22,7 @@ export const arpaProjectsDef = {
             let sc = global.tech['tp_particles'] || (global.tech['particles'] && global.tech['particles'] >= 3) ? (global.race['cataclysm'] ? 20 : 8) : (global.race['cataclysm'] ? 10 : 4);
             if (global.tech['storage'] >= 6){
                 if (global.race['warlord']){
-                    return loc('arpa_projects_lhc_warlord2',[loc('portal_twisted_lab_title'),sc,100]);
+                    return loc('arpa_projects_lhc_warlord2',[loc('portal_twisted_lab_title'),sc,5]);
                 }
                 else if (global.tech['particles'] && global.tech['particles'] >= 4){
                     return global.race['cataclysm'] ? loc('arpa_projects_lhc_cataclysm3',[sc]) : loc('arpa_projects_lhc_effect3',[sc,global.race['orbit_decayed'] ? loc('space_home_satellite_title') : wardenLabel()]);

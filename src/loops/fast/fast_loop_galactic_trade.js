@@ -1,6 +1,8 @@
 // Dagang galaksi per tick (freighter dan super freighter).
 import { global, breakdown, gal_on } from '../../core/vars.js';
-import { modRes } from '../../functions/resource_mod.js';
+import { modRes, timeScale } from '../../functions/resource_mod.js';
+import { stockFlags } from '../../stocks/stocks_core.js';
+import { TRADE_ROUTE_MULT } from '../../config/constants.js';
 import { calc_mastery } from '../../functions/calc_mastery.js';
 import { piracy } from '../../space/space_requirements.js';
 import { traits } from '../../core/registries.js';
@@ -9,14 +11,26 @@ import { loc } from '../../core/locale.js';
 import { galaxyOffers } from '../../resources/galaxy_offers.js';
 import { astroVal } from '../../functions/astrology.js';
 
+// How many of `routes` identical routes can each pay `cost` out of `available` (the rest cannot be paid). A route that costs
+// nothing is always fulfilled; no routes means none.
+export function affordableRoutes(routes, available, cost){
+    if (!(routes > 0)){
+        return 0;
+    }
+    if (!(cost > 0)){
+        return routes;
+    }
+    return Math.min(routes, Math.max(0, Math.floor(available / cost)));
+}
+
 export function fastLoopGalacticTrade($ctx){
         if (global.galaxy['trade'] && (gal_on.hasOwnProperty('freighter') || gal_on.hasOwnProperty('super_freighter'))){
             let cap = 0;
             if (global.galaxy['freighter']){
-                cap += gal_on['freighter'] * 2;
+                cap += gal_on['freighter'] * 2 * TRADE_ROUTE_MULT;
             }
             if (global.galaxy['super_freighter']){
-                cap += gal_on['super_freighter'] * 5;
+                cap += gal_on['super_freighter'] * 5 * TRADE_ROUTE_MULT;
             }
             global.galaxy.trade.max = cap;
 
@@ -66,11 +80,23 @@ export function fastLoopGalacticTrade($ctx){
                 }
 
                 let pirate = piracy('gxy_gorddon');
-                for (let j=0; j<global.galaxy.trade[`f${i}`]; j++){
-                    exp_total += exprt_vol;
-                    if (modRes(exprt_res,-(exprt_vol * $ctx.time_multiplier))){
-                        modRes(imprt_res,imprt_vol * $ctx.time_multiplier * pirate);
-                        imp_total += imprt_vol;
+                // Every route of an offer trades the same amount, so they are settled together instead of one by one: a ship
+                // gives hundreds of routes (TRADE_ROUTE_MULT) and one modRes call per route would make this loop that much heavier.
+                const routes = global.galaxy.trade[`f${i}`];
+                if (routes > 0){
+                    const cost = exprt_vol * $ctx.time_multiplier;
+                    // modRes multiplies production-loop amounts by timeScale(), so affordability has to use that same amount
+                    const seen = cost * (stockFlags.prod ? timeScale() : 1);
+                    const done = affordableRoutes(routes, global.resource[exprt_res].amount, seen);
+                    exp_total += exprt_vol * routes;
+                    if (done > 0){
+                        modRes(exprt_res,-(cost * done));
+                        modRes(imprt_res,imprt_vol * $ctx.time_multiplier * pirate * done);
+                        imp_total += imprt_vol * done;
+                    }
+                    if (done < routes){
+                        // The first route that cannot be paid drains what is left, as it did when routes were settled one by one
+                        modRes(exprt_res,-cost);
                     }
                 }
 

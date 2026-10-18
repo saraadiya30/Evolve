@@ -18,16 +18,28 @@ export const STORAGE_BONUS = 0.01;  // each lot on storage adds +1% storage (max
 export const MORALE_BONUS_PER_LOT = 0.1;  // each lot adds +0.1 Morale (the current value, not the cap)
 export const POWER_BONUS_PER_LOT = 1;     // each lot adds +1 Power (Watt) to the city's power grid
 export const BIRTH_BONUS_PER_LOT = 0.05;  // each lot adds +0.05 to the citizen growth roll, same additive/reversible pattern
+export const ARMY_BONUS_PER_LOT = 0.1;    // each lot adds +0.1 to the maximum number of soldiers (whole soldiers only, see armyCapBonus)
 // Dividend company: unlike the three above it pays in Ocoin. Once per game day each lot adds this fraction of the Ocoin
 // you currently have available (so 1000 lots = +100% of your Ocoin per day). It compounds, and it stops when you sell.
 export const OCOIN_YIELD_PER_LOT = 0.001;  // +0.1% of available Ocoin per lot, per game day
-// Order here is the display order for the special (non-resource) companies: Morale, then Power, then Birthrate.
+// Order here is the display order for the special (non-resource) companies: Morale, Power, Birthrate, Army, then Dividend.
 export const SPECIAL_STOCKS = [
     { res: 'Morale', fair: 60 },
     { res: 'Power', fair: 90 },
     { res: 'Birthrate', fair: 75 },
+    { res: 'Army', fair: 110 },
     { res: 'Dividend', fair: 150 }
 ];
+
+// Extra garrison capacity (maximum soldiers) from the Army company for `lots` lots held. Soldiers are whole people, so the
+// bonus is rounded down (the tiny epsilon keeps e.g. 30 * 0.1 = 3.0000000000000004 style products on the right side).
+// It only raises the cap: soldiers still have to be recruited at the normal rate. Invalid input gives 0.
+export function armyCapBonus(lots){
+    if (!(lots > 0)){
+        return 0;
+    }
+    return Math.floor(lots * ARMY_BONUS_PER_LOT + 1e-9);
+}
 
 // Ocoin paid out by the Dividend company for one game day: `ocoin` is the Ocoin available right now (Ocoin locked in open
 // buy orders is not counted), `lots` the lots held. Pure function so it can be tested without the game.

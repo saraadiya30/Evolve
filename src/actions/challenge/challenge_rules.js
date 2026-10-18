@@ -18,7 +18,7 @@ import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { govEffect } from '../../civics/gov_effect.js';
 import { govActive } from '../../governor/gov_active.js';
 import { challengeIcon } from '../../achievements/achievement_helpers.js';
-import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL } from '../../config/constants.js';
+import { BLACKHOLE_STORAGE_BONUS_PER_LEVEL, TRADE_ROUTE_MULT } from '../../config/constants.js';
 import { renderSpace } from '../../space/space_requirements.js';
 import { renderFortress } from '../../portal/hell/fortress_defense.js';
 import { renderEdenic } from '../../edenic/edenic_render.js';
@@ -188,7 +188,7 @@ export function templeEffect(){
         desc = `<div>${loc('city_temple_effect2',[plasmid])}</div>`;
     }
     if (global.tech['fanaticism'] && global.tech['fanaticism'] >= 3){
-        desc = desc + `<div>${loc('city_temple_effect3')}</div>`;
+        desc = desc + `<div>${loc('city_temple_effect3',[TRADE_ROUTE_MULT])}</div>`;
     }
     if (global.tech['anthropology'] && global.tech['anthropology'] >= 4){
         desc = desc + `<div>${global.race['truepath'] ? loc('city_temple_effect_tp',[2,25]) : loc('city_temple_effect4')}</div>`;
@@ -435,7 +435,7 @@ export function storageMultipler(scale = 1, wiki = false){
         multiplier *= 1 + (traits.pack_rat.vars(1)[1] / 100 * fathom);
     }
     if (global.tech['storage'] >= 6){
-        multiplier *= 1 + (global.tech['supercollider'] / 1);
+        multiplier *= 1 + (global.tech['supercollider'] / 20);
     }
     if (global.tech['tp_depot']){
         multiplier *= 1 + (global.tech['tp_depot'] / 20);

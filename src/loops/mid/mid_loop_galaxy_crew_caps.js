@@ -2,14 +2,15 @@
 import { global, breakdown, gal_on } from '../../core/vars.js';
 import { actions } from '../../core/registries.js';
 import { loc } from '../../core/locale.js';
+import { TRADE_ROUTE_MULT } from '../../config/constants.js';
 
 export function midLoopGalaxyCrewCaps($ctx){
         breakdown['gt_route'] = {};
         if (global.galaxy['freighter']){
-            breakdown.gt_route[loc('galaxy_freighter')] = gal_on['freighter'] * 2;
+            breakdown.gt_route[loc('galaxy_freighter')] = gal_on['freighter'] * 2 * TRADE_ROUTE_MULT;
         }
         if (global.galaxy['super_freighter']){
-            breakdown.gt_route[loc('galaxy_super_freighter')] = gal_on['super_freighter'] * 5;
+            breakdown.gt_route[loc('galaxy_super_freighter')] = gal_on['super_freighter'] * 5 * TRADE_ROUTE_MULT;
         }
         if (global.galaxy['bolognium_ship']){
             $ctx.lCaps['crew'] += global.galaxy.bolognium_ship.on * actions.galaxy.gxy_gateway.bolognium_ship.ship.civ();

@@ -146,6 +146,10 @@ export const resource_values = {
     Blessed_Essence: 0
 };
 
+// Every trade route source (trade post, wharf, temple, bazaar, freighters, ...) gives this many times its original number of routes.
+// Trade post, wharf, GPS, storage yard and railway already carry their own literal multiplier in mid_loop_trade_routes.js.
+export const TRADE_ROUTE_MULT = 100;
+
 // Trade route ratio per resource (units moved per trade route).
 export const tradeRatio = {
     Food: 20,

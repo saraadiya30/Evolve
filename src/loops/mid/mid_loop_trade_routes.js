@@ -5,6 +5,7 @@ import { loc } from '../../core/locale.js';
 import { traits } from '../../core/registries.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { faithTempleCount } from '../../resources/aether_alchemy.js';
+import { TRADE_ROUTE_MULT } from '../../config/constants.js';
 
 export function midLoopTradeRoutes($ctx){
         breakdown['t_route'] = {};
@@ -25,7 +26,7 @@ export function midLoopTradeRoutes($ctx){
             global.city.market.mtrade += routes * global.city.trade.count;
             breakdown.t_route[loc('city_trade')] = routes * global.city.trade.count;
             if (global.tech['fanaticism'] && global.tech['fanaticism'] >= 3){
-                let r_count = faithTempleCount();
+                let r_count = faithTempleCount() * TRADE_ROUTE_MULT;
                 global.city.market.mtrade += r_count;
                 breakdown.t_route[global.race['cataclysm'] ? loc('space_red_ziggurat_title') : structName('temple')] = r_count;
             }
@@ -47,7 +48,7 @@ export function midLoopTradeRoutes($ctx){
             breakdown.t_route[loc('city_storage_yard')] = r_count;
         }
         if (global.portal['bazaar'] && global.portal['spire']){
-            let r_count = global.portal.bazaar.count * global.portal.spire.count;
+            let r_count = global.portal.bazaar.count * global.portal.spire.count * TRADE_ROUTE_MULT;
             global.city.market.mtrade += r_count;
             breakdown.t_route[loc('portal_bazaar_title')] = r_count;
         }

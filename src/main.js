@@ -29,7 +29,7 @@ import { index, mainVue, initTabs, loadTab } from './core/index.js';
 import { setWeather, seasonDesc } from './systems/seasons.js';
 import { enableDebug } from './core/debug.js';
 import { S_loops as S } from './core/registries.js';
-import { execGameLoops } from './loops/game_loop_runner.js';
+import { execGameLoops, affordableSpeedDraw } from './loops/game_loop_runner.js';
 export { execGameLoops } from './loops/game_loop_runner.js';
 import { resourceAlt } from './loops/long/long_loop.js';
 export { steelCheck, spyCaught } from './loops/long/long_loop.js';
@@ -747,13 +747,14 @@ if (window.Worker){
             case 'main':
                 let speedMult = 1;
                 if (global.prestige.hasOwnProperty('Aether') && global.settings.aetherSpeed > 0){
-                    let draw = Math.min(global.settings.aetherSpeed, Math.floor(global.prestige.Aether.count));
+                    // Only spend the Aether that still fits in the per-call period limit, so none of it is paid for and then lost
+                    let draw = affordableSpeedDraw(data.periods, global.settings.aetherSpeed, global.prestige.Aether.count);
                     if (draw > 0){
                         global.prestige.Aether.count -= draw;
                         speedMult = 1 + draw;
                     }
                 }
-                execGameLoops(data.periods * speedMult);
+                execGameLoops(data.periods, speedMult);
                 break;
         }
     }, false);
