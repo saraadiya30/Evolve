@@ -6,6 +6,10 @@
 - Seed sama diharapkan memberi perilaku sama.
 - Save boleh dirombak; wajib ada importer dari save lama.
 
+## Kebijakan pembulatan [DIPUTUSKAN] (2026-10-19)
+Aturan pembulatan tidak perlu dikunci dari awal: boleh dicoba dulu, dan direset/diulang bila hasilnya menyimpang.
+Batas keras: selisih maksimal 1%; makin kecil makin bagus.
+
 ## Evolve sebagai oracle [USULAN]
 Jalankan Evolve asli secara headless, rekam trace: state awal + serangkaian aksi (beli building,
 riset tech, ganti kerja) lalu angka resource, max, produksi per tick. Engine baru harus menghasilkan

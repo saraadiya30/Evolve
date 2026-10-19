@@ -29,3 +29,9 @@ const { total, contributions } = resolve('storage.crate'); // hasil + breakdown 
 - Stat boleh bergantung pada stat lain; engine menjaga urutan evaluasi dan mendeteksi siklus.
 - Dirty flag agar tidak menghitung ulang semuanya tiap tick.
 - Nilai turunan tidak disimpan di save.
+
+## Efek non-angka [DIPUTUSKAN] (2026-10-19)
+Engine stat hanya menangani angka. Efek yang mengubah *apa yang ada atau terjadi* (unlock lewat tech tree, event acak, aksi sekali jalan,
+antrean, pesan) dimodelkan sebagai **modul terpisah**, tetapi **semua definisi tetap di satu registry data**, sehingga game, UI, dan wiki
+dihasilkan dari sumber yang sama. Contoh bentuk data di Evolve yang sudah deklaratif: `src/tech/techs_data.js`
+(`reqs: {...}, grant: [...]`). Detail dan contoh: lihat `EFFECT_TAXONOMY.md` bagian 6.
