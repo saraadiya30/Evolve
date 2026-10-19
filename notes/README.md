@@ -7,7 +7,7 @@ Terakhir diperbarui: 2026-10-19 (sesi diskusi awal). Acuan master saat itu: `d29
 
 ## Cara pakai di sesi chat baru
 1. Tempel isi `PROJECT_BRIEF.md` di awal chat, ATAU minta Claude membaca branch ini lewat GitHub
-   (`https://github.com/saraadiya30/Evolve/tree/rebuild-notes`).
+   (`https://github.com/saraadiya30/Evolve/tree/rebuild/notes`).
 2. Tempel `HANDOFF.md` bagian entri terbaru supaya Claude tahu posisi terakhir.
 3. Pakai template di `PROMPTS.md` untuk tugas yang spesifik.
 4. Di akhir sesi, minta Claude menulis entri baru untuk `HANDOFF.md`, lalu commit ke branch ini.
