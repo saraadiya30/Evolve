@@ -1,10 +1,2 @@
-*~
-*#
-.*
-update.*.json
-strings/last-strings.json
-node_modules/*
-docs
-dist
-*.maptest/diagnostics/accel_out.json
-test/_golden_*.json
+node_modules/
+.idea/
