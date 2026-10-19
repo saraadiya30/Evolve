@@ -6,6 +6,10 @@ import { aetherFormat } from '../resources/aether_alchemy.js';
 import { LOT_BONUS, productionLots, newStock, upgradeStock, stepMarket, settleAllOrders, settleOrders, snapPrice, stepOf, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, capOverflowStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, ocoinYield } from './stocks_core.js';
 import { hooks } from '../core/registries.js';
 
+// Companies that exist only in the Magic universe, and the long-run price of one Mana lot (Mana has no resource_values entry).
+const MAGIC_ONLY = ['Mana', 'Crystal'];
+const MANA_FAIR = 30;
+
 // Chart size in SVG units (the SVG scales to the width of its container)
 export const CHART_W = 640;
 export const CHART_H = 300;
@@ -56,6 +60,10 @@ export function liveStockDefs(){
     let materials = Object.keys(tmp_vars.resource)
         .filter(res => tmp_vars.resource[res].tradable || tmp_vars.resource[res].stackable || (resource_values[res] || 0) > 0)
         .map(res => ({ res: res, fair: resource_values[res] || 1 }));
+    // Mana is not tradable/stackable and has no entry in resource_values, so the filter above skips it. It is added by hand,
+    // right after Crystal (the other Magic universe company); listed() only shows it in the Magic universe.
+    let crystalAt = materials.findIndex(def => def.res === 'Crystal');
+    materials.splice(crystalAt === -1 ? materials.length : crystalAt + 1, 0, { res: 'Mana', fair: MANA_FAIR });
     // Special (non-resource) companies lead the list - Morale, Power, Birthrate, Army, Dividend, in that order (see SPECIAL_STOCKS) -
     // followed by every material company in normal resource order.
     return SPECIAL_STOCKS.concat(materials);
@@ -84,6 +92,12 @@ export function listed(def){
     if (def.res === 'Dividend'){
         // Pays in Ocoin, which only means something once Money itself is unlocked.
         return !!(global.resource.Money && global.resource.Money.display);
+    }
+    if (MAGIC_ONLY.indexOf(def.res) !== -1){
+        // Magic universe only. No exception for held lots: a reset clears the portfolio anyway.
+        if (!(global.race && global.race.universe === 'magic')){
+            return false;
+        }
     }
     let resource = global.resource[def.res];
     return !!(resource && resource.display);
