@@ -6,7 +6,8 @@ Entri terbaru di atas. Di akhir tiap sesi: apa yang jadi, keputusan, kontrak ter
 **Koreksi:** catatan sebelumnya menyebut versi acuan 1.4.10. Yang benar: game saat ini 1.5.0 (`package.json` master); fixture lama 1.4.10 termigrasi saat di-load. PROJECT_BRIEF.md dan PARITY.md sudah dikoreksi.
 **Temuan:** save punya input waktu nyata (jam harus bisa di-inject), daftar `power`/`support` berisi sisa run sebelumnya, dan angka sangat besar (Aether ~1.7e13).
 **Prototipe generator (selesai):** `gen-proto.mjs`, 21 kasus tanpa NaN, mutasi universe/pemerintahan/prestige/genes/resource berpengaruh nyata dan deterministik; spesies lewat `sentience()` bekerja tetapi menghasilkan peradaban kosong (detail di PARITY.md).
-**TODO berikutnya:** (pemilik) taruh save early-game di `fixtures/saves/` branch `rebuild` dan `gen-proto.mjs` di `test/diagnostics/` repo Evolve; (Claude) langkah populasi (tech via graf, bangunan, pekerja), lalu dump per langkah + breakdown; lalu Fase 0 putaran 2.
+**Langkah populasi (selesai sebagian):** tech via fungsi game, bangunan city, dan pekerja jalan di 15 kasus tanpa NaN; temuan kunci: `checkCosts` menolak biaya > max storage (detail di PARITY.md). Sisa: job yang tampil, region lain, pemerintahan, kalibrasi.
+**TODO berikutnya:** (pemilik) taruh save early-game di `fixtures/saves/` branch `rebuild`; (Claude) sisa populasi (job, region lain), lalu dump per langkah + breakdown per resource; lalu Fase 0 putaran 2.
 
 ## 2026-10-20: Sesi 2 (diskusi pertanyaan terbuka)
 **Jadi:** semua pertanyaan terbuka dari taksonomi dibahas dan diputuskan (lihat PROJECT_BRIEF.md bagian "Keputusan teknis" dan PARITY.md bagian "Keputusan lanjutan").

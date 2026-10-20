@@ -72,3 +72,14 @@ Skrip prototipe: `test/diagnostics/gen-proto.mjs` (di repo Evolve master, belum 
   pemerintahan awal anarchy). Tetapi hasilnya peradaban kosong (resource 0, tanpa tech/bangunan/pekerja), sehingga belum berguna untuk tes produksi/storage.
 - Belum diuji: generator set tech lewat graf `reqs/grant`, bangunan, dan pekerja (langkah "populasi" di atas peradaban kosong).
 - Catatan: mengubah universe lewat flag saja tidak menjamin state seperti hasil permainan nyata; selisih dari Evolve asli tetap harus ditriase.
+
+### Langkah populasi [FAKTA, dijalankan 2026-10-20]
+Di atas peradaban kosong hasil `sentience()`, generator menambah tech, bangunan, dan pekerja. 15 kasus (5 spesies x 3 tingkat), semuanya jalan 20 tick tanpa NaN, ~3 detik per kasus.
+- **Tech:** kandidat dipilih lewat `checkTechRequirements(t, false) === 'ok'` dan `condition()` (fungsi milik game, jadi graf `reqs/grant` plus syarat trait ikut terhormati).
+  Penerapannya: `actions.tech[t].action()` lalu `global.tech[grant[0]] = grant[1]` (setara `gainTech` tanpa menggambar ulang UI). Langkah 30/80/150 menghasilkan 18/39/57 key tech.
+- **Temuan penting:** `checkCosts` menolak biaya yang lebih besar dari **kapasitas storage** (mis. Knowledge max awal 100, tech seharga 110 tidak bisa dibeli). Amount dan max harus dinaikkan sementara
+  saat menerapkan tech, lalu dipulihkan. Tanpa itu, penelusuran mentok di 23 tech karena puluhan tech gagal diam-diam.
+- **Bangunan:** `checkCityRequirements(name)` lalu `initStruct(actions.city[name])`, lalu set `count`/`on` acak (14-30 jenis bangunan).
+- **Hasil:** max storage ikut naik sesuai tahap (Lumber 800 -> 5975, Money 1000 -> 60000); selisih antar spesies kecil tapi nyata (mis. spesies `antid` berbeda di diff Food dan Lumber).
+- **Keterbatasan yang diketahui:** (1) hanya region `city`, belum space/interstellar/portal/eden/tau; (2) hanya 3-4 job yang tampil walau 57 key tech (job `display` kemungkinan diatur logika lain),
+  sehingga produksi kecil dan Food cenderung negatif; (3) pemerintahan tetap anarchy; (4) belum dikalibrasi supaya mirip permainan nyata.
