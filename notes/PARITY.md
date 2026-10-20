@@ -40,4 +40,22 @@ Di game idle, selisih kecil membesar secara eksponensial bila dijalankan lama. M
 - Importer Evolve-lama: modul terpisah, satu arah, fungsi murni `importLegacySave(data) -> state baru`. [USULAN]
 - Save asli dari Evolve menjadi korpus tes: import, hitung stat turunan di engine baru, bandingkan dengan angka
   yang ditampilkan Evolve asli. Perlu dikumpulkan save dari berbagai tahap (evolusi awal, mid, late, tiap jenis prestige).
-- Detail format save lama (kompresi, struktur versi) belum diverifikasi; itu tugas Fase 0. [TERBUKA]
+- Format save lama **[FAKTA, diverifikasi 2026-10-20 dari fixture `test/fixtures/user-save-1.json`]**: JSON dari seluruh objek `global`,
+  dikompres LZString (`compressToUTF16` di localStorage; fixture menyimpannya di `{save: "..."}`). 35 key top-level (seed, warseed, resource, tech, city,
+  space, civic, race, genes, stats, event, queue, prestige, settings, stocks, ...), `version` berupa string (`"1.4.10"` di fixture lama; `1.5.0` di save terbaru dan di `package.json` master), ~120 KB JSON untuk save late-game.
+  Save menyimpan juga nilai turunan (mis. `city.smelter.cap`). Perlu disurvei: kode migrasi versi bawaan Evolve (putaran 2).
+- **Save early-game dari pemilik [FAKTA, 2026-10-20]:** `version 1.5.0`, tahap evolusi (`race.species: protoplasm`, `tech` hanya `theology/queue/evo`), `universe: magic`, biome `forest`,
+  pemerintahan `oligarchy`, `stats.reset: 77`. Bentuk top-level sama (35 key). Berisi key fitur modifikasi (`stocks`, `settings.aether*`, `settings.stock*`).
+  Catatan untuk importer dan engine: (a) ada input waktu nyata (`stats.start/current`, `special.egg["2026"]`, `settings.at`), jadi jam harus bisa di-inject;
+  (b) daftar `power`/`support` tetap berisi bangunan dari run sebelumnya meski save di tahap awal; (c) angka sangat besar (`prestige.Aether.count` sekitar 1.7e13).
+
+## Keputusan lanjutan [DIPUTUSKAN] (2026-10-20)
+Pemilik menyetujui seluruh usulan teknis di bawah (kecuali lisensi, yang dijawab terpisah: proyek pribadi, tidak diperjualbelikan).
+- **Oracle:** harness jsdom Evolve yang sudah ada dipakai (`Math.random` di-seed dan jam dikunci via `env-setup.mjs`; `golden-check` = 300 periode dari 2 fixture).
+  Kekurangan: baseline sekarang berupa state akhir; butuh dump per langkah dan breakdown per resource, plus fixture save yang lebih banyak (saat ini 2, satu sintetis).
+- **Importer:** input = state `global` setelah migrasi bawaan Evolve (bukan menulis ulang migrasi versi lama); output = state baru; nilai turunan diabaikan.
+- **RNG:** port LCG persis di modul terpisah; stream per sistem; generator = paritas seed, event berjalan = paritas distribusi.
+  Pemisahan mana yang generator dan mana yang event masuk survei putaran 2.
+- **Toleransi bertingkat:** 1% untuk angka akhir yang dilihat pemain; stat antara yang dieksponensialkan atau dikali berantai hampir persis
+  (selisih relatif kecil `e` pada `m` menjadi sekitar `count * e` pada `m ** count`); bilangan bulat kecil persis (1% dari 30 itu kurang dari 1).
+- **Tooling:** TypeScript + Vitest; framework UI ditunda ke Fase 5. (Catatan fakta: `lib/` punya Buefy, kerangka UI berbasis Vue, jadi UI Evolve kemungkinan Vue 2; belum diverifikasi.)

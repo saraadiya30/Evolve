@@ -3,7 +3,7 @@
 Folder `notes/` ini berisi dokumen hasil diskusi perencanaan untuk membuat ulang Evolve dari awal.
 Branch `rebuild` adalah tempat proyek baru; Evolve asli ada di branch `master` dan jadi **referensi/oracle**.
 
-Terakhir diperbarui: 2026-10-19 (sesi 0 diskusi awal, sesi 1 survei efek). Acuan master saat itu: `d29810a9`.
+Terakhir diperbarui: 2026-10-20 (sesi 0 diskusi awal, sesi 1 survei efek, sesi 2 keputusan teknis). Acuan master saat itu: `d29810a9`.
 
 ## Cara pakai di sesi chat baru
 1. Tempel isi `PROJECT_BRIEF.md` di awal chat, ATAU minta Claude membaca branch ini lewat GitHub

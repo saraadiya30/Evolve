@@ -194,6 +194,8 @@ tapi **semua definisinya hidup di satu registry data** yang sama, supaya wiki da
 sudah berbentuk data deklaratif, jadi migrasinya relatif langsung.
 
 ## 7. Putaran 2 (usulan)
+Tambahan dari diskusi 2026-10-20: (a) pisahkan penggunaan RNG menjadi generator (paritas seed) vs event berjalan (paritas distribusi);
+(b) cari kode migrasi versi bawaan Evolve (apa yang sudah ditangani loader sebelum importer).
 Petakan famili yang belum: morale, jobs/housing/citizen growth, crafting/alchemy/factory, military, trade, knowledge, tech effects, prestige.
 Tiap famili: target, operasi (tabel di atas), kondisi, lokasi duplikasi. Tambahkan skrip pencacah otomatis (per resource: tempat `modRes` dipanggil
 dan label breakdown-nya) supaya taksonomi tidak bergantung pada pembacaan manual.
