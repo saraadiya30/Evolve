@@ -162,7 +162,7 @@ tidak berlaku merata).
 
 ## 5. Temuan penting untuk desain engine
 
-1. **Breakdown Evolve adalah oracle bawaan.** `breakdown.p/c` sudah mengeluarkan `{label: nilai}` per resource, jadi bisa dibandingkan langsung
+1. **Breakdown Evolve adalah oracle bawaan (terverifikasi 2026-10-20, lihat PARITY.md).** `breakdown.p/c` sudah mengeluarkan `{label: nilai}` per resource, jadi bisa dibandingkan langsung
    dengan `contributions[]` engine baru (selain total). Kelemahan: format string campuran dan `Global` terpisah, perlu parser.
 2. **Satu modifier butuh:** nilai (fungsi dari state), kondisi, target, stage, scope, label, urutan.
 3. **Urutan harus data** (stage dan prioritas), karena D2/D4 menunjukkan hasil bergantung urutan dan pembulatan.

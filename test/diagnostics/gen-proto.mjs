@@ -107,6 +107,12 @@ async function runCase(c) {
         out.species = G.race.species; out.universe = G.race.universe; out.gov = G.civic.govern && G.civic.govern.type;
         out.traits = Object.keys(G.race).length;
         out.producing = Object.keys(G.resource).filter((k) => G.resource[k] && typeof G.resource[k].diff === 'number' && G.resource[k].diff !== 0).length;
+        { // snapshot breakdown untuk analisis oracle (lihat notes/PARITY.md)
+            const { breakdown } = await import('../../src/core/vars.js');
+            const snap = { name: c.name, resources: {}, p: JSON.parse(JSON.stringify(breakdown.p)), c: JSON.parse(JSON.stringify(breakdown.c)) };
+            for (const k of Object.keys(G.resource)) { const r = G.resource[k]; if (r && typeof r.amount === 'number') snap.resources[k] = { amount: r.amount, max: r.max, diff: r.diff, delta: r.delta, display: r.display }; }
+            out.snap = snap;
+        }
         out.res = {};
         for (const r of ['Food', 'Lumber', 'Stone', 'Money', 'Knowledge']) { const x = G.resource[r]; if (x) out.res[r] = { amt: +x.amount.toFixed(2), max: x.max, diff: x.diff }; }
         out.ok = true;
@@ -142,6 +148,8 @@ if (process.argv[2] === '--case') {
         rows.push(res);
         console.log(`${res.ok ? 'OK  ' : 'GAGAL'} ${c.name.padEnd(16)} nan:${res.nanBefore ?? '-'}->${res.nanAfter ?? '-'} ${res.species || ''} ${res.universe || ''} ${res.gov || ''} traits=${res.traits ?? '-'} ${res.pop ? 'tech=' + res.pop.techs + '/' + res.pop.techKeys + ' bangunan=' + res.pop.built + ' job=' + res.pop.jobsShown + ' pop=' + res.pop.pop + ' produksi=' + res.producing : ''} ${res.error ? 'ERR: ' + res.error : ''} (${res.sec}s)`);
     }
+    writeFileSync('/tmp/gen_bd.json', JSON.stringify({ steps: rows.filter((r) => r.snap).map((r) => r.snap) }));
+    for (const r of rows) delete r.snap;
     writeFileSync('/tmp/gen_results.json', JSON.stringify(rows, null, 1));
     console.log('\nJSON_RINGKAS:' + JSON.stringify(rows.map((r) => ({ n: r.name, ok: r.ok, nanA: r.nanAfter, err: r.error }))));
 }

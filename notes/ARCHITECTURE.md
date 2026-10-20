@@ -30,6 +30,11 @@ const { total, contributions } = resolve('storage.crate'); // hasil + breakdown 
 - Dirty flag agar tidak menghitung ulang semuanya tiap tick.
 - Nilai turunan tidak disimpan di save.
 
+## Semantik stage yang terverifikasi [FAKTA, 2026-10-20; rincian di PARITY.md]
+Dari rekonstruksi breakdown Evolve: (1) **cap** = jumlah kontribusi flat (persen dikonversi ke flat pada tahap tertentu, jadi urutan penting); (2) **produksi** = jumlah berurutan dari sumber,
+tiap sumber dikali bonus lokalnya (perkalian antar modifier), entri persen tingkat atas mengalikan total yang sudah terkumpul, lalu dikali produk bonus Global, lalu ditambah konsumsi.
+Ini menjadi dasar desain stage di Fase 1: `base/add -> per-sumber (mult) -> total-berjalan (mult, berurutan) -> global (mult) -> konsumsi (add)`.
+
 ## Efek non-angka [DIPUTUSKAN] (2026-10-19)
 Engine stat hanya menangani angka. Efek yang mengubah *apa yang ada atau terjadi* (unlock lewat tech tree, event acak, aksi sekali jalan,
 antrean, pesan) dimodelkan sebagai **modul terpisah**, tetapi **semua definisi tetap di satu registry data**, sehingga game, UI, dan wiki

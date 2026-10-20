@@ -83,3 +83,28 @@ Di atas peradaban kosong hasil `sentience()`, generator menambah tech, bangunan,
 - **Hasil:** max storage ikut naik sesuai tahap (Lumber 800 -> 5975, Money 1000 -> 60000); selisih antar spesies kecil tapi nyata (mis. spesies `antid` berbeda di diff Food dan Lumber).
 - **Keterbatasan yang diketahui:** (1) hanya region `city`, belum space/interstellar/portal/eden/tau; (2) hanya 3-4 job yang tampil walau 57 key tech (job `display` kemungkinan diatur logika lain),
   sehingga produksi kecil dan Food cenderung negatif; (3) pemerintahan tetap anarchy; (4) belum dikalibrasi supaya mirip permainan nyata.
+
+## Breakdown Evolve sebagai oracle [FAKTA, diuji 2026-10-20]
+Pertanyaan: apakah `breakdown.p` (produksi) dan `breakdown.c` (cap) bisa dipakai sebagai oracle per-kontribusi? **Jawaban: ya.** Skrip: `test/diagnostics/bd-dump.mjs` (dump per tick),
+`gen-proto.mjs` (snapshot breakdown di 36 state sintetis), `bd-analyze.py` (rekonstruksi dan bandingkan).
+
+**Hasil:** (a) di fixture late-game, 5 tick: cap 104/104 persis, produksi 70/70 cocok (selisih < 0,1%); (b) di 36 state sintetis (universe, pemerintahan, spesies, tahap berbeda):
+cap 866/866 persis, produksi 263/266 cocok dalam 1% (255/266 dalam 0,1%).
+
+**Aturan rekonstruksi yang terverifikasi** (semantik sebenarnya dari breakdown):
+- **Cap:** `max` = jumlah semua entri bersufiks `v` (bonus persen sudah dikonversi jadi flat, jadi tidak ada entri `%` di `breakdown.c`).
+- **Produksi:** entri dibaca **berurutan** (urutan kunci objek bermakna). Entri `v` tingkat atas menambah sumber baru; entri `%` berawalan `ᄂ` (anak) mengalikan sumber itu
+  (`x (1 + p/100)`, **saling dikalikan**, bukan dijumlah); entri `v` berawalan `ᄂ` menambah base sumber induknya; entri `%` tingkat atas mengalikan **seluruh jumlah yang terkumpul sebelumnya**
+  (mis. `Smelter 138%` di Iron, `Metal Refinery 150%` di Aluminium).
+- **Global:** `breakdown.p.Global` berisi persen-persen yang **dikalikan satu sama lain** (mis. 464,23% x 12,25% x 8,95% menghasilkan faktor 6,9003, bukan 5,8543 kalau dijumlah).
+- **Neto:** `diff = jumlah_berurutan x faktor_Global + jumlah breakdown.p.consume` (nilai konsumsi sudah negatif).
+
+**Catatan koreksi:** di taksonomi awal aku mengusulkan stage `addPct` (persen dijumlah lalu dikali). Itu benar hanya di dalam satu modifier (mis. `1 + p_on * 0.04`); **antar modifier berbeda semuanya perkalian**.
+
+**Keterbatasan oracle ini:**
+1. `resource.diff` dibulatkan 2 desimal dan terpotong (clamp) oleh amount/max. Contoh: Mana di universe magic, konsumsi nominal -0,8 tetapi `diff` -0,05 karena amount 0.
+   Bandingkan dengan **nilai nominal dari breakdown**, bukan `diff`, dan pilih state dengan amount di antara 0 dan max.
+2. Label adalah **string yang dilokalkan** ("Lumber Yard", "Grain Silo"), bukan ID stabil. Oracle perlu pemetaan label ke ID (atau menjalankan Evolve dengan locale tetap).
+3. Hanya ada untuk resource (cap dan produksi/konsumsi). **Tidak ada breakdown untuk cost bangunan, power, morale, populasi, dll.**, sehingga perlu oracle lain (mis. hasil `adjustCosts`/`costMultiplier` langsung).
+4. Label bisa punya akhiran dedup (`ᄂQuarantine+0`) yang harus dibuang sebelum dipetakan.
+5. Cakupan baru 36 state plus satu fixture; state sintetis belum mencakup region selain `city`.

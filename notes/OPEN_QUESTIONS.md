@@ -13,6 +13,8 @@
 - Lisensi? **Proyek pribadi, tidak diperjualbelikan/tidak didistribusikan. Tinjau ulang jika kelak dibagikan.**
 
 ## Masih terbuka
+- Pemetaan label breakdown (string dilokalkan) ke ID stabil untuk oracle; atau kunci locale saat dump.
+- Oracle untuk stat tanpa breakdown (cost bangunan, power, morale, populasi): pakai keluaran fungsi game langsung (`adjustCosts`, `costMultiplier`, dll.)? Perlu dirancang.
 - Populasi state sintetis: tech dan bangunan city sudah beres (lewat fungsi game). Sisa: kenapa hanya 3-4 job yang tampil, region lain (space dan seterusnya), pemerintahan, dan kalibrasi supaya state mirip permainan nyata.
 - Framework UI (ditunda ke Fase 5).
 - Pemisahan penggunaan RNG: mana yang generator (paritas seed) dan mana yang event berjalan (paritas distribusi). Butuh survei putaran 2.

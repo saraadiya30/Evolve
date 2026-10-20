@@ -7,7 +7,9 @@ Entri terbaru di atas. Di akhir tiap sesi: apa yang jadi, keputusan, kontrak ter
 **Temuan:** save punya input waktu nyata (jam harus bisa di-inject), daftar `power`/`support` berisi sisa run sebelumnya, dan angka sangat besar (Aether ~1.7e13).
 **Prototipe generator (selesai):** `gen-proto.mjs`, 21 kasus tanpa NaN, mutasi universe/pemerintahan/prestige/genes/resource berpengaruh nyata dan deterministik; spesies lewat `sentience()` bekerja tetapi menghasilkan peradaban kosong (detail di PARITY.md).
 **Langkah populasi (selesai sebagian):** tech via fungsi game, bangunan city, dan pekerja jalan di 15 kasus tanpa NaN; temuan kunci: `checkCosts` menolak biaya > max storage (detail di PARITY.md). Sisa: job yang tampil, region lain, pemerintahan, kalibrasi.
-**TODO berikutnya:** (pemilik) taruh save early-game di `fixtures/saves/` branch `rebuild`; (Claude) sisa populasi (job, region lain), lalu dump per langkah + breakdown per resource; lalu Fase 0 putaran 2.
+**Dump + breakdown (selesai):** breakdown Evolve terbukti jadi oracle yang kuat: cap persis (970/970), produksi cocok 70/70 di fixture late-game dan 263/266 dalam 1% di 36 state sintetis (aturan rekonstruksi dan keterbatasan di PARITY.md).
+**Koreksi:** bonus antar modifier itu perkalian, bukan persen dijumlah (ARCHITECTURE.md memuat semantik stage terverifikasi).
+**TODO berikutnya:** (pemilik) taruh save early-game di `fixtures/saves/` branch `rebuild`; (Claude) oracle untuk stat tanpa breakdown (cost, power, morale), pemetaan label ke ID, sisa populasi sintetis (job, region lain), lalu Fase 0 putaran 2 dan kontrak tipe Fase 1.
 
 ## 2026-10-20: Sesi 2 (diskusi pertanyaan terbuka)
 **Jadi:** semua pertanyaan terbuka dari taksonomi dibahas dan diputuskan (lihat PROJECT_BRIEF.md bagian "Keputusan teknis" dan PARITY.md bagian "Keputusan lanjutan").
