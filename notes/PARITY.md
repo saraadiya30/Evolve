@@ -59,3 +59,16 @@ Pemilik menyetujui seluruh usulan teknis di bawah (kecuali lisensi, yang dijawab
 - **Toleransi bertingkat:** 1% untuk angka akhir yang dilihat pemain; stat antara yang dieksponensialkan atau dikali berantai hampir persis
   (selisih relatif kecil `e` pada `m` menjadi sekitar `count * e` pada `m ** count`); bilangan bulat kecil persis (1% dari 30 itu kurang dari 1).
 - **Tooling:** TypeScript + Vitest; framework UI ditunda ke Fase 5. (Catatan fakta: `lib/` punya Buefy, kerangka UI berbasis Vue, jadi UI Evolve kemungkinan Vue 2; belum diverifikasi.)
+
+## Prototipe generator state [FAKTA, dijalankan 2026-10-20]
+Skrip prototipe: `test/diagnostics/gen-proto.mjs` (di repo Evolve master, belum masuk `npm test`). Satu kasus = satu proses, karena `vars.js` memuat save saat di-import.
+- 21 kasus dijalankan di atas `test/fixtures/user-save-1.json` dan state game baru: kontrol, acak jumlah resource, 6 universe, 5 pemerintahan, prestige+genes acak,
+  kombinasi, dan 5 spesies. Hasil: 21 dari 21 dimuat dan jalan 20 tick tanpa NaN/Infinity. Sekitar 2-3 detik per kasus.
+- Determinisme: kasus kontrol dan `universe=standard` (input identik) menghasilkan angka identik.
+- Mutasi lewat edit JSON **berpengaruh nyata** dan konsisten arahnya: ganti universe mengubah produksi dan max (mis. magic: max Knowledge 51700 vs 71700),
+  ganti pemerintahan mengubah income Money (5642 -> 3864 socialist -> 3401 anarchy), prestige/genes mengubah storage (max Food 1.415 juta -> 527 ribu).
+  Artinya untuk kelas mutasi ini tidak perlu memanggil fungsi inisialisasi game.
+- Spesies: `global.race.species = X; hooks.sentience()` (jalur yang dipakai game saat evolusi selesai) berhasil memasang trait (jumlah key `race` 12 -> 16-17,
+  pemerintahan awal anarchy). Tetapi hasilnya peradaban kosong (resource 0, tanpa tech/bangunan/pekerja), sehingga belum berguna untuk tes produksi/storage.
+- Belum diuji: generator set tech lewat graf `reqs/grant`, bangunan, dan pekerja (langkah "populasi" di atas peradaban kosong).
+- Catatan: mengubah universe lewat flag saja tidak menjamin state seperti hasil permainan nyata; selisih dari Evolve asli tetap harus ditriase.

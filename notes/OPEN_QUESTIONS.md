@@ -13,6 +13,7 @@
 - Lisensi? **Proyek pribadi, tidak diperjualbelikan/tidak didistribusikan. Tinjau ulang jika kelak dibagikan.**
 
 ## Masih terbuka
+- Populasi peradaban kosong hasil `sentience()` (tech lewat graf `reqs/grant`, bangunan, pekerja): lewat edit JSON atau lewat fungsi game? Eksperimen berikutnya.
 - Framework UI (ditunda ke Fase 5).
 - Pemisahan penggunaan RNG: mana yang generator (paritas seed) dan mana yang event berjalan (paritas distribusi). Butuh survei putaran 2.
 - Letak dan isi kode migrasi versi bawaan Evolve (supaya importer tahu apa yang sudah ditangani loader). Butuh survei putaran 2.

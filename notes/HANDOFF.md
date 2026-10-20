@@ -5,7 +5,8 @@ Entri terbaru di atas. Di akhir tiap sesi: apa yang jadi, keputusan, kontrak ter
 **Jadi:** pemilik menyerahkan 1 save early-game (tahap evolusi, `version 1.5.0`, universe magic). Pendekatan variasi state diusulkan: generator state acak + save asli seperlunya (bukan satu save per tahap); diperlakukan sebagai disetujui karena pemilik langsung menyerahkan save, belum dikonfirmasi eksplisit.
 **Koreksi:** catatan sebelumnya menyebut versi acuan 1.4.10. Yang benar: game saat ini 1.5.0 (`package.json` master); fixture lama 1.4.10 termigrasi saat di-load. PROJECT_BRIEF.md dan PARITY.md sudah dikoreksi.
 **Temuan:** save punya input waktu nyata (jam harus bisa di-inject), daftar `power`/`support` berisi sisa run sebelumnya, dan angka sangat besar (Aether ~1.7e13).
-**TODO berikutnya:** taruh save early-game di `fixtures/saves/` branch `rebuild`; Claude: generator state acak (perluasan harness oracle), cek apakah harness bisa memanggil fungsi setup ras Evolve; lalu Fase 0 putaran 2.
+**Prototipe generator (selesai):** `gen-proto.mjs`, 21 kasus tanpa NaN, mutasi universe/pemerintahan/prestige/genes/resource berpengaruh nyata dan deterministik; spesies lewat `sentience()` bekerja tetapi menghasilkan peradaban kosong (detail di PARITY.md).
+**TODO berikutnya:** (pemilik) taruh save early-game di `fixtures/saves/` branch `rebuild` dan `gen-proto.mjs` di `test/diagnostics/` repo Evolve; (Claude) langkah populasi (tech via graf, bangunan, pekerja), lalu dump per langkah + breakdown; lalu Fase 0 putaran 2.
 
 ## 2026-10-20: Sesi 2 (diskusi pertanyaan terbuka)
 **Jadi:** semua pertanyaan terbuka dari taksonomi dibahas dan diputuskan (lihat PROJECT_BRIEF.md bagian "Keputusan teknis" dan PARITY.md bagian "Keputusan lanjutan").
