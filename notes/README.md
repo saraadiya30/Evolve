@@ -16,6 +16,7 @@ Terakhir diperbarui: 2026-10-20 (sesi 0 diskusi awal, sesi 1 survei efek, sesi 2
 | File | Isi |
 |---|---|
 | `PROJECT_BRIEF.md` | Ringkasan tetap proyek (yang ditempel tiap sesi) |
+| `CONTRACT.md` | Kontrak engine (draft Fase 1) dan hasil uji ke oracle; kodenya di `engine/` |
 | `ARCHITECTURE.md` | Lima layer, desain stat engine, efek non-angka, masalah di Evolve saat ini |
 | `EFFECT_TAXONOMY.md` | Hasil survei Fase 0: famili efek, jenis operasi modifier, temuan (putaran 1) |
 | `PARITY.md` | Definisi "sama", strategi tes, RNG, save dan importer |

@@ -13,8 +13,11 @@
 - Lisensi? **Proyek pribadi, tidak diperjualbelikan/tidak didistribusikan. Tinjau ulang jika kelak dibagikan.**
 
 ## Masih terbuka
+- Bahasa untuk 422 cost sekali-pakai (rumus `jumlah < N ? C : 0`, dst.): perluas bahasa predikat/ekspresi deklaratif, atau izinkan fungsi TypeScript sebagai jalan keluar? (butuh keputusan; memengaruhi apakah wiki bisa dihasilkan otomatis dari definisi)
+- Tipe stat "alokasi" untuk power/populasi (algoritma berurutan, bukan tumpukan modifier): perlu survei sebelum kontrak dibekukan.
+- Penurunan nilai sumber produksi/cap dari state (belum dibuktikan; saat ini hanya semantik gabungannya).
 - Pemetaan label breakdown (string dilokalkan) ke ID stabil untuk oracle; atau kunci locale saat dump.
-- Oracle untuk stat tanpa breakdown (cost bangunan, power, morale, populasi): pakai keluaran fungsi game langsung (`adjustCosts`, `costMultiplier`, dll.)? Perlu dirancang.
+- Oracle untuk stat tanpa breakdown: **cost bangunan sudah ada** (`cost-dump.mjs`, lihat PARITY.md). Tersisa: power, morale, populasi/housing, dan cost non-bangunan (tech, arpa, kapal, evolusi).
 - Populasi state sintetis: tech dan bangunan city sudah beres (lewat fungsi game). Sisa: kenapa hanya 3-4 job yang tampil, region lain (space dan seterusnya), pemerintahan, dan kalibrasi supaya state mirip permainan nyata.
 - Framework UI (ditunda ke Fase 5).
 - Pemisahan penggunaan RNG: mana yang generator (paritas seed) dan mana yang event berjalan (paritas distribusi). Butuh survei putaran 2.

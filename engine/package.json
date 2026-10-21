@@ -1,0 +1,16 @@
+{
+  "name": "evolve-engine",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "description": "Rebuild Evolve: mesin stat/cost terpusat (draft Fase 1). Diuji terhadap oracle dari Evolve master.",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.6.0",
+    "vitest": "^2.1.0"
+  }
+}

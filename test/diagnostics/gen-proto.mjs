@@ -2,7 +2,7 @@
 // Pakai:  node test/diagnostics/gen-proto.mjs            (jalankan semua kasus, ringkasan di akhir)
 //         node test/diagnostics/gen-proto.mjs --case '<json>'   (satu kasus, dipakai internal)
 // Satu kasus = satu proses (vars.js memuat save saat import, jadi tidak bisa di-reload di proses yang sama).
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -99,6 +99,10 @@ async function runCase(c) {
             }
             out.debug = { reqsTerpenuhiTapiBelumDiambil: notOk.slice(0, 12), jumlah: notOk.length, kurangSatuReq: Object.entries(miss).sort((a, b) => b[1] - a[1]).slice(0, 8) };
             out.pop = { techs: got, blacklisted: bad.size, built, jobsShown: jobs.length, pop, techKeys: Object.keys(G.tech).length };
+        }
+        if (process.env.GEN_EXPORT_DIR) { // ekspor state sebelum tick, format sama dengan fixture ({save: LZString UTF16})
+            mkdirSync(process.env.GEN_EXPORT_DIR, { recursive: true });
+            writeFileSync(`${process.env.GEN_EXPORT_DIR}/${c.name}.json`, JSON.stringify({ save: globalThis.LZString.compressToUTF16(JSON.stringify(G)) }));
         }
         out.nanBefore = nan().length;
         for (let i = 0; i < (c.ticks || 20); i++) execGameLoops(1);

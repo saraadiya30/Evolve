@@ -108,3 +108,26 @@ cap 866/866 persis, produksi 263/266 cocok dalam 1% (255/266 dalam 0,1%).
 3. Hanya ada untuk resource (cap dan produksi/konsumsi). **Tidak ada breakdown untuk cost bangunan, power, morale, populasi, dll.**, sehingga perlu oracle lain (mis. hasil `adjustCosts`/`costMultiplier` langsung).
 4. Label bisa punya akhiran dedup (`ᄂQuarantine+0`) yang harus dibuang sebelum dipetakan.
 5. Cakupan baru 36 state plus satu fixture; state sintetis belum mencakup region selain `city`.
+
+## Oracle cost bangunan [FAKTA, diuji 2026-10-20]
+Skrip: `test/diagnostics/cost-dump.mjs` (dump), `cost-analyze.py` dan `cost-fit-k.py` (analisis). Untuk tiap struktur yang punya `cost` dan `struct()` (324 struktur di `actions`),
+dump mengeset jumlah bangunan ke 0, 1, 2, 5, 10, 25, 50, 100 lalu merekam **cost mentah** (`action.cost[res](0)`) dan **cost setelah semua adjuster** (`adjustCosts(action, 0)[res]()`).
+Dijalankan di fixture late-game dan 4 state sintetis (`gen-proto.mjs` dengan `GEN_EXPORT_DIR=<dir>` mengekspor state-nya sebagai fixture).
+
+**Hukum cost yang terverifikasi** (dari sumber `cost_multipliers.js` dan dari data):
+- `raw(res, count) = round(m ** (count + offset) * base) - K`, di mana `m` adalah pengali dasar yang **dimodifikasi secara aditif** lalu di-clamp minimal 1.0
+  (modifier: universe micro, trait small/large/compact/tunneler/solitary/pack_mentality, tech `housing_reduction` x 0,02, gen `creep`, pemerintahan `noquestions`),
+  dan `K` adalah konstanta per resource per struktur (mis. apartment Money `- 500`, university Lumber `- 200`, Stone `- 350`).
+- Uji data (nilai >= 200 supaya pembulatan diabaikan): di fixture late-game, **926 pasangan (struktur, resource) geometrik murni, 68 geometrik + konstanta K, 1 tersisa** (university Money,
+  yang sebenarnya `- 500` tetapi nilainya sangat besar sehingga fit numerik gagal); di state sintetis hasilnya serupa (941 / 72 / 1).
+- **Adjuster** (16 fungsi berurutan di `adjustCosts`) membungkus cost per resource. Terverifikasi dari data dan sumber: `rebarAdjust` (Cement x0,9 bila tech `cement` >= 2, x0,8 bila >= 3; cocok 39 pasangan
+  di state sintetis), `craftAdjust` (trait `hollow_bones` atau fathom pterodacti: material crafting x0,95; cocok >= 118 pasangan di fixture late-game spesies pterodacti).
+  Perkiraan (belum diverifikasi ke sumber): faktor 0,75 pada Stone di fixture late-game kemungkinan `flierAdjust`.
+- **Pembulatan:** semua cost mentah bulat (9872/9872 nilai), tetapi cost setelah adjuster **tidak selalu bulat** (late-game: 9552 dari 9872 bulat), karena sebagian adjuster membulatkan
+  (`Math.round`) dan sebagian tidak. Pembulatan di tengah rantai adalah bagian dari perilaku yang harus ditiru.
+
+**Usulan toleransi cost [USULAN]:** karena `m ** count` menggandakan selisih kecil, cost mentah dan hasil adjuster dibandingkan **persis** (selisih relatif <= 1e-9); kalau ada selisih, itu pertanda aturan pembulatan atau urutan adjuster berbeda,
+dan baru dilonggarkan (maksimal 1%) setelah ditriase.
+
+**Keterbatasan:** (1) hanya struktur ber-`cost` objek dengan `struct()`; belum cost tech, arpa, bagian kapal, dan evolusi; (2) hanya `offset = 0`; (3) cost yang bergantung kondisi planet/trait tertentu
+(mis. `unstable` di university) hanya teruji bila state-nya mengandung kondisi itu; (4) cost non-numerik (`Structs`, `Custom`) dilewati.

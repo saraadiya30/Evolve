@@ -9,7 +9,11 @@ Entri terbaru di atas. Di akhir tiap sesi: apa yang jadi, keputusan, kontrak ter
 **Langkah populasi (selesai sebagian):** tech via fungsi game, bangunan city, dan pekerja jalan di 15 kasus tanpa NaN; temuan kunci: `checkCosts` menolak biaya > max storage (detail di PARITY.md). Sisa: job yang tampil, region lain, pemerintahan, kalibrasi.
 **Dump + breakdown (selesai):** breakdown Evolve terbukti jadi oracle yang kuat: cap persis (970/970), produksi cocok 70/70 di fixture late-game dan 263/266 dalam 1% di 36 state sintetis (aturan rekonstruksi dan keterbatasan di PARITY.md).
 **Koreksi:** bonus antar modifier itu perkalian, bukan persen dijumlah (ARCHITECTURE.md memuat semantik stage terverifikasi).
-**TODO berikutnya:** (pemilik) taruh save early-game di `fixtures/saves/` branch `rebuild`; (Claude) oracle untuk stat tanpa breakdown (cost, power, morale), pemetaan label ke ID, sisa populasi sintetis (job, region lain), lalu Fase 0 putaran 2 dan kontrak tipe Fase 1.
+**Oracle cost bangunan (selesai):** `cost-dump.mjs` merekam cost mentah dan hasil adjuster untuk 324 struktur x 8 jumlah bangunan; hukum cost terverifikasi (`round(m**count*base) - K`, `m` aditif + clamp, lalu adjuster perkalian), geometrik murni 926/995 pasangan dan +konstanta 68 (detail di PARITY.md).
+**Draft kontrak + mesin mini Fase 1 (selesai, belum dibekukan):** folder `engine/` (TypeScript + Vitest) dengan resolver produksi, cap, dan cost; 15 tes lulus terhadap oracle. Cost end-to-end dari fakta state: 5 state x 199 bangunan x 12.432 nilai persis.
+Produksi/cap teruji sebagai semantik gabungan (70/70, 264/264; 104/104, 866/866). Temuan desain: adjuster cost adalah transformasi vektor (flier mengubah Cement jadi Stone, sensitif urutan kunci); 32% cost berupa rumus sekali-pakai. Rincian dan batasannya: `CONTRACT.md`.
+**Koreksi saat menulis kode:** pemicu adjuster `nexus` sempat salah kupetakan (bukan `high_pop`); sudah dikoreksi di sumber dan di kode.
+**TODO berikutnya:** (pemilik) putuskan bahasa untuk cost sekali-pakai (lihat OPEN_QUESTIONS); (Claude) survei power/populasi untuk tipe stat "alokasi", penurunan nilai sumber produksi/cap dari state, lalu membekukan kontrak.
 
 ## 2026-10-20: Sesi 2 (diskusi pertanyaan terbuka)
 **Jadi:** semua pertanyaan terbuka dari taksonomi dibahas dan diputuskan (lihat PROJECT_BRIEF.md bagian "Keputusan teknis" dan PARITY.md bagian "Keputusan lanjutan").
