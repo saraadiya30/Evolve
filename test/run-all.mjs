@@ -21,6 +21,7 @@ const TESTS = [
     ['stock-requote.mjs'],
     ['alchemy-mana-cap.mjs'],
     ['alchemy-mana-deficit.mjs'],
+    ['ocoin-alchemy.mjs'],
     ['accel-rolls.mjs'],
     ['aether-speed-cap.mjs'],
     ['aether-speed-lean.mjs'],

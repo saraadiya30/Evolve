@@ -30,6 +30,7 @@ import { supplyValue } from '../../resources/resources.js';
 import { atomic_mass } from '../../resources/atomic_mass.js';
 import { loadEjector, loadSupply } from '../../resources/market_storage.js';
 import { loadAlchemy, initAether } from '../../resources/aether_alchemy.js';
+import { drawOcoinAlchemy } from '../../resources/ocoin_alchemy.js';
 import { tradeRatio } from '../../config/constants.js';
 import { loc } from '../../core/locale.js';
 import { drawStocks } from '../../stocks/stocks.js';
@@ -441,6 +442,11 @@ export function loadTab_s2($ctx){
                             {{ 'tab_alchemy' | label }}
                         </template>
                     </b-tab-item>
+                    <b-tab-item id="resOcoinAlchemy" :visible="showOcoinAlchemy()">
+                        <template slot="header">
+                            {{ 'tab_ocoin_alchemy' | label }}
+                        </template>
+                    </b-tab-item>
                 </b-tabs>`);
                 vBind({
                     el: `#mTabResource`,
@@ -448,6 +454,10 @@ export function loadTab_s2($ctx){
                         s: global.settings
                     },
                     methods: {
+                        showOcoinAlchemy(){
+                            // same condition as the Stocks tab (Misc): everything except the evolution stage
+                            return global.race.species !== 'protoplasm';
+                        },
                         swapTab(tab){
                             if (!global.settings.tabLoad){
                                 clearElement($(`#market`));
@@ -455,6 +465,7 @@ export function loadTab_s2($ctx){
                                 clearElement($(`#resEjector`));
                                 clearElement($(`#resCargo`));
                                 clearElement($(`#resAlchemy`));
+                                clearElement($(`#resOcoinAlchemy`));
                                 switch (tab){
                                     case 0:
                                         {
@@ -479,6 +490,11 @@ export function loadTab_s2($ctx){
                                     case 4:
                                         {
                                             hooks.drawResourceTab('alchemy');
+                                        }
+                                        break;
+                                    case 5:
+                                        {
+                                            hooks.drawResourceTab('ocoinAlchemy');
                                         }
                                         break;
                                 }
@@ -526,6 +542,7 @@ export function loadTab_s2($ctx){
                         }
                     });
                 }
+                drawOcoinAlchemy();
                 hooks.tradeSummery();
             }
             break;

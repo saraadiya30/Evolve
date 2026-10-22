@@ -121,7 +121,7 @@ $(document).keydown(function(e){
                             break;
                         case quickMap.showResources:
                             tabName = 'marketTabs';
-                            tabList = [s.showMarket, s.showStorage, s.showEjector, s.showCargo, s.showAlchemy];
+                            tabList = [s.showMarket, s.showStorage, s.showEjector, s.showCargo, s.showAlchemy, global.race.species !== 'protoplasm'];
                             break;
                         case quickMap.showGenetics:
                             s = global.settings.arpa;

@@ -22,6 +22,7 @@ import { fastLoopEvolution } from './fast_loop_evolution.js';
 import { fastLoopMorale } from './fast_loop_morale.js';
 import { fastLoopTradeRoutes } from './fast_loop_trade.js';
 import { fastLoopAlchemy, reserveAlchemyBuffer } from './fast_loop_alchemy.js';
+import { fastLoopOcoinAlchemy } from '../../resources/ocoin_alchemy.js';
 import { fastLoopGalacticTrade } from './fast_loop_galactic_trade.js';
 import { fastLoopNaniteDeconstructor } from './fast_loop_nanite.js';
 import { fastLoopPowerGeneration } from './fast_loop_power_generation.js';
@@ -539,6 +540,7 @@ export function fastLoopCore(){
         // Alchemy runs after Mana and Crystal are produced: the resource buffer (resetResBuffer) lets what was produced this loop be spent,
         // otherwise a loop that represents several ticks (accelerated time) can only spend what was left in storage at the start.
         fastLoopAlchemy($ctx);
+        fastLoopOcoinAlchemy($ctx);
         fastLoopMiners($ctx);
         fastLoopCoal($ctx);
         fastLoopWarlordResources($ctx);

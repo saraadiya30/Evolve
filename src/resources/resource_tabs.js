@@ -6,6 +6,7 @@ import { initMarket, initStorage, initEjector, initSupply, initAlchemy, loadEjec
 import { marketItem, loadSpecialResource, initGalaxyTrade } from './special_resources.js';
 import { containerItem } from './crate_assignment.js';
 import { loadAlchemy } from './aether_alchemy.js';
+import { initOcoinAlchemy, drawOcoinAlchemy } from './ocoin_alchemy.js';
 import { loadResource_s1, loadResource_s2 } from '../sections/loaders/load_resource_parts.js';
 
 
@@ -28,6 +29,9 @@ export function initResourceTabs(tab){
             case 'alchemy':
                 initAlchemy();
                 break;
+            case 'ocoinAlchemy':
+                initOcoinAlchemy();
+                break;
         }
     }
     else {
@@ -36,6 +40,7 @@ export function initResourceTabs(tab){
         initEjector();
         initSupply();
         initAlchemy();
+        initOcoinAlchemy();
     }
 }
 
@@ -119,6 +124,9 @@ export function drawResourceTab(tab){
                 }
             });
         }
+    }
+    else if (tab === 'ocoinAlchemy'){
+        drawOcoinAlchemy();
     }
 }
 
