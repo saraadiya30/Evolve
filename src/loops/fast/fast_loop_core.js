@@ -21,7 +21,7 @@ import { govActive } from '../../governor/gov_active.js';
 import { fastLoopEvolution } from './fast_loop_evolution.js';
 import { fastLoopMorale } from './fast_loop_morale.js';
 import { fastLoopTradeRoutes } from './fast_loop_trade.js';
-import { fastLoopAlchemy } from './fast_loop_alchemy.js';
+import { fastLoopAlchemy, reserveAlchemyBuffer } from './fast_loop_alchemy.js';
 import { fastLoopGalacticTrade } from './fast_loop_galactic_trade.js';
 import { fastLoopNaniteDeconstructor } from './fast_loop_nanite.js';
 import { fastLoopPowerGeneration } from './fast_loop_power_generation.js';
@@ -487,6 +487,7 @@ export function fastLoopCore(){
 
     $ctx.time_multiplier = 0.25;
     resetResBuffer();
+    reserveAlchemyBuffer($ctx);
 
     if (global.race.species === 'protoplasm'){
         // Early Evolution Game
@@ -498,7 +499,6 @@ export function fastLoopCore(){
         // Rest of game
         fastLoopMorale($ctx);
         fastLoopTradeRoutes($ctx);
-        fastLoopAlchemy($ctx);
         fastLoopGalacticTrade($ctx);
         fastLoopNaniteDeconstructor($ctx);
         fastLoopPowerGeneration($ctx);
@@ -536,6 +536,9 @@ export function fastLoopCore(){
         fastLoopEdenPalace($ctx);
         fastLoopMana($ctx);
         fastLoopCrystal($ctx);
+        // Alchemy runs after Mana and Crystal are produced: the resource buffer (resetResBuffer) lets what was produced this loop be spent,
+        // otherwise a loop that represents several ticks (accelerated time) can only spend what was left in storage at the start.
+        fastLoopAlchemy($ctx);
         fastLoopMiners($ctx);
         fastLoopCoal($ctx);
         fastLoopWarlordResources($ctx);

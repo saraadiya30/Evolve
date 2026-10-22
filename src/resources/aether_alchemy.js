@@ -45,12 +45,11 @@ export function loadAlchemy(name,color,basic){
             },
             methods: {
                 addSpell(spell){
-                    let keyMult = keyMultiplier();
-                    let change = Math.min(Math.floor(global.resource.Mana.diff), keyMult);
-                    if (change > 0) {
-                        global.race.alchemy[spell] += change;
-                        global.resource.Mana.diff -= change;
-                    }
+                    // No longer capped by the Mana surplus: the allocation may exceed production, Mana.diff goes negative and
+                    // the stored Mana drains (fastLoopAlchemy only spends what is actually available, so it never goes below 0)
+                    let change = keyMultiplier();
+                    global.race.alchemy[spell] += change;
+                    global.resource.Mana.diff -= change;
                 },
                 subSpell(spell){
                     let keyMult = keyMultiplier();

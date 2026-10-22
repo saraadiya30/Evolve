@@ -610,26 +610,47 @@ function reducePosition(st, x){
     }
 }
 
+// After a big market order one side of the book is eaten up to the last trade price while the other side still sits at the
+// old price, so the quotes are far apart (e.g. best ask 120, best bid 30). In a real market the market makers re-quote
+// around the last trade right away. Without this, the next tick's random pressure could hit the stale side, drag the
+// last-trade anchor (st.kr) back to the old price and rebuild the whole book there: the price would snap back by itself
+// and the trade would have no lasting effect (or keep it, depending on a coin flip).
+// Small trades that leave the spread normal are left alone, so clicking buy/sell does not regenerate liquidity.
+function requote(st, rand){
+    let own = ownLevels(st);
+    let ka = bestLevel(st, 'ask', own);
+    let kb = bestLevel(st, 'bid', own);
+    let half = Math.max(1, Math.round(st.price * st.spread / 2 / stepOf(st)));
+    if (ka !== null && kb !== null && ka - kb <= 2 * half + 2){
+        return;
+    }
+    st.price = priceAtLevel(st, st.kr);
+    refill(st, rand);
+    st.price = (askPrice(st) + bidPrice(st)) / 2;
+}
+
 // Market buy: takes lots off the ask side (which pushes the price up for real). Returns { lots, cost }.
-export function buyMarket(st, m){
+export function buyMarket(st, m, rand = Math.random){
     let r = sweep(st, 'ask', Math.floor(m), true, Infinity);
     if (r.lots > 0){
         st.lots += r.lots;
         st.spent += r.cost;
         st.kr = r.last;
         bump(st);
+        requote(st, rand);
     }
     return { lots: r.lots, cost: r.cost };
 }
 
 // Market sell: hits the bid side. Returns { lots, proceeds }.
-export function sellMarket(st, m){
+export function sellMarket(st, m, rand = Math.random){
     m = Math.min(Math.floor(m), st.lots);
     let r = sweep(st, 'bid', m, true, Infinity);
     if (r.lots > 0){
         reducePosition(st, r.lots);
         st.kr = r.last;
         bump(st);
+        requote(st, rand);
     }
     return { lots: r.lots, proceeds: r.cost };
 }

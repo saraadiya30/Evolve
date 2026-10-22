@@ -64,15 +64,11 @@ export function loadPylon(parent,bind){
             addSpell(spell){
                 let keyMult = keyMultiplier();
                 for (let i=0; i<keyMult; i++){
+                    // No longer capped by the Mana surplus (see addSpell in aether_alchemy.js): casting may cost more than production
                     let diff = manaCost(global.race.casting[spell] + 1) - manaCost(global.race.casting[spell]);
-                    if (global.resource.Mana.diff >= diff){
-                        global.race.casting[spell]++;
-                        global.race.casting.total++;
-                        global.resource.Mana.diff -= diff;
-                    }
-                    else {
-                        break;
-                    }
+                    global.race.casting[spell]++;
+                    global.race.casting.total++;
+                    global.resource.Mana.diff -= diff;
                 }
             },
             subSpell(spell){
