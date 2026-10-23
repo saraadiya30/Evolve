@@ -4,7 +4,7 @@ Jalankan semua dari root repo:
 
 ```
 npm install
-npm test           # 17 tes otomatis (exit code 1 kalau ada yang gagal)
+npm test           # tes otomatis (exit code 1 kalau ada yang gagal)
 npm run lint       # ESLint untuk src/ dan test/
 ```
 
@@ -15,6 +15,7 @@ npm run lint       # ESLint untuk src/ dan test/
 | `bundle-run` | bundel split setelah 200 tick menghasilkan state `global` yang IDENTIK dengan `src/` |
 | `format-equiv` | `sizeApproximation` (dengan cache Intl.NumberFormat) identik dengan implementasi aslinya di 180 ribu kombinasi nilai, presisi, dan mode |
 | `cycles-check` | pagar circular import: kelompok siklus di `src/` tidak boleh membesar (baseline `snap_cycles_baseline.json`) |
+| `timescale-counters` | counter progres fast loop (rekrut soldier, repair Surveyor Carport, repair tembok Fortress, firestorm) maju sebanyak `timeScale()` per fast loop, jadi ikut percepatan waktu dan Aether speed |
 | `stock-*`, `stocks-no-market` | alokasi lot, bonus produksi vs storage, kapasitas crates/containers |
 | `auto-*` | auto-convert Money <-> Ocoin (income besar, clamp, lost) |
 | `numeric-snapshot` | fungsi eden + kapal di ribuan konfigurasi acak (seeded) vs `snap_numeric_baseline.json` |

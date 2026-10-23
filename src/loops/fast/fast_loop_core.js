@@ -422,7 +422,7 @@ export function fastLoopCore(){
         $ctx.global_multiplier *= 1 + zen;
     }
     if (global.city['firestorm'] && global.city.firestorm > 0){
-        global.city.firestorm--;
+        global.city.firestorm = Math.max(0, global.city.firestorm - timeScale());
         breakdown.p['Global'][loc('event_flare_bd')] = `-${20}%`;
         $ctx.global_multiplier *= 0.8;
     }
@@ -611,7 +611,8 @@ export function fastLoopCore(){
         if (fathom > 0){
             global.civic.garrison.rate += traits.brute.vars(1)[1] / 40 * fathom * $ctx.time_multiplier;
         }
-        global.civic.garrison.progress += global.civic.garrison.rate;
+        // rate is per tick; one fast loop can stand for several ticks of game time (accelerated time, Aether speed)
+        global.civic.garrison.progress += global.civic.garrison.rate * timeScale();
         while (global.civic.garrison.progress >= 100){
             global.civic.garrison.progress -= 100;
             global.civic.garrison.workers++;
@@ -628,10 +629,15 @@ export function fastLoopCore(){
             if (!$('#portal-carport .count').hasClass('has-text-alert')){
                 $('#portal-carport .count').addClass('has-text-alert');
             }
-            global.portal.carport.repair++;
-            if (global.portal.carport.repair >= actions.portal.prtl_fortress.carport.repair()){
-                global.portal.carport.repair = 0;
+            // One repair step per tick of game time (a fast loop can stand for several, see timeScale)
+            global.portal.carport.repair += timeScale();
+            let carportRepair = actions.portal.prtl_fortress.carport.repair();
+            while (global.portal.carport.damaged > 0 && global.portal.carport.repair >= carportRepair){
+                global.portal.carport.repair -= carportRepair;
                 global.portal.carport.damaged--;
+            }
+            if (global.portal.carport.damaged <= 0){
+                global.portal.carport.repair = 0;
             }
             //limit carport damage to account for removing high population
             global.portal.carport.damaged = Math.min(global.portal.carport.damaged, jobScale(global.portal.carport.count));

@@ -54,15 +54,18 @@ export function ocoinYield(ocoin, lots){
 // Ocoin). A positive flow always counts, because Money that the storage cap would throw away is converted even while Auto is
 // off (see capOverflowStep); a negative flow (top-up from Ocoin) only exists, and only counts, while Auto is on.
 // The Compoundia payout happens once per game day, so it is spread over daySeconds.
+// alchemyFlow: smoothed Ocoin/s the Resources > Ocoin tab really moved (selling pays Ocoin out, buying takes it), already a
+// signed Ocoin rate, see trackAlchemyFlow in ocoin_alchemy.js.
 // One-off movements (buying/selling Ocoin, filled orders, Aether purchases) are not rates and are not counted.
-export function ocoinFlowPerSecond(autoFlow, autoOn, ocoin, dividendLots, daySeconds){
+export function ocoinFlowPerSecond(autoFlow, autoOn, ocoin, dividendLots, daySeconds, alchemyFlow = 0){
     let auto = 0;
     if (isFinite(autoFlow) && autoFlow !== 0 && (autoOn || autoFlow > 0)){
         auto = autoFlow > 0 ? moneyToOcoin(autoFlow) : autoFlow / OCOIN_RATE;
     }
     let perDay = daySeconds > 0 ? ocoinYield(ocoin, dividendLots) : 0;
     let dividend = daySeconds > 0 ? perDay / daySeconds : 0;
-    return { auto, dividend, perDay, net: auto + dividend };
+    let alchemy = isFinite(alchemyFlow) ? alchemyFlow : 0;
+    return { auto, dividend, alchemy, perDay, net: auto + dividend + alchemy };
 }
 export const HIST_LEN = 240;        // how many past prices (one per tick) are kept for the price chart
 

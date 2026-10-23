@@ -163,6 +163,10 @@ export function initStocks(){
     if (typeof s.autoFlow !== 'number'){
         s.autoFlow = 0;
     }
+    // Ocoin per second moved by the Resources > Ocoin tab (smoothed, signed), shown in the Ocoin per second indicator
+    if (typeof s.alchemyFlow !== 'number' || !isFinite(s.alchemyFlow)){
+        s.alchemyFlow = 0;
+    }
     // What the auto-balance added to the Money delta on the previous tick (so it can be told apart from real income)
     if (typeof s.autoAdj !== 'number'){
         s.autoAdj = 0;

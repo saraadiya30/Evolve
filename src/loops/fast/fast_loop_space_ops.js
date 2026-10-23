@@ -1,6 +1,6 @@
 // Operasi ruang angkasa per tick: mass relay, troop lander, foothold, moon base dan spaceport, space marines, dan pabrik planet. Membaca $ctx.p_structs dari fastLoopPowerUsage.
 import { global, breakdown, p_on, support_on } from '../../core/vars.js';
-import { modRes } from '../../functions/resource_mod.js';
+import { modRes, timeScale } from '../../functions/resource_mod.js';
 import { actions } from '../../core/registries.js';
 import { structName } from '../../actions/core/structure_ui.js';
 import { fuel_adjust, int_fuel_adjust } from '../../space/planet_generation.js';
@@ -15,7 +15,7 @@ export function fastLoopSpaceOps($ctx){
         if (global.space['m_relay']){
             if (p_on['m_relay']){
                 if (global.space.m_relay.charged < 10000){
-                    global.space.m_relay.charged++;
+                    global.space.m_relay.charged = Math.min(10000, global.space.m_relay.charged + timeScale());
                 }
             }
             else {

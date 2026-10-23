@@ -8,10 +8,11 @@ import { popover } from '../../functions/popover.js';
 import { messageQueue } from '../../functions/message_log.js';
 import { global, keyMultiplier, webWorker } from '../../core/vars.js';
 
-// Net Ocoin per game second from Auto Convert and the Compoundia payout (a game day is longRatio ticks of AUTO_TICK_SECONDS).
+// Net Ocoin per game second from Auto Convert, the Compoundia payout (a game day is longRatio ticks of AUTO_TICK_SECONDS) and
+// buying/selling in the Resources > Ocoin tab.
 function ocoinFlow(){
     let d = global.stocks.market.Dividend;
-    return ocoinFlowPerSecond(global.stocks.autoFlow, !!global.settings.stockAutoOn, global.stocks.ocoin, d ? d.lots : 0, webWorker.longRatio * AUTO_TICK_SECONDS);
+    return ocoinFlowPerSecond(global.stocks.autoFlow, !!global.settings.stockAutoOn, global.stocks.ocoin, d ? d.lots : 0, webWorker.longRatio * AUTO_TICK_SECONDS, global.stocks.alchemyFlow);
 }
 
 
@@ -65,6 +66,7 @@ function netBreakdownHtml(){
     let html = `<div class="resBreakdown"><div class="has-text-info">${loc('stock_net_title')}</div><div class="parent"><div>`;
     html += row(loc('stock_net_auto'), f.auto);
     html += row(loc('stock_net_dividend'), f.dividend);
+    html += row(loc('stock_net_alchemy'), f.alchemy);
     html += `</div>`;
     html += `</div><div class="modal_bd sum"><span>${loc('stock_net_total')}</span><span class="has-text-${f.net < -1e-9 ? 'danger' : 'success'}">${Math.abs(f.net) < 1e-9 ? '0' : signed(f.net)}/s</span></div>`;
     html += `<div style="font-size:.75rem;opacity:.75;max-width:16rem;white-space:normal;">${loc('stock_net_note')}</div></div>`;

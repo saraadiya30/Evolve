@@ -1,6 +1,6 @@
 // Produksi Stone dan Amber per tick: metal refinery ($ctx.refinery), quarry, sappy, dan petrifikasi ocular power.
 import { global, breakdown, p_on, support_on } from '../../core/vars.js';
-import { modRes } from '../../functions/resource_mod.js';
+import { modRes, timeScale } from '../../functions/resource_mod.js';
 import { flib } from '../../functions/run_stats_helpers.js';
 import { traits, hooks } from '../../core/registries.js';
 import { biomes } from '../../races/planet_data.js';
@@ -307,7 +307,7 @@ export function fastLoopStone($ctx){
 
             let base = global.race.ocularPowerConfig.dsl;
             let delta = base * $ctx.hunger * $ctx.q_multiplier * $ctx.global_multiplier;
-            global.race.ocularPowerConfig.ticks--;
+            global.race.ocularPowerConfig.ticks -= timeScale();
 
             breakdown.p['Stone'][loc('ocular_petrification')] = base + 'v';
             modRes('Stone', delta * $ctx.time_multiplier);

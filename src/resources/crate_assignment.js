@@ -9,7 +9,9 @@ import { traits } from '../core/registries.js';
 import { fathomCheck } from '../races/trait_logic/fathom_check.js';
 import { production } from './prod.js';
 import { craftingRatio } from './resources.js';
-import { tradeRatio } from '../config/constants.js';
+import { tradeRatio, OCULAR_POWER_CHARM_BASE } from '../config/constants.js';
+import { govActive } from '../governor/gov_active.js';
+import { astroVal, astrologySign } from '../functions/astrology.js';
 import { galaxyOffers } from './galaxy_offers.js';
 import { crateValue, containerValue } from './crate_value.js';
 
@@ -358,6 +360,108 @@ export function tradeBuyPrice(res){
     }
     price = +(price).toFixed(1);
     return price;
+}
+
+// Trade route profitability, exactly as the marketplace applies it (tradeBuyPrice / tradeSellPrice above): wharf, GPS satellites
+// (above 3) and railway. Keep in sync with those two when a bonus is added.
+// Buy side: every building multiplies the price by 0.99 (railway 0.98, 0.97 with the banana perk), so the price keeps falling but
+// never reaches 0: that is the soft cap. Returns the factor on the price (1 = no discount, 0.8 = 20% cheaper).
+export function tradeProfitBuyFactor(){
+    let factor = 1;
+    if (global.city['wharf']){
+        factor *= 0.99 ** global.city['wharf'].count;
+    }
+    if (global.space['gps'] && global.space['gps'].count > 3){
+        factor *= 0.99 ** global.space['gps'].count;
+    }
+    if (global.tech['railway']){
+        let boost = global.stats.achieve['banana'] && global.stats.achieve.banana.l >= 1 ? 0.97 : 0.98;
+        factor *= boost ** global.tech['railway'];
+    }
+    return factor;
+}
+
+// Sell side: +1% per wharf, +1% per GPS satellite (above 3), +2% per railway level (+3% with the banana perk), multiplied
+// together, no cap. Returns the factor on the price (1.25 = 25% more).
+export function tradeProfitSellFactor(){
+    let factor = 1;
+    if (global.city['wharf']){
+        factor *= 1 + (global.city['wharf'].count * 0.01);
+    }
+    if (global.space['gps'] && global.space['gps'].count > 3){
+        factor *= 1 + (global.space['gps'].count * 0.01);
+    }
+    if (global.tech['railway']){
+        let boost = global.stats.achieve['banana'] && global.stats.achieve.banana.l >= 1 ? 0.03 : 0.02;
+        factor *= 1 + (global.tech['railway'] * boost);
+    }
+    return factor;
+}
+
+// Units one import trade route actually delivers per second (tradeRatio plus every bonus). This is the amount the trade loop
+// (fast_loop_trade.js) credits per route, so it is the one place to change when a bonus is added.
+// Returns 0 for a resource that has no trade route.
+export function tradeBuyRate(res, astroSign = astrologySign()){
+    let rate = tradeRatio[res];
+    if (!(rate > 0)){
+        return 0;
+    }
+    let dealVal = govActive('dealmaker',0);
+    if (dealVal){
+        rate *= 1 + (dealVal / 100);
+    }
+    if (global.race['persuasive']){
+        rate *= 1 + (traits.persuasive.vars()[0] * global.race['persuasive'] / 100);
+    }
+    if (global.race['merchant']){
+        rate *= 1 + (traits.merchant.vars()[1] / 100);
+    }
+    if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.c){
+        let trade = OCULAR_POWER_CHARM_BASE * (traits.ocular_power.vars()[1] / 100);
+        rate *= 1 + (trade / 100);
+    }
+    let fathom = fathomCheck('goblin');
+    if (fathom > 0){
+        rate *= 1 + (traits.merchant.vars(1)[1] / 100 * fathom);
+    }
+    if (astroSign === 'capricorn'){
+        rate *= 1 + (astroVal('capricorn')[0] / 100);
+    }
+    if (global.race['devious']){
+        rate *= 1 - (traits.devious.vars()[0] / 100);
+    }
+    if (global.genes['trader']){
+        let mastery = calc_mastery();
+        rate *= 1 + (mastery / 100);
+        if (global.genes.trader >= 2){
+            let coiled = global.prestige.Supercoiled.count;
+            rate *= 1 + (coiled / (coiled + 500));
+        }
+    }
+    if (global.stats.achieve.hasOwnProperty('trade')){
+        let rank = global.stats.achieve.trade.l * 2;
+        if (rank > 10){ rank = 10; }
+        rate *= 1 + (rank / 100);
+    }
+    if (global.race['truepath']){
+        rate *= 1 - (global.civic.foreign.gov3.hstl / 101);
+    }
+    return rate;
+}
+
+// Money one unit costs when bought through an import trade route: the route price divided by the units it delivers.
+// Follows the same modifiers as the routes (wharf, GPS, railway, traits, inflation, market value). 0 when the resource
+// has no trade route, so the caller can fall back to something else.
+export function tradeRouteUnitCost(res){
+    if (!global.resource[res]){
+        return 0;
+    }
+    let rate = tradeBuyRate(res);
+    if (!(rate > 0)){
+        return 0;
+    }
+    let price = tradeBuyPrice(res);
+    return price > 0 ? price / rate : 0;
 }
 
 export function craftingPopover(id,res,type,extra){

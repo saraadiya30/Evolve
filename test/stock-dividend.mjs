@@ -72,6 +72,15 @@ f = core.ocoinFlowPerSecond(-5000, false, 1000, 0, 5);
 check('net: Auto mati tidak menghitung top-up', f.net, 0);
 f = core.ocoinFlowPerSecond(NaN, true, 1000, 0, 5);
 check('net: NaN aman', f.net, 0);
+f = core.ocoinFlowPerSecond(10000, true, 1000, 100, 5, 3.5);
+check('net: tab Ocoin (jual/beli) ikut dijumlah', f.alchemy, 3.5);
+check('net: jumlah dengan tab Ocoin', f.net, core.moneyToOcoin(10000) + 20 + 3.5);
+f = core.ocoinFlowPerSecond(0, true, 1000, 0, 5, -2);
+check('net: tab Ocoin negatif (lebih banyak beli) mengurangi net', f.net, -2);
+f = core.ocoinFlowPerSecond(0, true, 1000, 0, 5, NaN);
+check('net: tab Ocoin NaN aman', f.net, 0);
+f = core.ocoinFlowPerSecond(10000, true, 1000, 100, 5);
+check('net: tanpa argumen tab Ocoin tetap seperti sebelumnya', f.alchemy === 0 && Math.abs(f.net - (core.moneyToOcoin(10000) + 20)) < 1e-9, true);
 
 console.log(ok ? 'LOLOS' : 'GAGAL');
 process.exit(ok ? 0 : 1);

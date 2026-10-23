@@ -958,6 +958,22 @@
         line-height: 1.2;
     }
 
+    // Total trade route ("Trade Routes 1006200 / 4044600" + "Cancel All Routes") bukan item market: tidak punya kolom BUY/SELL,
+    // jadi grid di atas membuat kolom tombolnya sempit dan teksnya terpecah jadi 3 baris. Pakai flex: teks total di kiri,
+    // tombol rata kanan satu baris; kalau lebar tidak cukup, seluruh tombol turun ke baris berikutnya (bukan terpecah per kata).
+    html body #market #tradeTotal.market-item {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: space-between;
+        column-gap: .75rem;
+    }
+    html body #market #tradeTotal .zero {
+        flex: 0 0 auto;
+        margin-left: auto;
+        white-space: nowrap;
+    }
+
     // ---- 31. Aether: kontrol sejajar dan selebar baris ---------------------------------------------------------------
     // Modul ini menulis style inline (lebar 3.5rem/6rem, margin) pada input dan select, jadi lebar dan margin ditimpa dengan !important.
     // Baris yang berisi input/select: judul satu baris penuh, di bawahnya kontrol yang mengisi lebar.

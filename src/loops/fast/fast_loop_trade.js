@@ -1,14 +1,10 @@
 // Rute dagang per tick (beli/jual resource lewat trade route).
 import { global, breakdown } from '../../core/vars.js';
 import { modRes } from '../../functions/resource_mod.js';
-import { calc_mastery } from '../../functions/calc_mastery.js';
-import { traits } from '../../core/registries.js';
-import { fathomCheck } from '../../races/trait_logic/fathom_check.js';
 import { govActive } from '../../governor/gov_active.js';
 import { loc } from '../../core/locale.js';
-import { tradeBuyPrice, tradeSellPrice } from '../../resources/crate_assignment.js';
-import { tradeRatio, OCULAR_POWER_CHARM_BASE } from '../../config/constants.js';
-import { astroVal } from '../../functions/astrology.js';
+import { tradeBuyPrice, tradeSellPrice, tradeBuyRate } from '../../resources/crate_assignment.js';
+import { tradeRatio } from '../../config/constants.js';
 import { steelCheck } from '../long/long_loop.js';
 
 export function fastLoopTradeRoutes($ctx){
@@ -45,46 +41,7 @@ export function fastLoopTradeRoutes($ctx){
 
                     if (routes > 0){
                         price *= routes;
-                        let rate = tradeRatio[res];
-                        if (dealVal){
-                            rate *= 1 + (dealVal / 100);
-                        }
-                        if (global.race['persuasive']){
-                            rate *= 1 + (traits.persuasive.vars()[0] * global.race['persuasive'] / 100);
-                        }
-                        if (global.race['merchant']){
-                            rate *= 1 + (traits.merchant.vars()[1] / 100);
-                        }
-                        if (global.race['ocular_power'] && global.race['ocularPowerConfig'] && global.race.ocularPowerConfig.c){
-                            let trade = OCULAR_POWER_CHARM_BASE * (traits.ocular_power.vars()[1] / 100);
-                            rate *= 1 + (trade / 100);
-                        }
-                        let fathom = fathomCheck('goblin');
-                        if (fathom > 0){
-                            rate *= 1 + (traits.merchant.vars(1)[1] / 100 * fathom);
-                        }
-                        if ($ctx.astroSign === 'capricorn'){
-                            rate *= 1 + (astroVal('capricorn')[0] / 100);
-                        }
-                        if (global.race['devious']){
-                            rate *= 1 - (traits.devious.vars()[0] / 100);
-                        }
-                        if (global.genes['trader']){
-                            let mastery = calc_mastery();
-                            rate *= 1 + (mastery / 100);
-                            if (global.genes.trader >= 2){
-                                let coiled = global.prestige.Supercoiled.count;
-                                rate *= 1 + (coiled / (coiled + 500));
-                            }
-                        }
-                        if (global.stats.achieve.hasOwnProperty('trade')){
-                            let rank = global.stats.achieve.trade.l * 2;
-                            if (rank > 10){ rank = 10; }
-                            rate *= 1 + (rank / 100);
-                        }
-                        if (global.race['truepath']){
-                            rate *= 1 - (global.civic.foreign.gov3.hstl / 101);
-                        }
+                        let rate = tradeBuyRate(res, $ctx.astroSign);
                         modRes(res,routes * $ctx.time_multiplier * rate, false, true);
                         modRes('Money', -(price * $ctx.time_multiplier));
                         breakdown.p.consume.Money[loc('trade')] -= price;
