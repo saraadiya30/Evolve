@@ -21,6 +21,11 @@ async function runCase(c) {
             const m = c.mut || {};
             if (m.universe) obj.race.universe = m.universe;
             if (m.govern) obj.civic.govern.type = m.govern;
+            if (m.race) Object.assign(obj.race, m.race); // menyalakan trait/flag tertentu (menguji adjuster cost)
+            if (m.tech) Object.assign(obj.tech, m.tech);
+            if (m.lm) for (const reg of ['city', 'space', 'interstellar', 'portal', 'eden', 'tauceti', 'galaxy']) { // living_materials: properti l_m pada struktur ber-count
+                for (const k of Object.keys(obj[reg] || {})) { const st = obj[reg][k]; if (st && typeof st === 'object' && typeof st.count === 'number') st.l_m = 50; }
+            }
             if (m.prestige) {
                 obj.prestige.Plasmid.count = Math.floor(rnd() * 20000);
                 obj.prestige.Phage.count = Math.floor(rnd() * 500);
@@ -134,6 +139,15 @@ if (process.argv[2] === '--case') {
         { name: 'resources', base: 'fixture', fixture: F, seed: 7, mut: { resources: true } },
         ...['standard', 'heavy', 'antimatter', 'evil', 'micro', 'magic'].map((u) => ({ name: 'uni_' + u, base: 'fixture', fixture: F, mut: { universe: u } })),
         ...['anarchy', 'theocracy', 'socialist', 'technocracy', 'magocracy'].map((g) => ({ name: 'gov_' + g, base: 'fixture', fixture: F, mut: { govern: g } })),
+        ...[['bloated', 1], ['lone_survivor', 1], ['truepath', 1], ['inflation', 1], ['kindling_kindred', 1], ['iron_wood', 1], ['smoldering', 1], ['smart', 1], ['dumb', 1], ['heavy', 1], ['living_materials', 1]]
+            .map(([t, r]) => ({ name: 'tr_' + t, base: 'fixture', fixture: F, mut: { race: { [t]: r } } })),
+        { name: 'tr_combo', base: 'fixture', fixture: F, mut: { race: { bloated: 1, kindling_kindred: 1, heavy: 1, smart: 1, inflation: 1 } } },
+        { name: 'x_gv_noble', base: 'fixture', fixture: F, mut: { race: { governor: { g: { bg: 'noble' } } } } },
+        { name: 'x_gv_bluecollar', base: 'fixture', fixture: F, mut: { race: { governor: { g: { bg: 'bluecollar' } } } } },
+        { name: 'x_gv_criminal', base: 'fixture', fixture: F, mut: { race: { governor: { g: { bg: 'criminal' } } } } },
+        { name: 'x_lmat', base: 'fixture', fixture: F, mut: { race: { living_materials: 1, sappy: 1 }, lm: true } },
+        { name: 'x_nexus', base: 'fixture', fixture: F, mut: { race: { witch_hunter: 1 }, tech: { nexus: 3, roguemagic: 7 } } },
+        { name: 'gov_dictator', base: 'fixture', fixture: F, mut: { govern: 'dictator' } },
         { name: 'prestige_genes', base: 'fixture', fixture: F, seed: 3, mut: { prestige: true, genes: true } },
         { name: 'combo', base: 'fixture', fixture: F, seed: 11, mut: { resources: true, universe: 'evil', govern: 'socialist', prestige: true } },
         { name: 'fresh_control', base: 'fresh' },

@@ -130,6 +130,17 @@ Morale, jobs/housing/citizen growth, military, trade/market, knowledge, crafting
 ### L. Efek non-angka (contoh sudah ada, pemetaan penuh belum)
 Lihat bagian 6: graf tech (`reqs`/`grant`), event (`reqs`/`condition`/`effect`), aksi sekali jalan, antrean, pesan.
 
+### M. Laju trade route [FAKTA, master 2026-10-25]
+Commit baru mengekstrak rumus trade ke fungsi murni: `tradeProfitBuyFactor`/`tradeProfitSellFactor` dan `tradeBuyRate` (`src/resources/crate_assignment.js`). Bentuknya **rantai pengali berurutan** dengan banyak sumber
+(dealmaker, achievement trade, tech, trait, tanda zodiak yang bergantung **tanggal kalender nyata**), jadi masuk resolver modifier/ekspresi. Ketiganya berhasil diterjemahkan ke bahasa deklaratif.
+
+### N. Alkimia Ocoin [FAKTA, master 2026-10-25]
+`src/stocks/ocoin_alchemy_core.js` ditulis sebagai **matematika murni** (tanpa DOM, tanpa state game, parameter di-inject; fungsi pembantu dipanggil sebagai callback). Seluruh 14 fungsi yang diuji (`ocoinAlchemyPrice/Step/SellStep`,
+`ocoinInstant*`, `ocoinFlowPerSecond`, dst.) berhasil diterjemahkan. Ini contoh bentuk yang diinginkan rebuild; fitur modifikasi ini sudah selaras dengan arsitektur.
+
+### Catatan koreksi bagian I (waktu dan tick)
+Commit `46ced068` memperbaiki counter progres (rekrut soldier, repair, tembok benteng, firestorm) agar maju sebanyak `timeScale()` per tick. Catatan "sebagian counter tidak ikut diskalakan" di bagian I sudah **tidak berlaku** untuk counter tersebut.
+
 ## 3. Jenis operasi modifier yang ditemukan
 
 | # | Operasi | Contoh nyata | Catatan untuk engine |

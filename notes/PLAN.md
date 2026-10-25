@@ -4,7 +4,8 @@
    klasifikasi per target/stage. Hasilnya taksonomi, yaitu spesifikasi sebenarnya. Format save lama sudah diverifikasi (lihat PARITY.md). Perluas harness oracle di `test/` (dump per langkah + breakdown per resource) dan kumpulkan
    fixture save dari berbagai tahap (tugas pemilik).
 1. **Engine murni + tes**, belum ada konten game. Bekukan kontrak (tipe/interface).
-1b. **Status Fase 1 (2026-10-20): draft kontrak + mesin mini selesai dan teruji** (`CONTRACT.md`, folder `engine/`): resolver produksi, cap, dan cost lulus terhadap oracle. Belum dibekukan.
+1b. **Status Fase 1 (2026-10-20): draft kontrak + mesin mini selesai dan teruji** (`CONTRACT.md`, folder `engine/`): resolver produksi, cap, dan cost (bahasa deklaratif untuk semua aturan cost, seluruh 324 bangunan, 25 state) lulus terhadap oracle. Belum dibekukan: power/populasi/morale belum tercakup, produksi/cap belum diturunkan dari state.
+1c. **Survei power/morale/populasi selesai (2026-10-20):** morale dan pembangkitan power = ledger (teruji); alokasi dan proses acak = tipe baru yang disarankan (`SURVEY_POWER_POPULASI.md`). Arah alokasi **disetujui 2026-10-25** (modul sistem terpisah, efek sebagai keluaran murni); langkah berikutnya oracle + implementasi alokasi power.
 2. **Vertical slice**: beberapa resource, storage, beberapa building, 1 tech, 1 trait. Tes paritas rumus Evolve vs engine baru.
 3. **Tick loop + save/load** dengan versi dan migrasi, plus importer save lama.
 4. **Migrasi konten per domain** (city, tech, race, space, dst), lewat template + batch.

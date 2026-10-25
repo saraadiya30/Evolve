@@ -4,7 +4,9 @@
 - Wiki ikut direbuild? **Ya**, dari satu sumber data dengan game.
 - Aturan pembulatan? **Coba dulu / reset boleh; batas maksimal 1%.**
 - Fitur modifikasi (stock market, Aether, tab Misc)? **Direbuild di awal bila diperlukan.**
+- Alokasi power/support? **Modul sistem terpisah (bukan dipaksa jadi modifier); efek samping (pesan, konsumsi Aether, perubahan pekerja, bahan bakar) sebagai keluaran murni.** [DIPUTUSKAN 2026-10-25]
 - Efek non-angka (unlock/tech tree, event, antrean)? **Modul terpisah dari engine stat, satu registry data untuk semua definisi.**
+- Bahasa untuk cost sekali-pakai? **Deklaratif (bukan fungsi TypeScript).** Terwujud untuk seluruh 1.339 cost bangunan, 16 adjuster, dan modifier pertumbuhan (kode engine cost = evaluator saja).
 - Bahasa/tooling? **TypeScript + Vitest; framework UI diputuskan di Fase 5.**
 - Cara oracle Evolve dijalankan headless? **Pakai harness jsdom yang sudah ada di `test/` master, diperluas (dump per langkah + breakdown).**
 - Format save lama? **Sudah diverifikasi (lihat PARITY.md). Importer menerima hasil load Evolve setelah migrasinya.**
@@ -13,7 +15,11 @@
 - Lisensi? **Proyek pribadi, tidak diperjualbelikan/tidak didistribusikan. Tinjau ulang jika kelak dibagikan.**
 
 ## Masih terbuka
-- Bahasa untuk 422 cost sekali-pakai (rumus `jumlah < N ? C : 0`, dst.): perluas bahasa predikat/ekspresi deklaratif, atau izinkan fungsi TypeScript sebagai jalan keluar? (butuh keputusan; memengaruhi apakah wiki bisa dihasilkan otomatis dari definisi)
+- Pemanggilan metode milik struktur sendiri (`this.heatSink()`) belum didukung penerjemah (1 dari 310 fungsi `powered`/`p_fuel`/`support`).
+- Oracle untuk hasil alokasi (`p_on`) dan penyeimbang beban; umpan balik `resource.diff` antar-tick harus dijadikan masukan eksplisit.
+- Mode wiki: definisi cost punya cabang `wiki ? ... : ...` (dan fungsi yang menerima input hipotetis); bagaimana menghasilkan wiki/tooltip dari definisi yang sama? Belum dibangun dan belum diuji.
+- Cabang yang belum punya state uji: `fathomCheck > 0`, `eventActive = true`, `offset != 0`, kondisi planet khusus.
+- Fakta eksternal cost (`darkEffect`, `towerSize`, `hellSupression`, ...) adalah stat lain: kapan dan bagaimana masuk ke graf dependensi engine?
 - Tipe stat "alokasi" untuk power/populasi (algoritma berurutan, bukan tumpukan modifier): perlu survei sebelum kontrak dibekukan.
 - Penurunan nilai sumber produksi/cap dari state (belum dibuktikan; saat ini hanya semantik gabungannya).
 - Pemetaan label breakdown (string dilokalkan) ke ID stabil untuk oracle; atau kunci locale saat dump.

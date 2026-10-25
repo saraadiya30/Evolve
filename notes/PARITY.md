@@ -131,3 +131,30 @@ dan baru dilonggarkan (maksimal 1%) setelah ditriase.
 
 **Keterbatasan:** (1) hanya struktur ber-`cost` objek dengan `struct()`; belum cost tech, arpa, bagian kapal, dan evolusi; (2) hanya `offset = 0`; (3) cost yang bergantung kondisi planet/trait tertentu
 (mis. `unstable` di university) hanya teruji bila state-nya mengandung kondisi itu; (4) cost non-numerik (`Structs`, `Custom`) dilewati.
+
+### Pembaruan oracle cost: bahasa deklaratif [FAKTA, 2026-10-20]
+Dump cost (`cost-dump.mjs`) kini memuat **fakta state** (salinan state yang dipangkas, keluaran fungsi eksternal, `vars()` trait, `p_on`/`support_on`) dan menginisialisasi semua struktur lebih dulu agar hasil tidak bergantung urutan loop.
+`extract-costs.mjs` + `cost-ast.mjs` menerjemahkan seluruh 1.339 cost (dan 16 fungsi pustaka) dari sumber Evolve menjadi AST deklaratif; tidak ada yang gagal diterjemahkan.
+Hasil: **seluruh 324 bangunan lolos persis di 7 state** (lihat `notes/CONTRACT.md`). Temuan: input waktu nyata ikut memengaruhi cost lewat `eventActive('launch_day')` (diskon 5% BBM pada hari tertentu); `towerSize()` dan `hellSupression()` adalah stat lain yang cost-nya bergantung padanya.
+
+### Adjuster dan modifier pertumbuhan menjadi data [FAKTA, 2026-10-20]
+Penerjemah (`cost-ast.mjs`) diperluas dengan operasi vektor, `forEach` atas kunci (menjadi `vecFold` + daftar pasangan), rujukan properti bangunan, template literal, dan `typeof`. Hasil: **16 adjuster, `adjustCosts`, `costMultiplier`, `spaceCostMultiplier`** ikut berupa data.
+Oracle diperluas dari 7 menjadi **25 state** (governor, trait, `l_m`, nexus); seluruh 324 bangunan x ~21.400 nilai per state persis (lihat `CONTRACT.md`).
+**Temuan:** (1) ada dua fungsi bernama `costMultiplier` (kota dan ARPA), pemilihan salah akan diam-diam menghasilkan angka salah; (2) governor dinyalakan lewat `race.governor.g.bg` (noble = extravagant, bluecollar = pragmatist, criminal = noquestions),
+dan `noquestions` ternyata mengubah **pertumbuhan** cost (13.445 nilai berubah di state `criminal`); (3) `lMat` butuh properti `l_m` pada tiap bangunan (dibuat saat struktur diinisialisasi bila ras punya living_materials);
+(4) daya uji tiap state perlu diukur: empat pemerintahan dan `living_materials` tanpa `l_m` ternyata tidak mengubah angka apa pun.
+
+## Oracle ledger: morale dan power [FAKTA, 2026-10-20]
+`ledger-dump.mjs` merekam buku besar morale/power (`S.moraleParts`, `S.powerParts`) dan hasil alokasi (`p_on`, `power`, `power_total`). Di 7 state x 5 tick: morale `potential`/`current` cocok 35/35 (selisih 0) dan Σ baris power = `power_total` 35/35.
+Alokasi belum punya uji nilai; invarian `p_on <= jumlah` terpenuhi (0 pelanggaran). Rincian dan rekomendasi: `SURVEY_POWER_POPULASI.md`.
+
+## Pembaruan master 2026-10-25 [FAKTA]
+Tiga commit baru di `master` (Ocoin alchemy/trade, helper laju trade, perbaikan counter `timeScale`). **Dampak ke oracle: nol.** Diperiksa dengan mengekstrak ulang dan men-dump ulang di master baru:
+definisi cost (1.339 cost, 325 bangunan), 36 fungsi pustaka, dan inventaris fakta **identik**; nilai cost late-game **0 beda dari 21.416**; breakdown produksi/cap/resource 5 tick **0 beda** (260 + 196 + 355); ledger morale dan power **0 beda** di 5 tick.
+Fixture oracle tidak perlu dibuat ulang.
+
+### Perluasan penerjemah dan bug ukuran AST [FAKTA, 2026-10-25]
+Penerjemah (`cost-ast.mjs`) diperluas: parameter default, objek literal, `Number/Boolean/isFinite`, `x++`, tabel konstanta lintas-modul, `toPrecision`, `filter`, `Object.keys`, lambda dan pemanggilan fungsi-parameter, pengikatan nilai antara (`let`).
+Hasil pada fungsi non-cost: **`powered()` 202/203** (dulu 180), **`p_fuel` 15/15** (dulu 0), **`support()` 92/92** (dulu 91); 14 dari 14 fungsi trade/Ocoin yang ditemukan berhasil. Satu sisa: `ascension_trigger.powered` memanggil metode milik struktur sendiri (`heatSink()`).
+**Bug yang kutemukan sendiri:** penerjemah menggandakan sisa fungsi di tiap `if` tanpa `return`, sehingga ukuran AST meledak secara eksponensial. Paket sebelumnya memuat `costs.ast.json` sebesar **186 MB** setelah dibuka (zip hanya 4,8 MB karena isinya repetitif);
+`tradeBuyRate` sempat 3,3 MB. Perbaikan: penggabungan lingkungan variabel antar cabang dan `let` untuk berbagi nilai antara. Sekarang **367 KB** (500 kali lebih kecil) dan **seluruh 47 tes oracle tetap lulus**, jadi hasilnya setara.

@@ -8,31 +8,20 @@
  */
 
 // ---------------------------------------------------------------- fakta state
-/** Fakta state yang dibaca engine. Diisi oleh adapter/importer; bukan seluruh save. */
+/**
+ * Fakta state yang dibaca engine. Diisi oleh adapter/importer; bukan seluruh save.
+ *  global     : salinan state game yang dipangkas (acuan semua rujukan `global.*` di ekspresi).
+ *  ext        : keluaran fungsi eksternal (stat/fakta lain), kunci `nama(argumen-JSON)`; mis. darkEffect, towerSize, eventActive (tanggal kalender).
+ *  traitVars  : `vars()` trait pada rank saat ini, kunci `traits.heavy` atau `planetTraits.dense` (tabel rank sebagai data).
+ *  pOn/supportOn : jumlah bangunan yang menyala (power / support).
+ */
 export interface StateFacts {
-  species: string;
-  universe: string;
-  govern: string | null;
-  /** trait dan flag ras -> rank (atau true). */
-  race: Record<string, number | boolean>;
-  tech: Record<string, number>;
-  genes: { creep: number };
-  ptrait: string[];
-  /** nilai `vars()` tiap trait aktif pada rank-nya (tabel rank sebagai data, bukan kode). */
-  traitVars: Record<string, { rank: number; vars: number[] }>;
-  harmonyCount: number;
-  ascendedAchieve: boolean;
-  /** hasil govActive('noquestions') : 0/false bila tidak aktif. */
-  govNoQuestions: number | boolean;
-  /** fathomCheck('pterodacti'). */
-  fathomPterodacti: number;
+  global: any;
+  ext: Record<string, unknown>;
+  traitVars: Record<string, number[] | null>;
+  pOn: Record<string, number | null>;
+  supportOn: Record<string, number | null>;
 }
-
-/** Predikat deklaratif, pengganti kode kondisi `global.race[...]` dst. Diperluas bertahap. */
-export type Predicate =
-  | { type: 'universe'; value: string }
-  | { type: 'ptrait'; value: string }
-  | { type: 'trait'; value: string };
 
 // ------------------------------------------------------------------- produksi
 /**
@@ -64,26 +53,80 @@ export type CapEntry =
   | { id: string; kind: 'percent-of-running'; value: number; round?: boolean };
 export interface CapResult { max: number; contributions: { id: string; value: number }[] }
 
+// --------------------------------------------------------------------- ledger
+/**
+ * LEDGER = jumlah baris berlabel (urutan bermakna, label sama digabung) lalu tahap lanjutan. Menggeneralisasi cap.
+ * Terverifikasi untuk morale (potensi dan nilai akhir) dan pembangkitan power (jumlah baris = power_total), lihat notes/SURVEY_POWER_POPULASI.md.
+ *  bounds : jika nilai < min -> min; jika > cap -> cap + (nilai - cap) * leak / 100  (leak = persen kelebihan yang lolos; gaslighter).
+ *  mult   : pengali akhir (mis. Aether).
+ */
+export type LedgerStage =
+  | { kind: 'bounds'; min?: number; cap?: number; leak?: number }
+  | { kind: 'mult'; value: number };
+export interface LedgerInput { base: number; parts: { id: string; value: number }[]; /** jumlah desimal untuk `potential` (morale: 1) */ potentialDecimals?: number; stages: LedgerStage[] }
+export interface LedgerResult { total: number; potential: number; current: number }
+
 // ----------------------------------------------------------------------- cost
+/**
+ * BAHASA EKSPRESI DEKLARATIF untuk cost. Semua definisi cost (1.339 cost, 325 bangunan) dinyatakan sebagai data JSON ini,
+ * diterjemahkan otomatis dari sumber Evolve (`test/diagnostics/cost-ast.mjs`). Semantik operator = JavaScript
+ * (kebenaran/falsiness, `||`/`&&` mengembalikan nilai, `===` ketat) supaya persis sama dengan perilaku Evolve.
+ * Karena berupa data, wiki/tooltip bisa dihasilkan dari definisi yang sama.
+ */
+export type BinOp = '+' | '-' | '*' | '/' | '%' | '**' | '<' | '<=' | '>' | '>=' | '===' | '!==' | '==' | '!=' | '&&' | '||' | '??';
+export type Expr = number | string | boolean | ExprNode;
+export type ExprNode =
+  | { op: BinOp; args: [Expr, Expr] }
+  | { op: '!' | 'neg' | 'num' | 'typeof'; args: [Expr] }
+  | { op: '?:'; args: [Expr, Expr, Expr] }
+  /** pengikatan nilai antara: ikat `name` = args[0], evaluasi args[1] (berbagi hasil tanpa menggandakan pohon). */
+  | { op: 'let'; name: string; args: [Expr, Expr] }
+  /** nilai default parameter: args[0] bila !== undefined, selain itu args[1]. */
+  | { op: 'dflt'; args: [Expr, Expr] }
+  /** data tabel konfigurasi (mis. resource_values) sebagai literal JSON. */
+  | { op: 'lit'; value: unknown }
+  | { op: 'obj'; keys: string[]; args: Expr[] }
+  | { op: 'builtin'; fn: 'Number' | 'Boolean' | 'isFinite' | 'parseFloat' | 'String'; args: Expr[] }
+  | { op: 'keys'; args: [Expr] }
+  | { op: 'filter'; var: string; args: [Expr, Expr] }
+  | { op: 'toPrecision'; args: [Expr, Expr] }
+  /** fungsi sebagai nilai (higher-order): lambda dan pemanggilannya. */
+  | { op: 'lambda'; params: string[]; body: Expr }
+  | { op: 'apply'; args: Expr[] }
+  | { op: 'undef' }
+  | { op: 'null' }
+  | { op: 'array' | 'concat'; args: Expr[] }
+  | { op: 'math'; fn: string; args: Expr[] }
+  | { op: 'toFixed'; args: [Expr, Expr] }
+  | { op: 'has' | 'includes' | 'get'; args: [Expr, Expr] }
+  /** pemanggilan fungsi pustaka deklaratif (mis. costMultiplier, traitCostMod, fuel_adjust, adjustCosts), juga diterjemahkan dari sumber. */
+  | { op: 'call'; fn: string; args: Expr[] }
+  /** nilai dari stat/fakta lain, disuplai lewat `facts.ext` (kunci `nama(argumen-JSON)`). */
+  | { op: 'ext'; name: string; args: Expr[] }
+  // ---- operasi atas vektor cost (resource -> nilai), dipakai oleh adjuster
+  | { op: 'vecNew' }
+  | { op: 'vecGet' | 'vecHas'; args: [Expr, Expr] }
+  | { op: 'vecSet'; args: [Expr, Expr, Expr] }
+  /** untuk tiap kunci `vec`: ikat `var`=kunci, evaluasi `body` menjadi daftar pasangan [kunci, nilai] (cons/pair/nil) lalu tulis ke salinan `base`, berurutan. */
+  | { op: 'vecFold'; var: string; args: [Expr, Expr, Expr] }
+  | { op: 'cons'; args: [Expr, Expr] }
+  | { op: 'pair'; args: [Expr, Expr] }
+  | { op: 'nil' }
+  | { ref: 'global'; path: (string | number | Expr)[] }
+  | { ref: 'local'; name: string }
+  | { ref: 'pOn' | 'supportOn'; name: string | Expr }
+  | { ref: 'traitVars'; table: string; name: string; rank: Expr | null }
+  /** objek bangunan yang sedang dihitung (properti `path`, `struct`), `struct().p`, dan vektor cost mentah. */
+  | { ref: 'action' }
+  | { ref: 'actionStruct' }
+  | { ref: 'rawCosts' };
+
 export type CostVector = Record<string, number>;
 
-export type CostDef =
-  | { kind: 'geo'; family: 'city' | 'space'; structure: string; sector: string; base: number; mult: number; K: number; cMin?: number; when?: Predicate }
-  | { kind: 'flat'; value: number; when?: Predicate }
-  /** bentuk yang belum bisa dinyatakan deklaratif (rumus sekali-pakai). */
-  | { kind: 'custom'; src: string };
+export interface CostFunction { params: string[]; expr: Expr }
+/** Definisi cost satu bangunan: identitasnya, properti, dan cost per resource (urutan kunci bermakna). */
+export interface CostEntry { self: { structure: string; region: string } | null; props: { path: string[] | null }; costs: Record<string, CostFunction> }
+export type CostLibrary = Record<string, { params: string[]; body: Expr }>;
 
-export interface CostRequest { defs: Record<string, CostDef>; facts: StateFacts; count: number; offset?: number }
-export interface CostResult {
-  raw: CostVector;
-  adjusted: CostVector;
-  /** hal yang memicu perilaku yang belum diimplementasi (custom, adjuster, modifier pertumbuhan). Hasil tidak boleh dipercaya bila tidak kosong. */
-  unsupported: string[];
-}
-
-/** Adjuster cost = TRANSFORMASI VEKTOR (bisa mengubah, menambah, atau menghapus resource; mis. flier mengubah Cement menjadi Stone). */
-export interface CostAdjuster {
-  id: string;
-  /** diurutkan sesuai urutan di `adjustCosts` Evolve. */
-  transform(costs: CostVector, facts: StateFacts): CostVector;
-}
+export interface CostRequest { entry: CostEntry; library: CostLibrary; facts: StateFacts; count: number; offset?: number }
+export interface CostResult { raw: CostVector; adjusted: CostVector }

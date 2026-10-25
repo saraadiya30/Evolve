@@ -1,7 +1,8 @@
-// Ekstrak definisi cost sederhana dari sumber game (bentuk `costMultiplier('x', offset, base, mult) - K`) menjadi data.
+// Ekstrak SEMUA definisi cost dari sumber game menjadi AST deklaratif (lihat cost-ast.mjs).
 // Pakai: node test/diagnostics/extract-costs.mjs <output .json>
 import { writeFileSync } from 'node:fs';
-const out = process.argv[2] || '/tmp/costs.generated.json';
+import { buildLibraryIndex, makeConverter, loadConstants, buildConstantIndex, librarySource, duplicateNames, PREFER } from './cost-ast.mjs';
+const out = process.argv[2] || '/tmp/costs.ast.json';
 const env = await import('../env-setup.mjs');
 env.seedMathRandom(12345); env.setFixedNow(1735689600000);
 await import('../../src/core/vars.js'); await import('../../src/main.js');
@@ -13,49 +14,38 @@ const walk = (obj, path, depth) => { for (const k of Object.keys(obj || {})) { c
     if (typeof v.cost === 'object' && typeof v.struct === 'function') structs.push({ id: [...path, k].join('.'), a: v }); else if (depth < 2) walk(v, [...path, k], depth + 1); } };
 for (const top of Object.keys(actions)) if (!SKIP.has(top)) walk(actions[top], [top], 0);
 
-const NUM = '[0-9][0-9._eE+]*';
-const GEO_CITY = new RegExp(`^costMultiplier\\(\\s*'([^']+)'\\s*,\\s*offset\\s*,\\s*(${NUM})\\s*,\\s*(${NUM})\\s*(?:,\\s*'([^']+)'\\s*)?\\)\\s*(?:([-+])\\s*(${NUM})\\s*)?$`);
-const GEO_SPACE = new RegExp(`^spaceCostMultiplier\\(\\s*'([^']+)'\\s*,\\s*offset\\s*,\\s*(${NUM})\\s*,\\s*(${NUM})\\s*(?:,\\s*'([^']+)'\\s*)?(?:,\\s*(${NUM})\\s*)?\\)\\s*(?:([-+])\\s*(${NUM})\\s*)?$`);
-const COND = [
-    [/^global\.race\.universe\s*===\s*'(\w+)'$/, (m) => ({ type: 'universe', value: m[1] })],
-    [/^global\.city\.ptrait\.includes\('(\w+)'\)$/, (m) => ({ type: 'ptrait', value: m[1] })],
-    [/^global\.race\['(\w+)'\]$/, (m) => ({ type: 'trait', value: m[1] })],
-];
-const parseExpr = (e) => {
-    let m = GEO_SPACE.exec(e);
-    if (m) return { kind: 'geo', family: 'space', structure: m[1], sector: m[4] || 'space', base: +m[2], mult: +m[3], cMin: m[5] ? +m[5] : 1.0, K: m[6] ? (m[6] === '-' ? +m[7] : -m[7]) : 0 };
-    m = GEO_CITY.exec(e);
-    if (m) return { kind: 'geo', family: 'city', structure: m[1], sector: m[4] || 'city', base: +m[2], mult: +m[3], K: m[5] ? (m[5] === '-' ? +m[6] : -m[6]) : 0 };
-    if (new RegExp(`^${NUM}$`).test(e)) return { kind: 'flat', value: +e };
-    return null;
-};
-const parseCost = (src) => {
-    const b = /\{\s*([\s\S]*)\}\s*$/.exec(src.replace(/\s+/g, ' '));
-    if (!b) return null;
-    let body = b[1].trim().replace(/;\s*$/, '');
-    if (!body.startsWith('return ')) return null;
-    body = body.slice(7).trim();
-    const t = /^(.+?)\s*\?\s*(.+?)\s*:\s*0$/.exec(body);
-    if (t) {
-        let when = null; for (const [re, f] of COND) { const m = re.exec(t[1].trim()); if (m) { when = f(m); break; } }
-        const ex = parseExpr(t[2].trim());
-        return when && ex ? { ...ex, when } : null;
-    }
-    return parseExpr(body);
-};
-const data = {}; const stats = { supported: 0, custom: 0, structs: 0, structsAllSupported: 0 }; const byKind = {};
+const libIdx = buildLibraryIndex('src');
+const dupWarn = Object.fromEntries(Object.entries(duplicateNames).map(([n, files]) => [n, { files, dipilih: libIdx[n] }]));
+const cv = makeConverter(libIdx, { ...buildConstantIndex('src'), ...loadConstants('src/config/constants.js') });
+// Fungsi pustaka yang dipakai kode engine (bukan hanya ekspresi cost): ikut diterjemahkan.
+// adjustCosts (rantai 16 adjuster), modifier pertumbuhan (costMultiplier/spaceCostMultiplier), dan yang dipakainya: semuanya data juga.
+for (const name of ['adjustCosts', 'costMultiplier', 'spaceCostMultiplier', 'highPopAdjust']) { if (!cv.used[name]) { cv.used[name] = null; cv.used[name] = cv.convertFunction(librarySource(name, libIdx)); } }
+const data = {}; const stats = { costs: 0, ok: 0, failed: 0, structs: structs.length, structsAllOk: 0 }; const why = {};
 for (const { id, a } of structs) {
-    stats.structs++;
+    let self = null; try { const p = a.struct().p; self = { structure: p[0], region: p[1] }; } catch (e) { /* tanpa struct */ }
     const defs = {}; let all = true;
     for (const res of Object.keys(a.cost)) {
-        const src = a.cost[res].toString();
-        const d = parseCost(src);
-        if (d) { defs[res] = d; stats.supported++; const k = d.kind + (d.family ? ':' + d.family : '') + (d.when ? '+cond' : ''); byKind[k] = (byKind[k] || 0) + 1; }
-        else { all = false; stats.custom++; defs[res] = { kind: 'custom', src: src.replace(/\s+/g, ' ').slice(0, 260) }; }
+        stats.costs++;
+        try { const f = cv.convertFunction(a.cost[res].toString()); defs[res] = { params: f.params, expr: f.body }; stats.ok++; }
+        catch (e) { all = false; stats.failed++; const k = String(e.message).slice(0, 80); why[k] = (why[k] || 0) + 1; defs[res] = { unsupported: String(e.message), src: a.cost[res].toString().replace(/\s+/g, ' ').slice(0, 300) }; }
     }
-    if (all) stats.structsAllSupported++;
-    data[id] = defs;
+    if (all) stats.structsAllOk++;
+    data[id] = { self, props: { path: Array.isArray(a.path) ? a.path : null }, costs: defs };
 }
-writeFileSync(out, JSON.stringify({ stats, byKind, data }, null, 1));
-console.log(JSON.stringify({ stats, byKind }));
+// Inventaris fakta yang harus disuplai dump: panggilan eksternal (argumen harus literal), trait, p_on, support_on.
+const ext = new Map(); const traitRefs = new Set(); const pOn = new Set(); const supportOn = new Set(); const nonLiteral = [];
+const scan = (n) => {
+    if (Array.isArray(n)) return n.forEach(scan);
+    if (n && typeof n === 'object') {
+        if (n.op === 'ext') { if (n.args.every((x) => ['number', 'string', 'boolean'].includes(typeof x))) ext.set(`${n.name}(${JSON.stringify(n.args)})`, { name: n.name, args: n.args }); else nonLiteral.push(n); }
+        if (n.ref === 'traitVars') { if (n.rank !== null && typeof n.rank !== 'number') nonLiteral.push(n); traitRefs.add(`${n.table}.${n.name}${n.rank !== null && typeof n.rank === 'number' ? '@' + n.rank : ''}`); }
+        if (n.ref === 'pOn') pOn.add(n.name); if (n.ref === 'supportOn') supportOn.add(n.name);
+        Object.values(n).forEach(scan);
+    }
+};
+for (const sd of Object.values(data)) for (const c of Object.values(sd.costs)) if (c.expr !== undefined) scan(c.expr);
+for (const f of Object.values(cv.used)) scan(f.body);
+const facts = { externals: [...ext.values()], traitRefs: [...traitRefs].sort(), pOn: [...pOn].sort(), supportOn: [...supportOn].sort(), nonLiteral: nonLiteral.length };
+writeFileSync(out, JSON.stringify({ stats, why, facts, library: cv.used, data }));
+console.log(JSON.stringify({ stats, why, library: Object.keys(cv.used).length, namaGanda: dupWarn, facts }, null, 1));
 process.exit(0);

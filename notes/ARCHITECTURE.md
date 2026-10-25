@@ -35,7 +35,7 @@ Dari rekonstruksi breakdown Evolve: (1) **cap** = jumlah kontribusi flat (persen
 tiap sumber dikali bonus lokalnya (perkalian antar modifier), entri persen tingkat atas mengalikan total yang sudah terkumpul, lalu dikali produk bonus Global, lalu ditambah konsumsi.
 Ini menjadi dasar desain stage di Fase 1: `base/add -> per-sumber (mult) -> total-berjalan (mult, berurutan) -> global (mult) -> konsumsi (add)`.
 
-> Implementasi dan hasil uji semantik di bawah: lihat `CONTRACT.md` dan folder `engine/`.
+> Implementasi dan hasil uji semantik di bawah: lihat `CONTRACT.md` dan folder `engine/`. Cost dinyatakan dengan bahasa ekspresi deklaratif (data), diputuskan pemilik 2026-10-20; terwujud penuh (termasuk adjuster dan modifier pertumbuhan).
 
 ## Semantik cost yang terverifikasi [FAKTA, 2026-10-20; rincian di PARITY.md]
 Cost = `round(m ** (count + offset) * base) - K`, dengan `m` dimodifikasi **aditif** lalu di-clamp >= 1.0; sesudahnya rantai adjuster per resource (perkalian, sebagian dengan pembulatan).

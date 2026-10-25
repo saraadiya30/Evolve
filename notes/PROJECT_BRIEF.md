@@ -28,6 +28,7 @@ Masalah ini juga ada di efek lain (produksi, cost, dll), jadi solusinya harus ge
   Event yang berjalan terus: paritas distribusi.
 - **Toleransi bertingkat:** 1% hanya untuk angka akhir yang dilihat pemain. Stat antara yang dieksponensialkan/dikali berantai (mis. pengali cost,
   karena `m ** count` melipatgandakan selisih) harus hampir persis. Bilangan bulat kecil harus persis.
+- **Cost sekali-pakai:** dinyatakan dengan bahasa ekspresi deklaratif (data), bukan fungsi TypeScript, supaya wiki dan tooltip bisa dihasilkan dari definisi. Terwujud di `engine/` untuk seluruh 1.339 cost bangunan.
 - **Lisensi:** proyek pribadi, tidak diperjualbelikan dan tidak didistribusikan. Kalau kelak dibagikan, tinjau ulang kewajiban MPL-2.0 milik Evolve.
 
 ## Cara kerja [DIPUTUSKAN]

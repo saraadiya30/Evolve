@@ -1,10 +1,15 @@
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
+import { gunzipSync } from 'node:zlib';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import type { CapEntry, ProductionEntry, ProductionInput } from '../../src/contract';
 
 const dir = join(dirname(fileURLToPath(import.meta.url)), '../../fixtures/oracle');
-export const loadOracle = <T = any>(name: string): T => JSON.parse(readFileSync(join(dir, name), 'utf8')) as T;
+export const loadOracle = <T = any>(name: string): T => {
+  const gz = join(dir, `${name}.gz`);
+  const text = existsSync(gz) ? gunzipSync(readFileSync(gz)).toString('utf8') : readFileSync(join(dir, name), 'utf8');
+  return JSON.parse(text) as T;
+};
 
 /** Nilai breakdown Evolve: '12.5v' (flat), '8%' (persen), atau angka mentah. */
 export function parseBreakdownValue(v: unknown): { kind: 'v' | '%' | 'raw' | '?'; x: number } {
