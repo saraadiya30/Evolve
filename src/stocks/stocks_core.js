@@ -202,6 +202,8 @@ export function upgradeStock(st, rand = Math.random){
     if (!st.asks || !st.bids || typeof st.kr !== 'number'){
         buildBook(st, rand);
     }
+    rawBook(st.asks);
+    rawBook(st.bids);
     return st;
 }
 
@@ -266,8 +268,8 @@ export function stepStock(st, rand = Math.random){
             st.kr = out.last;
         }
     }
-    refill(st, rand);
-    let p = (askPrice(st) + bidPrice(st)) / 2;
+    let book = refill(st, rand);
+    let p = (askPrice(st, book.own, book.ask) + bidPrice(st, book.own, book.bid)) / 2;
     st.prev = st.price;
     st.price = p;
     st.hist.push(+p.toFixed(4));
@@ -352,8 +354,31 @@ export function levelOf(st, price){
     return Math.max(1, Math.round(price / stepOf(st) + 1e-9));
 }
 
+// A price is a pure function of (level, step), and toPrecision is slow while every sweep, quote and depth row asks for dozens
+// of them, so they are kept per step. Only whole levels in a sane range are cached; anything else is computed directly.
+const PRICE_CACHE = new Map();    // step -> prices indexed by level
+const PRICE_CACHE_MAX_LEVEL = 100000;
+const PRICE_CACHE_MAX_STEPS = 256;
+
 export function priceAtLevel(st, k){
-    return +(k * stepOf(st)).toPrecision(12);
+    let step = stepOf(st);
+    if (!Number.isInteger(k) || k < 0 || k > PRICE_CACHE_MAX_LEVEL){
+        return +(k * step).toPrecision(12);
+    }
+    let prices = PRICE_CACHE.get(step);
+    if (prices === undefined){
+        if (PRICE_CACHE.size >= PRICE_CACHE_MAX_STEPS){
+            PRICE_CACHE.clear();
+        }
+        prices = [];
+        PRICE_CACHE.set(step, prices);
+    }
+    let price = prices[k];
+    if (price === undefined){
+        price = +(k * step).toPrecision(12);
+        prices[k] = price;
+    }
+    return price;
 }
 
 // Rounds a price to the nearest price level of this stock. Orders are always placed on the grid.
@@ -362,6 +387,17 @@ export function snapPrice(st, price){
         return price;
     }
     return priceAtLevel(st, levelOf(st, price));
+}
+
+// Vue 2.7 skips any object flagged __v_skip (what Vue.markRaw does). Each NPC order book holds ~80 price levels per side, per
+// stock; making every one of them a reactive getter/setter made each book write about 2.5x slower and cost a lot of memory,
+// while the UI never needed it (it watches st.rev instead, see bump). The flag is not enumerable, so it is not saved:
+// upgradeStock puts it back after a load.
+function rawBook(book){
+    if (book && typeof book === 'object' && !Object.prototype.hasOwnProperty.call(book, '__v_skip')){
+        Object.defineProperty(book, '__v_skip', { value: true, configurable: true });
+    }
+    return book;
 }
 
 function bump(st){
@@ -382,6 +418,9 @@ function addOwn(map, k, o, q){
 // A sell limit can only rest with lots you actually hold.
 function ownLevels(st){
     let own = { bid: {}, ask: {} };
+    if (!st.orders || st.orders.length === 0){
+        return own;
+    }
     let hold = st.lots || 0;
     (st.orders || []).slice().sort((a, b) => a.id - b.id).forEach(function(o){
         if (!(o.lots > 0)){
@@ -401,10 +440,17 @@ function ownLevels(st){
     return own;
 }
 
-// Every non-empty level of one side, best price first: { k, n (NPC lots), o (your lots), list (your orders there) }.
-function sideLevels(st, side, own){
-    let npc = side === 'ask' ? st.asks : st.bids;
-    let ow = side === 'ask' ? own.ask : own.bid;
+const EMPTY = Object.freeze({});
+
+// The price levels of one side that hold anything (NPC lots or yours), best price first, as plain numbers.
+function levelKeys(npc, ow){
+    let ks = [];
+    if (Object.keys(ow).length === 0){
+        for (let key in npc){
+            if (npc[key] > 0){ ks.push(+key); }
+        }
+        return ks;
+    }
     let seen = {};
     for (let key in npc){
         if (npc[key] > 0){ seen[key] = true; }
@@ -412,31 +458,59 @@ function sideLevels(st, side, own){
     for (let key in ow){
         seen[key] = true;
     }
-    let ks = Object.keys(seen).map(Number);
-    ks.sort(side === 'ask' ? (a, b) => a - b : (a, b) => b - a);
-    return ks.map(function(k){
-        let list = ow[k] || [];
-        let o = 0;
-        list.forEach(function(e){ o += e.q; });
-        return { k: k, n: npc[k] > 0 ? npc[k] : 0, o: o, list: list };
-    });
+    return Object.keys(seen).map(Number);
 }
 
-function bestLevel(st, side, own){
-    own = own || ownLevels(st);
+// One non-empty level: { k, n (NPC lots), o (your lots), list (your orders there) }.
+function levelAt(npc, ow, k){
+    let list = ow[k] || [];
+    let o = 0;
+    for (let i = 0; i < list.length; i++){ o += list[i].q; }
+    return { k: k, n: npc[k] > 0 ? npc[k] : 0, o: o, list: list };
+}
+
+// Sorted level keys of one side plus a lazy accessor for the level at position i. Walking a side level by level (sweep, the
+// depth table) usually stops after a few levels, so the level objects are only built for the ones actually visited.
+function sideWalk(st, side, own){
     let npc = side === 'ask' ? st.asks : st.bids;
     let ow = side === 'ask' ? own.ask : own.bid;
-    let better = side === 'ask' ? (a, b) => a < b : (a, b) => a > b;
-    let best = null;
-    for (let key in npc){
-        if (npc[key] > 0){
+    let ks = levelKeys(npc, ow);
+    ks.sort(side === 'ask' ? (a, b) => a - b : (a, b) => b - a);
+    return { keys: ks, at: i => levelAt(npc, ow, ks[i]) };
+}
+
+// `npcBest` (optional) is the best NPC level when the caller already knows it (null = the NPC side is empty); without it the
+// whole NPC side is scanned.
+function bestLevel(st, side, own, npcBest){
+    own = own || ownLevels(st);
+    let ask = side === 'ask';
+    let npc = ask ? st.asks : st.bids;
+    let ow = ask ? own.ask : own.bid;
+    let known = npcBest !== undefined;
+    let best = known ? npcBest : null;
+    if (ask){
+        for (let key in known ? EMPTY : npc){
+            if (npc[key] > 0){
+                let k = +key;
+                if (best === null || k < best){ best = k; }
+            }
+        }
+        for (let key in ow){
             let k = +key;
-            if (best === null || better(k, best)){ best = k; }
+            if (best === null || k < best){ best = k; }
         }
     }
-    for (let key in ow){
-        let k = +key;
-        if (best === null || better(k, best)){ best = k; }
+    else {
+        for (let key in known ? EMPTY : npc){
+            if (npc[key] > 0){
+                let k = +key;
+                if (best === null || k > best){ best = k; }
+            }
+        }
+        for (let key in ow){
+            let k = +key;
+            if (best === null || k > best){ best = k; }
+        }
     }
     return best;
 }
@@ -447,24 +521,24 @@ function fallbackLevel(st, side){
     return side === 'ask' ? kr + 1 : Math.max(1, kr - 1);
 }
 
-export function askPrice(st){
-    let k = bestLevel(st, 'ask');
+export function askPrice(st, own, npcBest){
+    let k = bestLevel(st, 'ask', own, npcBest);
     return priceAtLevel(st, k === null ? fallbackLevel(st, 'ask') : k);
 }
 
-export function bidPrice(st){
-    let k = bestLevel(st, 'bid');
+export function bidPrice(st, own, npcBest){
+    let k = bestLevel(st, 'bid', own, npcBest);
     return priceAtLevel(st, k === null ? fallbackLevel(st, 'bid') : k);
 }
 
 // The first n price levels of one side, best price first, for the depth table: { price, qty (all lots), own (your lots),
 // cum (lots from the best price through this level) }. Missing levels (a thin book) come back with qty 0.
 export function bookLevels(st, side, n = 5){
-    let levels = sideLevels(st, side, ownLevels(st));
+    let walk = sideWalk(st, side, ownLevels(st));
     let out = [];
     let cum = 0;
     for (let i = 0; i < n; i++){
-        let L = levels[i];
+        let L = i < walk.keys.length ? walk.at(i) : null;
         if (L){
             cum += L.n + L.o;
             out.push({ price: priceAtLevel(st, L.k), qty: L.n + L.o, own: L.o, cum: cum });
@@ -482,16 +556,17 @@ export function bookLevels(st, side, n = 5){
 // commit = false only measures it. With commit = true the NPC lots at each level go first, then your own resting orders
 // there (oldest first): those are reduced right away and the lots are booked in order.pend, which settleOrders pays out.
 // Returns { lots, cost (Ocoin spent or received), last (level of the last lot taken), nextK (best level left, or null) }.
-function sweep(st, side, want, commit, budget){
+function sweep(st, side, want, commit, budget, own){
     let out = { lots: 0, cost: 0, last: null, nextK: null };
     if (!(want > 0)){
         return out;
     }
     let limited = isFinite(budget) && budget >= 0;
     let book = side === 'ask' ? st.asks : st.bids;
-    let levels = sideLevels(st, side, ownLevels(st));
-    for (let i = 0; i < levels.length; i++){
-        let L = levels[i];
+    let walk = sideWalk(st, side, own || ownLevels(st));
+    let count = walk.keys.length;
+    for (let i = 0; i < count; i++){
+        let L = walk.at(i);
         let price = priceAtLevel(st, L.k);
         let avail = L.n + L.o;
         let take = Math.min(avail, want);
@@ -528,7 +603,7 @@ function sweep(st, side, want, commit, budget){
             return out;
         }
         if (want <= 0){
-            out.nextK = levels[i + 1] ? levels[i + 1].k : null;
+            out.nextK = i + 1 < count ? walk.keys[i + 1] : null;
             return out;
         }
     }
@@ -536,7 +611,7 @@ function sweep(st, side, want, commit, budget){
     // keep quoting further out): there is no cap on how many lots you can buy or sell, only on how much it costs.
     // These levels are not stored; whatever is left of the real book after the trade is what the market makers rebuild from.
     let dir = side === 'ask' ? 1 : -1;
-    let k = levels.length > 0 ? levels[levels.length - 1].k : fallbackLevel(st, side) - dir;
+    let k = count > 0 ? walk.keys[count - 1] : fallbackLevel(st, side) - dir;
     let tailDepth = Math.max(1, Math.round(baseDepth(st) * 3));
     for (let n = 0; n < MAX_TAIL_LEVELS && want > 0; n++){
         k += dir;
@@ -628,8 +703,8 @@ function requote(st, rand){
         return;
     }
     st.price = priceAtLevel(st, st.kr);
-    refill(st, rand);
-    st.price = (askPrice(st) + bidPrice(st)) / 2;
+    let book = refill(st, rand);
+    st.price = (askPrice(st, book.own, book.ask) + bidPrice(st, book.own, book.bid)) / 2;
 }
 
 // Market buy: takes lots off the ask side (which pushes the price up for real). Returns { lots, cost }.
@@ -675,13 +750,20 @@ function bookFactors(st){
 
 // Tops the levels from `start` outwards (dir +1 asks, -1 bids) up towards a target depth that gets thicker further from
 // the price. Levels that are already thicker stay (slowly pulled back), levels past the window are cancelled.
+const BOOK_SCALE = [];    // 1 + 2 * j / BOOK_WINDOW per level j, computed once
+for (let j = 0; j <= BOOK_WINDOW; j++){
+    BOOK_SCALE.push(1 + 2 * j / BOOK_WINDOW);
+}
+
 function topUp(book, start, dir, depth, noise, rand){
+    let n0 = noise[0];
+    let n1 = noise[1];
     for (let j = 0; j <= BOOK_WINDOW; j++){
         let k = start + dir * j;
         if (k < 1){
             break;
         }
-        let target = Math.max(1, Math.round(depth * (1 + 2 * j / BOOK_WINDOW) * (noise[0] + noise[1] * rand())));
+        let target = Math.max(1, Math.round(depth * BOOK_SCALE[j] * (n0 + n1 * rand())));
         let cur = book[k] || 0;
         if (cur < target){
             book[k] = cur + Math.max(1, Math.ceil((target - cur) * BOOK_REFILL));
@@ -690,11 +772,17 @@ function topUp(book, start, dir, depth, noise, rand){
             book[k] = Math.round(cur - (cur - target * 1.5) * BOOK_DECAY);
         }
     }
+    let best = null;
     for (let key in book){
-        if ((+key - start) * dir > BOOK_WINDOW + 5){
+        let k = +key;
+        if ((k - start) * dir > BOOK_WINDOW + 5){
             delete book[key];
         }
+        else if (book[key] > 0 && (best === null || (dir > 0 ? k < best : k > best))){
+            best = k;
+        }
     }
+    return best;    // the best level left on this side (null if none), so the caller need not scan the book again
 }
 
 // The market makers repost liquidity around the last trade, never crossing the book. Liquidity that is already closer to
@@ -716,15 +804,17 @@ function refill(st, rand){
     if (bestAsk !== null){
         bidStart = Math.min(bidStart, bestAsk - 1);
     }
-    topUp(st.asks, askStart, 1, depth * f.ask, noise, rand);
-    topUp(st.bids, Math.max(1, bidStart), -1, depth * f.bid, noise, rand);
+    let askBest = topUp(st.asks, askStart, 1, depth * f.ask, noise, rand);
+    let bidBest = topUp(st.bids, Math.max(1, bidStart), -1, depth * f.bid, noise, rand);
     bump(st);
+    // Your resting orders did not change, so the caller can reuse `own`; the best levels are what bestLevel would find.
+    return { own: own, ask: askBest, bid: bidBest };
 }
 
 // Builds a fresh book around the stock's current price.
 function buildBook(st, rand){
-    st.asks = {};
-    st.bids = {};
+    st.asks = rawBook({});
+    st.bids = rawBook({});
     st.kr = levelOf(st, st.price);
     for (let i = 0; i < 8; i++){
         refill(st, rand);

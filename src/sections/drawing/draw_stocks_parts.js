@@ -421,7 +421,7 @@ export function drawStocks_s2($ctx){
                     chgClass: chg >= 0 ? 'has-text-success' : 'has-text-danger',
                     evText: st.ev ? loc(st.ev.type === 'boom' ? 'stock_event_boom' : 'stock_event_crash') : '',
                     evClass: st.ev ? (st.ev.type === 'boom' ? 'has-text-success' : 'has-text-danger') : '',
-                    depth: this.depthRows(st),
+                    depth: this.depthRows(st, buyMax),
                     // The real current gap between the best ask and best bid, as a % of the mid price - this already
                     // includes any push your own trading left on the book (st.spread alone would understate it).
                     spreadText: loc('stock_spread',[((ask - bid) / st.price * 100).toFixed(2)]),
@@ -552,7 +552,11 @@ export function drawStocks_s2($ctx){
         },
         methods: {
             // 5-level order-book depth for the chart panel: one row per price level, best price first on both sides.
-            depthRows(st){
+            // Each row also carries what clicking its ask / bid cell would do (askCan / askTip / bidCan / bidTip). This is worked out
+            // here, once per recalculation of `d`, and not in the template: the template re-runs on every render (every fast tick and
+            // every mouse move over the chart), and each of those lookups used to walk the whole ask side up to your wallet - 10 full
+            // book sweeps per render, which for a big wallet took tens of milliseconds.
+            depthRows(st, buyMax){
                 let asks = bookLevels(st, 'ask', 5);
                 let bids = bookLevels(st, 'bid', 5);
                 let cell = function(L){
@@ -561,7 +565,21 @@ export function drawStocks_s2($ctx){
                 };
                 let rows = [];
                 for (let i = 0; i < 5; i++){
-                    rows.push({ ask: cell(asks[i]), bid: cell(bids[i]) });
+                    // Buying through level i: everything up to it, as far as the wallet reaches (same walk the quote does)
+                    let askM = Math.min(asks[i].cum, buyMax);
+                    let askTip = loc('stock_order_err_funds');
+                    if (askM > 0){
+                        let q = buyQuote(st, askM);
+                        askTip = loc('stock_buy_tip',[fmt(askM, 0), fmt(q.cost), fmt(q.avg), fmt(q.next)]);
+                    }
+                    // Selling through level i, limited to what you hold
+                    let bidM = Math.min(bids[i].cum, st.lots);
+                    let bidTip = loc('stock_order_err_holdings');
+                    if (bidM > 0){
+                        let q = sellQuote(st, bidM);
+                        bidTip = loc('stock_sell_tip',[fmt(bidM, 0), fmt(q.proceeds), fmt(q.avg), fmt(q.next)]);
+                    }
+                    rows.push({ ask: cell(asks[i]), bid: cell(bids[i]), askCan: askM > 0, askTip: askTip, bidCan: bidM > 0, bidTip: bidTip });
                 }
                 return rows;
             },
@@ -781,47 +799,22 @@ export function drawStocks_s2($ctx){
                 }
                 return bookLevels(global.stocks.market[res], 'bid', i + 1)[i].cum;
             },
+            // Read from the rows of `d` (see depthRows); no book walking here because these run on every render.
             canFillAsk(i){
-                let res = this.cur;
-                if (!res){
-                    return false;
-                }
-                let st = global.stocks.market[res];
-                return Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin)) > 0;
+                let row = this.d.depth && this.d.depth[i];
+                return !!(row && row.askCan);
             },
             canFillBid(i){
-                let res = this.cur;
-                if (!res){
-                    return false;
-                }
-                let st = global.stocks.market[res];
-                return Math.min(this.bidFillLots(i), st.lots) > 0;
+                let row = this.d.depth && this.d.depth[i];
+                return !!(row && row.bidCan);
             },
             askFillTip(i){
-                let res = this.cur;
-                if (!res){
-                    return '';
-                }
-                let st = global.stocks.market[res];
-                let m = Math.min(this.askFillLots(i), maxBuyLots(st, global.stocks.ocoin));
-                if (!(m > 0)){
-                    return loc('stock_order_err_funds');
-                }
-                let q = buyQuote(st, m);
-                return loc('stock_buy_tip',[fmt(m, 0), fmt(q.cost), fmt(q.avg), fmt(q.next)]);
+                let row = this.d.depth && this.d.depth[i];
+                return row ? row.askTip : '';
             },
             bidFillTip(i){
-                let res = this.cur;
-                if (!res){
-                    return '';
-                }
-                let st = global.stocks.market[res];
-                let m = Math.min(this.bidFillLots(i), st.lots);
-                if (!(m > 0)){
-                    return loc('stock_order_err_holdings');
-                }
-                let q = sellQuote(st, m);
-                return loc('stock_sell_tip',[fmt(m, 0), fmt(q.proceeds), fmt(q.avg), fmt(q.next)]);
+                let row = this.d.depth && this.d.depth[i];
+                return row ? row.bidTip : '';
             },
             fillAsk(i){
                 let res = this.cur;

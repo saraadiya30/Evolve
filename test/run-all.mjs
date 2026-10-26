@@ -19,6 +19,7 @@ const TESTS = [
     ['stock-army.mjs'],
     ['stock-power-gate.mjs'],
     ['stock-requote.mjs'],
+    ['stock-book-equiv.mjs'],
     ['alchemy-mana-cap.mjs'],
     ['alchemy-mana-deficit.mjs'],
     ['ocoin-alchemy.mjs'],
