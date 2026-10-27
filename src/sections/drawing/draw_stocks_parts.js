@@ -150,7 +150,7 @@ export function drawStocks_s1($ctx){
     let inputStyle = 'background:transparent;color:inherit;border:1px solid currentColor;border-radius:.25rem;padding:0 .25rem;';
 
     // Top bar: balance and the wallet toggle
-    wrap.append($(`<div class="stk-top"><h3 class="has-text-info">${loc('resource_Ocoin_name')}: <span>{{ ocoinText() }}</span>&nbsp;<span id="stkNet" class="stk-net" :class="netClass()">({{ netText() }})</span></h3>&nbsp;<span v-if="reservedOcoin() > 0" class="has-text-warning">({{ reservedText() }})</span><b-tooltip :label="helpText()" position="is-bottom" size="is-large" multilined animated><span class="stk-help has-text-warning">?</span></b-tooltip><span id="stkGold" role="button" class="stk-gold order has-text-warning" @click="openGold()">${loc('stock_gold_button')}: {{ goldText() }}</span><span role="button" class="stk-toggle" @click="toggleWallet()">{{ s.stockWalletOpen ? '▾' : '▸' }} ${loc('stock_wallet')}</span></div>`));
+    wrap.append($(`<div class="stk-top"><h3 class="has-text-info">${loc('resource_Ocoin_name')}: <span>{{ ocoinText() }}</span>&nbsp;<span id="stkNet" class="stk-net" :class="netClass()">({{ netText() }})</span></h3>&nbsp;<span v-if="reservedOcoin() > 0" class="has-text-warning">({{ reservedText() }})</span><b-tooltip append-to-body :label="helpText()" position="is-top" size="is-large" multilined animated><span class="stk-help has-text-warning">?</span></b-tooltip><span id="stkGold" role="button" class="stk-gold order has-text-warning" @click="openGold()">${loc('stock_gold_button')}: {{ goldText() }}</span><span role="button" class="stk-toggle" @click="toggleWallet()">{{ s.stockWalletOpen ? '▾' : '▸' }} ${loc('stock_wallet')}</span></div>`));
 
     // Wallet: Money <-> Ocoin and the auto balance
     let wallet = $(`<div v-if="s.stockWalletOpen" class="stk-wallet"></div>`);
@@ -159,13 +159,13 @@ export function drawStocks_s1($ctx){
     let exchange = $(`<div id="stockOcoin" class="market-item stk-flow"><h3 class="res has-text-info">${loc('stock_convert')}</h3></div>`);
     wallet.append(exchange);
     exchange.append($(`<input type="number" min="0" step="any" v-model.number="st.qty" @change="clampQty()" style="width:7rem;margin-right:.5rem;${inputStyle}">`));
-    exchange.append($(`<b-tooltip :label="buyOcoinTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !canBuyOcoin() }" @click="buyOcoin()">${loc('resource_market_buy')}</span></b-tooltip>`));
-    exchange.append($(`<b-tooltip :label="buyOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" @click="buyOcoinMax()">${loc('stock_buy_max')}</span></b-tooltip>`));
-    exchange.append($(`<b-tooltip :label="sellOcoinTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !canSellOcoin() }" @click="sellOcoin()">${loc('resource_market_sell')}</span></b-tooltip>`));
-    exchange.append($(`<b-tooltip :label="sellOcoinMaxTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" @click="sellOcoinMax()">${loc('stock_sell_max')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip append-to-body :label="buyOcoinTip()" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !canBuyOcoin() }" @click="buyOcoin()">${loc('resource_market_buy')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip append-to-body :label="buyOcoinMaxTip()" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-success" @click="buyOcoinMax()">${loc('stock_buy_max')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip append-to-body :label="sellOcoinTip()" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !canSellOcoin() }" @click="sellOcoin()">${loc('resource_market_sell')}</span></b-tooltip>`));
+    exchange.append($(`<b-tooltip append-to-body :label="sellOcoinMaxTip()" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-danger" @click="sellOcoinMax()">${loc('stock_sell_max')}</span></b-tooltip>`));
     let auto = $(`<div id="stockAuto" class="market-item stk-flow"><h3 class="res has-text-info">${loc('stock_auto')}</h3></div>`);
     wallet.append(auto);
-    auto.append($(`<b-tooltip :label="autoTip()" position="is-bottom" size="is-large" multilined animated><span role="button" class="order" :class="s.stockAutoOn ? 'has-text-success' : 'has-text-danger'" @click="toggleAuto()">{{ autoLabel() }}</span></b-tooltip>`));
+    auto.append($(`<b-tooltip append-to-body :label="autoTip()" position="is-top" size="is-large" multilined animated><span role="button" class="order" :class="s.stockAutoOn ? 'has-text-success' : 'has-text-danger'" @click="toggleAuto()">{{ autoLabel() }}</span></b-tooltip>`));
     auto.append($(`<span class="has-text-warning" style="margin:0 .5rem;">${loc('stock_auto_keep')}</span>`));
     auto.append($(`<input type="number" min="0" step="any" v-model.number="s.stockAutoKeep" @change="clampKeep()" style="width:7rem;margin-right:.75rem;${inputStyle}">`));
     auto.append($(`<span style="font-size:.875rem;">{{ autoStatus() }}</span>`));
@@ -210,8 +210,8 @@ export function drawStocks_s1($ctx){
     main.append(depth);
     let depthRow = $(`<tr v-for="(row, i) in d.depth" :key="i"></tr>`);
     depth.find('tbody').append(depthRow);
-    depthRow.append($(`<td><b-tooltip :label="askFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-danger stk-depth-cell" :class="{ off: !canFillAsk(i) }" @click="fillAsk(i)">{{ row.ask }}</span></b-tooltip></td>`));
-    depthRow.append($(`<td><b-tooltip :label="bidFillTip(i)" position="is-bottom" size="is-small" multilined animated><span role="button" class="has-text-success stk-depth-cell" :class="{ off: !canFillBid(i) }" @click="fillBid(i)">{{ row.bid }}</span></b-tooltip></td>`));
+    depthRow.append($(`<td><b-tooltip append-to-body :label="askFillTip(i)" position="is-top" size="is-small" multilined animated><span role="button" class="has-text-danger stk-depth-cell" :class="{ off: !canFillAsk(i) }" @click="fillAsk(i)">{{ row.ask }}</span></b-tooltip></td>`));
+    depthRow.append($(`<td><b-tooltip append-to-body :label="bidFillTip(i)" position="is-top" size="is-small" multilined animated><span role="button" class="has-text-success stk-depth-cell" :class="{ off: !canFillBid(i) }" @click="fillBid(i)">{{ row.bid }}</span></b-tooltip></td>`));
     // These three lines are always there and always one line tall (long text is cut off with an ellipsis and stays readable in
     // the title tooltip), so nothing above the Buy/Sell buttons changes height while you trade.
     main.append($(`<div class="stk-line" :title="d.spreadText"><span>{{ d.spreadText }}</span></div>`));
@@ -221,10 +221,10 @@ export function drawStocks_s1($ctx){
     // take-profit/stop-loss panel that only exists while you hold lots, the order form), so the buttons stay put while you trade.
     let btns = $(`<div class="market-item stk-flow stk-btns"></div>`);
     main.append(btns);
-    btns.append($(`<b-tooltip :label="d.buyTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(false)">{{ d.buyBtn }}</span></b-tooltip>`));
-    btns.append($(`<b-tooltip :label="d.buyMaxTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(true)">${loc('stock_buy_max')}</span></b-tooltip>`));
-    btns.append($(`<b-tooltip :label="d.sellTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(false)">{{ d.sellBtn }}</span></b-tooltip>`));
-    btns.append($(`<b-tooltip :label="d.sellAllTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(true)">${loc('stock_sell_all')}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip append-to-body :label="d.buyTip" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(false)">{{ d.buyBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip append-to-body :label="d.buyMaxTip" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: !d.canBuy }" @click="buyLots(true)">${loc('stock_buy_max')}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip append-to-body :label="d.sellTip" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(false)">{{ d.sellBtn }}</span></b-tooltip>`));
+    btns.append($(`<b-tooltip append-to-body :label="d.sellAllTip" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-danger" :class="{ off: !d.canSell }" @click="sellLots(true)">${loc('stock_sell_all')}</span></b-tooltip>`));
 
     // Lots are split between the production bonus and the storage bonus (one or the other per lot). Not for the special
     // stocks (Morale/Power/Birthrate), which have their own flat bonus per lot.
@@ -263,7 +263,7 @@ export function drawStocks_s1($ctx){
     slRow.append($(`<input v-else type="number" min="0" step="any" v-model.number="ex.slPct" style="${inputStyle}" placeholder="%">`));
     slRow.append($(`<input type="number" min="1" step="1" v-model.number="ex.slLots" style="${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
     slRow.append($(`<span class="stk-resolved has-text-warning">{{ d.slPriceText }}</span>`));
-    exitPanel.append($(`<div style="display:flex;align-items:center;flex-wrap:nowrap;"><b-tooltip :label="d.exitTip" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !d.exitOk }" @click="placeExit()">${loc('stock_order_place')}</span></b-tooltip></div>`));
+    exitPanel.append($(`<div style="display:flex;align-items:center;flex-wrap:nowrap;"><b-tooltip append-to-body :label="d.exitTip" position="is-top" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !d.exitOk }" @click="placeExit()">${loc('stock_order_place')}</span></b-tooltip></div>`));
     // The "why can't I place this" message has its own always-present one-line slot instead of appearing next to the button, so
     // neither the button nor anything below it moves when the message shows up or changes length (full text on hover).
     exitPanel.append($(`<div class="stk-msg has-text-warning" :title="d.exitErr">{{ d.exitErr }}</div>`));
@@ -274,13 +274,13 @@ export function drawStocks_s1($ctx){
     let form = $(`<div id="stockOrderForm" class="market-item stk-flow stk-plain"></div>`);
     main.append(form);
     let selectStyle = `margin-right:.5rem;${inputStyle}`;
-    form.append($(`<b-tooltip :label="typeHint()" position="is-bottom" size="is-medium" multilined animated><select v-model="st.form.type" @change="resetPrice()" style="${selectStyle}">${ORDER_TYPES.map(t => `<option value="${t}">${orderLabel(t)}</option>`).join('')}</select></b-tooltip>`));
+    form.append($(`<b-tooltip append-to-body :label="typeHint()" position="is-top" size="is-medium" multilined animated><select v-model="st.form.type" @change="resetPrice()" style="${selectStyle}">${ORDER_TYPES.map(t => `<option value="${t}">${orderLabel(t)}</option>`).join('')}</select></b-tooltip>`));
     form.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.priceMode !== 'price' }" @click="setPriceMode('price')">${loc('stock_mode_price')}</span>`));
     form.append($(`<span role="button" class="stk-modebtn" :class="{ off: st.form.priceMode !== 'pct' }" @click="setPriceMode('pct')">${loc('stock_mode_pct')}</span>`));
     form.append($(`<input v-if="st.form.priceMode === 'price'" type="number" min="0" step="any" v-model.number="st.form.price" style="width:6.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_price')}">`));
     form.append($(`<input v-else type="number" min="0" step="any" v-model.number="st.form.pct" style="width:5rem;margin-right:.5rem;${inputStyle}" placeholder="%">`));
     form.append($(`<input type="number" min="1" step="1" v-model.number="st.form.lots" style="width:4.5rem;margin-right:.5rem;${inputStyle}" placeholder="${loc('stock_order_lots')}">`));
-    form.append($(`<b-tooltip :label="orderTip()" position="is-bottom" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: orderError() !== '' }" @click="place()">${loc('stock_order_place')}</span></b-tooltip>`));
+    form.append($(`<b-tooltip append-to-body :label="orderTip()" position="is-top" size="is-small" multilined animated><span role="button" class="order has-text-success" :class="{ off: orderError() !== '' }" @click="place()">${loc('stock_order_place')}</span></b-tooltip>`));
     // The notes under the order form (percent resolved to a price, rounding, why the order is not allowed) share one always-present
     // one-line slot, so the order list and the bracket panel below do not jump when a note appears or disappears (full text on hover).
     main.append($(`<div class="stk-note stk-msg has-text-warning" :title="formNote()" style="margin-left:0;">{{ formNote() }}</div>`));

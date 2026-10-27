@@ -12,6 +12,10 @@ import { resource_values } from '../config/constants.js';
 export const OCOIN_ALCH_MARKUP = 1;
 // Prices are shown per lot of this many units, and each step of the allocation (the number next to a resource) buys one lot per second.
 export const OCOIN_ALCH_LOT = 1000;
+// Crafted resources (Plywood, Brick, Wrought_Iron, ...) have no trade route and no base market value. Their price is what the
+// ingredients of one unit cost (recipe amounts x the ingredient prices above, so it follows the trade route modifiers of the
+// ingredients too) times this markup. The recipe comes from the caller (`recipe`: res -> [{ r, a }] or null), like routeCost.
+export const OCOIN_ALCH_CRAFT_MARKUP = 1;
 // Per resource price in Ocoin per unit, when the formula above is not what you want. Takes priority over the formula.
 export const OCOIN_ALCH_PRICE_OVERRIDE = {
     // Example: Iron: 0.2
@@ -25,10 +29,24 @@ export const OCOIN_ALCH_EXCLUDE = ['Mana'];
 
 // Ocoin cost of one unit of `res`. Returns 0 when the resource has no price (so it is not eligible).
 // `routeCost` (optional) is a function res -> Money one unit costs through an import trade route, 0 when there is no route.
-// It is passed in, not imported, to keep this file free of game state. Without it the base market value is used.
-export function ocoinAlchemyPrice(res, values = resource_values, routeCost = null){
+// `recipe` (optional) is a function res -> [{ r: ingredient, a: amount }] for one unit of a crafted resource, null/empty otherwise.
+// Both are passed in, not imported, to keep this file free of game state. Without them the base market value is used.
+export function ocoinAlchemyPrice(res, values = resource_values, routeCost = null, recipe = null){
     if (OCOIN_ALCH_PRICE_OVERRIDE[res] > 0){
         return OCOIN_ALCH_PRICE_OVERRIDE[res];
+    }
+    let parts = recipe ? recipe(res) : null;
+    if (parts && parts.length){
+        // crafted: sum of the ingredients. One ingredient with no price makes the whole thing unavailable (0), not cheap.
+        let total = 0;
+        for (let i = 0; i < parts.length; i++){
+            let p = ocoinAlchemyPrice(parts[i].r, values, routeCost);
+            if (!(p > 0) || !(parts[i].a > 0)){
+                return 0;
+            }
+            total += p * parts[i].a;
+        }
+        return total > 0 && isFinite(total) ? total * OCOIN_ALCH_CRAFT_MARKUP : 0;
     }
     let unit = routeCost ? Number(routeCost(res)) : 0;
     if (!(unit > 0) || !isFinite(unit)){
@@ -38,26 +56,27 @@ export function ocoinAlchemyPrice(res, values = resource_values, routeCost = nul
 }
 
 // Buy / sell price of one unit in Ocoin: the base price above times the trade route profit factor (1 = no profit).
-export function ocoinAlchemyBuyPrice(res, values = resource_values, routeCost = null, factor = 1){
+export function ocoinAlchemyBuyPrice(res, values = resource_values, routeCost = null, factor = 1, recipe = null){
     let f = Number(factor);
-    return ocoinAlchemyPrice(res, values, routeCost) * (f > 0 && isFinite(f) ? f : 1);
+    return ocoinAlchemyPrice(res, values, routeCost, recipe) * (f > 0 && isFinite(f) ? f : 1);
 }
-export function ocoinAlchemySellPrice(res, values = resource_values, routeCost = null, factor = 1){
+export function ocoinAlchemySellPrice(res, values = resource_values, routeCost = null, factor = 1, recipe = null){
     let f = Number(factor);
-    return ocoinAlchemyPrice(res, values, routeCost) * (f > 0 && isFinite(f) ? f : 1);
+    return ocoinAlchemyPrice(res, values, routeCost, recipe) * (f > 0 && isFinite(f) ? f : 1);
 }
 
 // Ocoin cost of one lot (OCOIN_ALCH_LOT units) of `res`.
-export function ocoinAlchemyLotPrice(res, values = resource_values, routeCost = null){
-    return ocoinAlchemyPrice(res, values, routeCost) * OCOIN_ALCH_LOT;
+export function ocoinAlchemyLotPrice(res, values = resource_values, routeCost = null, recipe = null){
+    return ocoinAlchemyPrice(res, values, routeCost, recipe) * OCOIN_ALCH_LOT;
 }
 
 // Eligible resources, in the game's own resource order: a real material (tradable, or stackable, or has a base value),
-// with a price, and not special. `resources` is tmp_vars.resource.
-export function ocoinAlchemyList(resources, values = resource_values){
+// with a price, and not special. A crafted resource (it has a `recipe`) counts as a material too. `resources` is tmp_vars.resource.
+export function ocoinAlchemyList(resources, values = resource_values, recipe = null){
     return Object.keys(resources || {}).filter(function(res){
         let r = resources[res];
-        return !OCOIN_ALCH_EXCLUDE.includes(res) && (r.tradable || r.stackable || (values[res] || 0) > 0) && ocoinAlchemyPrice(res, values) > 0;
+        let crafted = recipe ? (recipe(res) || []).length > 0 : false;
+        return !OCOIN_ALCH_EXCLUDE.includes(res) && (r.tradable || r.stackable || crafted || (values[res] || 0) > 0) && ocoinAlchemyPrice(res, values, null, recipe) > 0;
     });
 }
 

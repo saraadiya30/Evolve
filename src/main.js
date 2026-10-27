@@ -1,4 +1,4 @@
-import { global, save, webWorker, intervals, keyMap, resizeGame, p_on, support_on, int_on, set_qlevel, convertVersion } from './core/vars.js';
+import { global, save, webWorker, intervals, keyMap, setKeyMap, resizeGame, p_on, support_on, int_on, set_qlevel, convertVersion } from './core/vars.js';
 import { loc } from './core/locale.js';
 import { challengeIcon } from './achievements/achievement_helpers.js';
 import { gameLoop, loopTimers } from './functions/game_loop_timing.js';
@@ -88,7 +88,7 @@ $(document).keydown(function(e){
     let key = e.key || e.keyCode;
     Object.keys(keyMap).forEach(function(k){
         if (key === global.settings.keyMap[k]){
-            keyMap[k] = true;
+            setKeyMap(k, true);
         }
     });
     if (!$(`input`).is(':focus') && !$(`textarea`).is(':focus')){
@@ -163,7 +163,7 @@ $(document).keyup(function(e){
     let key = e.key || e.keyCode;
     Object.keys(keyMap).forEach(function(k){
         if (key === global.settings.keyMap[k]){
-            keyMap[k] = false;
+            setKeyMap(k, false);
         }
     });
 });
@@ -173,19 +173,19 @@ $(document).mousemove(function(e){
         switch(global.settings.keyMap[k]){
             case 'Shift':
             case 16:
-                keyMap[k] = e.shiftKey ? true : false;
+                setKeyMap(k, e.shiftKey ? true : false);
                 break;
             case 'Control':
             case 17:
-                keyMap[k] = e.ctrlKey ? true : false;
+                setKeyMap(k, e.ctrlKey ? true : false);
                 break;
             case 'Alt':
             case 18:
-                keyMap[k] = e.altKey ? true : false;
+                setKeyMap(k, e.altKey ? true : false);
                 break;
             case 'Meta':
             case 91:
-                keyMap[k] = e.metaKey ? true : false;
+                setKeyMap(k, e.metaKey ? true : false);
                 break;
         }
     });

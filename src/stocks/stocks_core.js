@@ -6,6 +6,8 @@ export const OCOIN_RATE = 1000;     // 1 Ocoin = 1000 Money (both directions)
 export const OCOIN_BUY_FEE = 0.05;  // fee on Money -> Ocoin only. Ocoin -> Money is free.
 export const AETHER_GENES_RATE = 1e9; // Genes you get for 1 Aether (the Aether tab): 1 nano Aether = 1 Genes
 export const AETHER_SOUL_GEM_RATE = 1e12; // Soul Gems you get for 1 Aether (the Aether tab): 1 pico Aether = 1 Soul Gem
+export const AETHER_DARK_RATE = 10; // Dark Energy you get for 1 Aether (the Aether tab), bought in whole Aether like Plasmid/Phage
+export const AETHER_HARMONY_RATE = 1; // Harmony Crystal you get for 1 Aether (the Aether tab); the rarest of the prestige currencies
 export const AETHER_OCOIN_RATE = 1e12; // Ocoin you get for 1 Aether (the Aether tab). Same value as 1 Aether = 1e15 Money at the 1000:1
                                         // exchange, without the 5% fee.
 export const LOT_BONUS = 0.001;     // each lot on production adds +0.1% production to that stock's resource (additive, no cap)
@@ -1364,3 +1366,26 @@ export function goldBarsToOcoin(S, settings, bars){
     S.ocoin += bars * GOLD_BAR_OCOIN;
     return true;
 }
+
+// Aether -> prestige currency (Plasmid/Phage style): spend up to `qty` WHOLE Aether (limited to what you have) and get `rate` of the
+// currency per Aether. `decimals` is how many decimals the game keeps for that currency (Dark Energy 3, Harmony Crystal 2), so the
+// stored count is rounded the same way the resets do. Returns null when nothing can be bought, else { aether, count, spent }.
+export function aetherBuyPrestige(aether, count, rate, qty, decimals){
+    let have = Math.floor(Number(aether));
+    let convert = Math.min(Number(qty), have);
+    if (!(convert > 0) || !isFinite(convert) || !(rate > 0)){
+        return null;
+    }
+    let next = parseFloat((Number(count || 0) + convert * rate).toFixed(decimals));
+    return { aether: Number(aether) - convert, count: next, spent: convert };
+}
+
+// How many Aether one click on a prestige-currency buy button really spends: the multiplier (x1/x10/x25/x100...), limited to the
+// whole Aether you have, and at least 1 so a button you cannot afford still shows its base price. The button text and tooltip show
+// this number; the purchase itself (aetherBuyPrestige and the Plasmid/Phage buttons) uses the same min(multiplier, whole Aether).
+export function aetherBuyCount(aether, mult){
+    let have = Math.floor(Number(aether));
+    let m = Number(mult) > 0 ? Number(mult) : 1;
+    return have >= 1 ? Math.min(m, have) : 1;
+}
+

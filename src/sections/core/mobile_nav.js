@@ -74,5 +74,7 @@ export function initMobileNav(){
     if (!syncTimer){
         syncTimer = setInterval(syncTopBarHeight,400);
     }
-    syncTopBarHeight();
+    // Pembacaan pertama ditunda sampai startup selesai (tepat sebelum paint pertama): membaca offsetHeight di sini memaksa layout
+    // penuh sementara sisa UI masih dibangun, lalu layout dihitung ulang lagi. Interval di atas tetap menjaga nilainya.
+    (window.requestAnimationFrame || setTimeout)(syncTopBarHeight);
 }

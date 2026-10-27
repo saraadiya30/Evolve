@@ -32,6 +32,23 @@ const list = core.ocoinAlchemyList(fake);
 check('daftar: material masuk (termasuk yang bukan tradable)', ['Iron', 'Graphene', 'Water'].every(r => list.includes(r)), JSON.stringify(list));
 check('daftar: resource khusus tidak masuk', ['Money', 'Knowledge', 'Mana', 'Genes', 'Soul_Gem', 'Codex'].every(r => !list.includes(r)));
 
+// (1b) resource crafting: harga = jumlah bahan x harga bahan (x markup crafting), masuk daftar walau bukan tradable/stackable
+{
+    const recipe = (res) => ({ Plywood: [{ r: 'Lumber', a: 100 }], Mythril: [{ r: 'Iridium', a: 100 }, { r: 'Alloy', a: 250 }], Rusak: [{ r: 'Money', a: 5 }] })[res] || null;
+    const pl = core.ocoinAlchemyPrice('Plywood', undefined, null, recipe);
+    check('crafting: harga Plywood = 100 Lumber x harga Lumber x markup crafting', close(pl, 100 * core.ocoinAlchemyPrice('Lumber') * core.OCOIN_ALCH_CRAFT_MARKUP) && pl > 0);
+    const my = core.ocoinAlchemyPrice('Mythril', undefined, null, recipe);
+    check('crafting: harga Mythril = jumlah semua bahan dijumlah', close(my, (100 * core.ocoinAlchemyPrice('Iridium') + 250 * core.ocoinAlchemyPrice('Alloy')) * core.OCOIN_ALCH_CRAFT_MARKUP));
+    check('crafting: tanpa recipe, Plywood tidak punya harga (perilaku lama tidak berubah)', core.ocoinAlchemyPrice('Plywood') === 0);
+    check('crafting: bahan tanpa harga -> 0 (tidak jadi gratis)', core.ocoinAlchemyPrice('Rusak', undefined, null, recipe) === 0);
+    check('crafting: bahan ikut biaya trade route (Lumber 2 Money/unit -> Plywood 100 x 2 / 1000)', close(core.ocoinAlchemyPrice('Plywood', undefined, (r) => r === 'Lumber' ? 2 : 0, recipe), 100 * 2 * core.OCOIN_ALCH_MARKUP / 1000 * core.OCOIN_ALCH_CRAFT_MARKUP));
+    check('crafting: faktor profit trade route berlaku juga (beli x0,5, jual x2)', close(core.ocoinAlchemyBuyPrice('Plywood', undefined, null, 0.5, recipe), pl * 0.5) && close(core.ocoinAlchemySellPrice('Plywood', undefined, null, 2, recipe), pl * 2));
+    check('crafting: harga per lot = harga per unit x lot', close(core.ocoinAlchemyLotPrice('Plywood', undefined, null, recipe), pl * core.OCOIN_ALCH_LOT));
+    const craftList = core.ocoinAlchemyList({ Lumber: { tradable: true }, Plywood: { tradable: false, stackable: false }, Mythril: {}, Rusak: {}, Money: {} }, undefined, recipe);
+    check('crafting: Plywood dan Mythril masuk daftar, resep rusak dan Money tidak', craftList.includes('Plywood') && craftList.includes('Mythril') && !craftList.includes('Rusak') && !craftList.includes('Money'), JSON.stringify(craftList));
+    check('crafting: tanpa recipe daftar tidak berubah (Plywood tidak masuk)', !core.ocoinAlchemyList({ Lumber: { tradable: true }, Plywood: {} }).includes('Plywood'));
+}
+
 // (2) langkah per loop
 let s = core.ocoinAlchemyStep(10, 1, 1, 0.5, 100, -1);
 check('beli penuh bila Ocoin cukup', close(s.units, 10) && close(s.cost, 5));
@@ -331,6 +348,38 @@ check('game: Ocoin bebas 0 -> tidak membeli apa pun dari alokasi', G.resource.Ir
 }
 
 
+// (5a) resource crafting di game sungguhan: masuk tab, harga dari resep, beli/jual instan jalan
+{
+    const { ocoinInstantBuyNow, ocoinInstantSellNow, ocoinCraftRecipe } = await import('../src/resources/ocoin_alchemy.js');
+    const { craftCost } = await import('../src/resources/craft_cost.js');
+    const { tmp_vars } = await import('../src/core/vars.js');
+    const crafts = Object.keys(craftCost(true));
+    const inList = core.ocoinAlchemyList(tmp_vars.resource, resource_values, ocoinCraftRecipe);
+    check('game crafting: semua resource crafting yang ada di game masuk daftar tab', crafts.filter(r => tmp_vars.resource[r]).every(r => inList.includes(r)), `(${crafts.filter(r => !inList.includes(r)).join(',') || 'lengkap'})`);
+    const recipe = craftCost(true).Plywood;
+    const expect = recipe.reduce((t, i) => t + i.a * core.ocoinAlchemyBuyPrice(i.r, resource_values, tradeRouteUnitCost, buyF), 0);
+    check('game crafting: harga beli Plywood = bahan x harga beli bahan', close(ocoinUnitPrice('Plywood'), expect) && expect > 0, `(${ocoinUnitPrice('Plywood')})`);
+    check('game crafting: harga jual Plywood > harga beli (profit trade route)', ocoinSellUnitPrice('Plywood') > ocoinUnitPrice('Plywood'));
+    G.settings.pause = false;
+    G.resource.Plywood.display = true;
+    G.race.ocoinInstant = { coef: 10, exp: 0 };
+    G.resource.Plywood.amount = 0; G.stocks.ocoin = 1e9;
+    const pp = ocoinUnitPrice('Plywood');
+    const okb = ocoinInstantBuyNow('Plywood');
+    check('game crafting: beli instan 10 Plywood -> +10, Ocoin berkurang 10 x harga', okb && G.resource.Plywood.amount === 10 && close(1e9 - G.stocks.ocoin, 10 * pp));
+    G.stocks.ocoin = 0;
+    const oks = ocoinInstantSellNow('Plywood');
+    check('game crafting: jual instan 10 Plywood -> 0, Ocoin +10 x harga jual', oks && G.resource.Plywood.amount === 0 && close(G.stocks.ocoin, 10 * ocoinSellUnitPrice('Plywood')));
+    G.race.ocoinAlchemy = { Plywood: 1 };
+    G.stocks.ocoin = 1e9;
+    G.resource.Plywood.amount = 0;
+    const oc0 = G.stocks.ocoin;
+    execGameLoops(1);
+    check('game crafting: alokasi per detik beli Plywood (1 lot = 250 unit per loop)', close((oc0 - G.stocks.ocoin) / pp, core.OCOIN_ALCH_LOT * 0.25, 1e-3) && G.resource.Plywood.amount > 0, `(Plywood ${G.resource.Plywood.amount})`);
+    G.race.ocoinAlchemy = { Iron: 0 };
+    G.race.ocoinInstant = { coef: 1, exp: 3 };
+}
+
 // (5b) instan di game sungguhan
 {
     const { ocoinInstantBuyNow, ocoinInstantSellNow } = await import('../src/resources/ocoin_alchemy.js');
@@ -384,6 +433,22 @@ check('game: Ocoin bebas 0 -> tidak membeli apa pun dari alokasi', G.resource.Ir
     G.resource.Money.display = true; G.resource.Money.amount = 100; G.stocks.ocoin = 0;
     ocoinInstantSellNow('Money');
     check('game instan: Money tidak punya harga -> tidak bisa dijual', G.resource.Money.amount === 100 && G.stocks.ocoin === 0);
+}
+
+// (6) tooltip baris tab Exchange harus append-to-body: kalau tooltip ikut area scroll, hover di baris terbawah membesarkan area scroll
+// (+80px), scroll berikutnya menggeser list, mouse lepas dari baris, tooltip hilang, area mengecil lagi: list bergetar naik-turun.
+{
+    const srcText = readFileSync(new URL('../src/resources/ocoin_alchemy.js', import.meta.url), 'utf8');
+    const tips = srcText.match(/<b-tooltip [^>]*>/g) || [];
+    check('tooltip: tab Exchange punya tooltip baris', tips.length >= 4, `(${tips.length})`);
+    check('tooltip: semua tooltip baris append-to-body (tidak memperbesar area scroll)', tips.every(t => t.includes('append-to-body')), `(${tips.filter(t => !t.includes('append-to-body')).length} tanpa)`);
+    check('tooltip: semua tooltip baris membuka ke atas (tidak terpotong tepi layar di baris terbawah)', tips.every(t => t.includes('position="is-top"')));
+    check('tooltip +/-: harga dan jumlah lot dikali keyMultiplier() (klik menggeser sebanyak itu lot)', /sellTip\(spell\)\{[\s\S]*?keyMultiplier\(\)[\s\S]*?ocoinSellLotPrice\(spell\) \* m[\s\S]*?OCOIN_ALCH_LOT \* m/.test(srcText) && /buyTip\(spell\)\{[\s\S]*?keyMultiplier\(\)[\s\S]*?ocoinLotPrice\(spell\) \* m[\s\S]*?OCOIN_ALCH_LOT \* m/.test(srcText));
+    // tab lain yang list-nya scroll di dalam section.tab-content: Misc > Aether, Misc > Stocks, Stats > Achievements
+    for (const f of ['../src/resources/aether_alchemy.js', '../src/sections/drawing/draw_stocks_parts.js', '../src/achievements/achievement_logic.js']) {
+        const t2 = (readFileSync(new URL(f, import.meta.url), 'utf8').match(/<b-tooltip [^>]*>/g) || []);
+        check(`tooltip: ${f.split('/').pop()} semua append-to-body dan membuka ke atas`, t2.length > 0 && t2.every(t => t.includes('append-to-body') && t.includes('position="is-top"')), `(${t2.length} tooltip)`);
+    }
 }
 
 console.log(ok ? '\nLOLOS' : '\nGAGAL');

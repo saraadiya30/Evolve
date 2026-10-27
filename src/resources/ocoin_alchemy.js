@@ -9,6 +9,7 @@ import { modRes, timeScale } from '../functions/resource_mod.js';
 import { stockFlags } from '../stocks/stocks_core.js';
 import { ocoinAlchemyBuyPrice, ocoinAlchemySellPrice, ocoinAlchemyList, ocoinAlchemyStep, ocoinAlchemySellStep, ocoinInstantBuy, ocoinInstantSell, OCOIN_ALCH_LOT, OCOIN_INSTANT_EXPS, ocoinInstantQuantity } from '../stocks/ocoin_alchemy_core.js';
 import { resource_values } from '../config/constants.js';
+import { craftCost } from './craft_cost.js';
 import { tradeRouteUnitCost, tradeProfitBuyFactor, tradeProfitSellFactor } from './crate_assignment.js';
 import { aetherFormat } from './aether_alchemy.js';
 import { aether_big_affix } from './aether_affix.js';
@@ -17,11 +18,17 @@ const TAB_INDEX = 5;
 
 // Ocoin per unit / per lot, priced from the import trade route (falls back to the base value for resources with no route).
 // Same profit mechanics as the marketplace: buying gets the trade route buy discount, selling the sell bonus on top.
+// Crafted resources (Plywood, Brick, ...) are priced from their crafting recipe (what the ingredients of one unit cost), so the
+// recipe is handed to the pure price maths. Same recipe the crafting itself uses (manual = true: without the high_pop discount).
+export function ocoinCraftRecipe(res){
+    let recipe = craftCost(true)[res];
+    return recipe && recipe.length ? recipe : null;
+}
 export function ocoinUnitPrice(res){
-    return ocoinAlchemyBuyPrice(res, resource_values, tradeRouteUnitCost, tradeProfitBuyFactor());
+    return ocoinAlchemyBuyPrice(res, resource_values, tradeRouteUnitCost, tradeProfitBuyFactor(), ocoinCraftRecipe);
 }
 export function ocoinSellUnitPrice(res){
-    return ocoinAlchemySellPrice(res, resource_values, tradeRouteUnitCost, tradeProfitSellFactor());
+    return ocoinAlchemySellPrice(res, resource_values, tradeRouteUnitCost, tradeProfitSellFactor(), ocoinCraftRecipe);
 }
 function ocoinLotPrice(res){
     return ocoinUnitPrice(res) * OCOIN_ALCH_LOT;
@@ -232,16 +239,16 @@ export function loadOcoinAlchemy(name,color){
 
     // Same row as the marketplace: BUY [price] SELL [price], price per unit in Ocoin. The tooltip says what one click does now.
     alchemy.append($(`<span class="buy"><span class="has-text-success">${loc('resource_market_buy')}</span></span>`));
-    alchemy.append($(`<b-tooltip :label="instBuyTip('${name}')" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !instBuyOk('${name}') }" @click="instBuy('${name}')">{{ buyPrice('${name}') }}</span></b-tooltip>`));
+    alchemy.append($(`<b-tooltip append-to-body :label="instBuyTip('${name}')" position="is-top" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !instBuyOk('${name}') }" @click="instBuy('${name}')">{{ buyPrice('${name}') }}</span></b-tooltip>`));
     alchemy.append($(`<span class="sell"><span class="has-text-danger">${loc('resource_market_sell')}</span></span>`));
-    alchemy.append($(`<b-tooltip :label="instSellTip('${name}')" position="is-bottom" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !instSellOk('${name}') }" @click="instSell('${name}')">{{ sellPrice('${name}') }}</span></b-tooltip>`));
+    alchemy.append($(`<b-tooltip append-to-body :label="instSellTip('${name}')" position="is-top" size="is-small" multilined animated><span role="button" class="order" :class="{ off: !instSellOk('${name}') }" @click="instSell('${name}')">{{ sellPrice('${name}') }}</span></b-tooltip>`));
 
     // Per second allocation, like the routes of the marketplace: minus sells, plus buys, one step = one lot per second.
     let res = $(`<span class="trade"><span class="has-text-warning">${loc('ocoin_alchemy_auto')}</span></span>`);
     alchemy.append(res);
-    res.append($(`<b-tooltip :label="sellTip('${name}')" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="sell ${global.resource[name].name}" class="sub has-text-danger" @click="subSpell('${name}')"><span>-</span></span></b-tooltip>`));
+    res.append($(`<b-tooltip append-to-body :label="sellTip('${name}')" position="is-top" size="is-small" multilined animated><span role="button" aria-label="sell ${global.resource[name].name}" class="sub has-text-danger" @click="subSpell('${name}')"><span>-</span></span></b-tooltip>`));
     res.append($(`<span class="current">{{ a.${name} }}</span>`));
-    res.append($(`<b-tooltip :label="buyTip('${name}')" position="is-bottom" size="is-small" multilined animated><span role="button" aria-label="buy ${global.resource[name].name}" class="add has-text-success" @click="addSpell('${name}')"><span>+</span></span></b-tooltip>`));
+    res.append($(`<b-tooltip append-to-body :label="buyTip('${name}')" position="is-top" size="is-small" multilined animated><span role="button" aria-label="buy ${global.resource[name].name}" class="add has-text-success" @click="addSpell('${name}')"><span>+</span></span></b-tooltip>`));
 
     if (!global.race.ocoinAlchemy.hasOwnProperty(name)){
         global.race.ocoinAlchemy[name] = 0;
@@ -289,10 +296,13 @@ export function loadOcoinAlchemy(name,color){
                 global.race.ocoinAlchemy[spell] -= keyMultiplier();
             },
             sellTip(spell){
-                return loc('ocoin_alchemy_sell_tip',[aetherFormat(ocoinSellLotPrice(spell)), OCOIN_ALCH_LOT, global.resource[spell].name]);
+                // one click moves keyMultiplier() lots, so the tooltip shows that step (keyMultiplier() is reactive, see vars.js)
+                let m = keyMultiplier();
+                return loc('ocoin_alchemy_sell_tip',[aetherFormat(ocoinSellLotPrice(spell) * m), OCOIN_ALCH_LOT * m, global.resource[spell].name]);
             },
             buyTip(spell){
-                return loc('ocoin_alchemy_buy_tip',[aetherFormat(ocoinLotPrice(spell)), OCOIN_ALCH_LOT, global.resource[spell].name]);
+                let m = keyMultiplier();
+                return loc('ocoin_alchemy_buy_tip',[aetherFormat(ocoinLotPrice(spell) * m), OCOIN_ALCH_LOT * m, global.resource[spell].name]);
             }
         }
     });
@@ -306,7 +316,7 @@ export function drawOcoinAlchemy(){
     }
     initOcoinAlchemy();
     ensureState();
-    let list = tmp_vars.hasOwnProperty('resource') ? ocoinAlchemyList(tmp_vars.resource) : [];
+    let list = tmp_vars.hasOwnProperty('resource') ? ocoinAlchemyList(tmp_vars.resource, resource_values, ocoinCraftRecipe) : [];
     // Every key must exist BEFORE the first vBind: Vue 2 only makes the keys that exist at bind time reactive, so a key added
     // afterwards would change in the data but the number on screen would never update (the buttons look dead).
     list.forEach(function(name){

@@ -4,32 +4,58 @@
     <title>Evolve</title>
     <meta http-equiv="Content-type" content="text/html;charset=utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <link rel="preconnect" href="https://unpkg.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="icon" href="evolved-light.ico" type="images/x-icon" media="(prefers-color-scheme:dark)">
     <link rel="icon" href="evolved.ico" type="images/x-icon" media="(prefers-color-scheme:light)">
     <link rel="icon" href="evolved.ico" type="images/x-icon" media="(prefers-color-scheme:no-preference)">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato&display=swap" media="print" onload="this.media='all'">
+    <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato&display=swap"></noscript>
     <link rel="stylesheet" href="lib/buefy.min.0.9.22.css">
     <link rel="stylesheet" type="text/css" href="lib/weather-icons.min.css">
     <link rel="stylesheet" type="text/css" href="evolve/evolve.css">
-    <script src="https://unpkg.com/jquery@3.6.3/dist/jquery.min.js" integrity="sha384-Ft/vb48LwsAEtgltj7o+6vtS2esTU9PCpDqcXs4OCVQFZu5BqprHtUCZ4kjK+bpE" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/vue@2.7.14/dist/vue.min.js" integrity="sha384-05dHfbm/L0COkFLQ5ghEDllrtj0kD1/46h3bAPxuPjWq9/IDglEo6RtZefYkYfpk" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/buefy@0.9.22/dist/buefy.min.js" integrity="sha384-SsYfCnxxJJlTFm+xZU2q9KLeF0LureHv8EYGBhKyFNiAGP5ufOhhryh1fKVdq6N7" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/sortablejs@1.10.2/Sortable.min.js" integrity="sha384-6qM1TfKo1alBw3Uw9AWXnaY5h0G3ScEjxtUm4TwRJm7HRmDX8UfiDleTAEEg5vIe" crossorigin="anonymous"></script>
-    <script src="https://unpkg.com/chart.js@3.8.2/dist/chart.min.js" integrity="sha384-z7c1KnSCkMpfoib43Lq1v2pokQC8cdqBWmH2qiyH2KkmNv60hACtZUjoCEkp1Y08" crossorigin="anonymous"></script>
-    <script src="lib/lz-string.min.js"></script>
+    <script defer src="https://unpkg.com/jquery@3.6.3/dist/jquery.min.js" integrity="sha384-Ft/vb48LwsAEtgltj7o+6vtS2esTU9PCpDqcXs4OCVQFZu5BqprHtUCZ4kjK+bpE" crossorigin="anonymous"></script>
+    <script defer src="https://unpkg.com/vue@2.7.14/dist/vue.min.js" integrity="sha384-05dHfbm/L0COkFLQ5ghEDllrtj0kD1/46h3bAPxuPjWq9/IDglEo6RtZefYkYfpk" crossorigin="anonymous"></script>
+    <script defer src="https://unpkg.com/buefy@0.9.22/dist/buefy.min.js" integrity="sha384-SsYfCnxxJJlTFm+xZU2q9KLeF0LureHv8EYGBhKyFNiAGP5ufOhhryh1fKVdq6N7" crossorigin="anonymous"></script>
+    <script defer src="https://unpkg.com/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
+    <script defer src="https://unpkg.com/sortablejs@1.10.2/Sortable.min.js" integrity="sha384-6qM1TfKo1alBw3Uw9AWXnaY5h0G3ScEjxtUm4TwRJm7HRmDX8UfiDleTAEEg5vIe" crossorigin="anonymous"></script>
+    <script defer src="https://unpkg.com/chart.js@3.8.2/dist/chart.min.js" integrity="sha384-z7c1KnSCkMpfoib43Lq1v2pokQC8cdqBWmH2qiyH2KkmNv60hACtZUjoCEkp1Y08" crossorigin="anonymous"></script>
+    <script defer src="lib/lz-string.min.js"></script>
     <script src="evolve/main.js" type="module"></script>
 </head>
 <body>
     <style>
+        /* Layar tunggu statis: tampil segera saat HTML dimuat, sebelum skrip selesai. Seluruh body dikosongkan saat UI game dibangun. */
         .loading {
-            text-align: center;
-            margin-top: 10rem;
+            position: fixed;
+            top: 0; right: 0; bottom: 0; left: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+            color: #282828;
+            font-family: Lato, "Helvetica Neue", Arial, sans-serif;
+            z-index: 9999;
+        }
+        @media (prefers-color-scheme: dark) {
+            .loading {
+                background-color: #282828;
+                color: #ebdbb2;
+            }
+        }
+        .loading .loadingTitle {
+            font-size: clamp(3rem, 18vw, 8rem);
+            font-weight: bold;
+            line-height: 1.1;
+            letter-spacing: .05em;
         }
         .lds-dual-ring {
             display: inline-block;
             width: 64px;
             height: 64px;
+            margin-top: 1.5rem;
         }
         .lds-dual-ring:after {
             content: " ";
@@ -38,8 +64,8 @@
             height: 5rem;
             margin: 1px;
             border-radius: 50%;
-            border: 5px solid #fff;
-            border-color: #fff transparent #fff transparent;
+            border: 5px solid currentColor;
+            border-color: currentColor transparent currentColor transparent;
             animation: lds-dual-ring 1.2s linear infinite;
             }
             @keyframes lds-dual-ring {
@@ -51,7 +77,7 @@
             }
         }
     </style>
-    <div class="loading"><div class="lds-dual-ring"></div></div>
+    <div class="loading"><div class="loadingTitle">Evolve</div><div class="lds-dual-ring"></div></div>
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-CPC46V71CB"></script>
     <script>

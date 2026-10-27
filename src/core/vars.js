@@ -203,7 +203,20 @@ export let keyMap = {
     q: false
 };
 
+// keyMap is a plain object, so Vue never knew that a tooltip/label showing the multiplier (x10/x25/x100) had to be recomputed when
+// Ctrl/Shift/Alt went down or up: the click already used the new multiplier but the text kept the old one until something else
+// re-rendered it. keyState.n is a reactive counter bumped whenever a key in keyMap really changes, and keyMultiplier() reads it,
+// so every render or computed that calls keyMultiplier() re-runs by itself when the multiplier keys change.
+export const keyState = (typeof Vue !== 'undefined' && typeof Vue.observable === 'function') ? Vue.observable({ n: 0 }) : { n: 0 };
+export function setKeyMap(key, down){
+    if (keyMap[key] !== down){
+        keyMap[key] = down;
+        keyState.n++;
+    }
+}
+
 export function keyMultiplier(){
+    void keyState.n;
     let number = 1;
     if (global.settings['mKeys']){
         if (keyMap.x10){

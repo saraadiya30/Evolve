@@ -125,7 +125,7 @@ export function drawAchieve(args){
             }
             let emblem = format_emblem(achievement,16,baseIcon,fool);
             if ((fool && global.stats.achieve[achievement].l > 1) || !fool){
-                achieve.append($(`<b-tooltip :label="flair('${achievement}')" position="is-bottom" size="is-small" animated><div class="achievement"><span class="has-text-warning">${achievements[achievement].name}</span><span>${achievements[achievement].desc}</span>${emblem}</div></b-tooltip>`));
+                achieve.append($(`<b-tooltip append-to-body :label="flair('${achievement}')" position="is-top" size="is-small" animated><div class="achievement"><span class="has-text-warning">${achievements[achievement].name}</span><span>${achievements[achievement].desc}</span>${emblem}</div></b-tooltip>`));
             }
             else if (fool && global.stats.achieve[achievement].l === 1){
                 earned--;
@@ -136,7 +136,7 @@ export function drawAchieve(args){
     set_ulevel(ulevel);
 
     if (fool && !global.stats.feat['fool']){
-        let thefool = $(`<b-tooltip :label="feat('fool')" position="is-bottom" size="is-small" animated><div id="thefool" class="achievement"><span class="has-text-danger">${feats.fool.name}</span><span>${loc('feat_fool_spoof')}</span></div></b-tooltip>`);
+        let thefool = $(`<b-tooltip append-to-body :label="feat('fool')" position="is-top" size="is-small" animated><div id="thefool" class="achievement"><span class="has-text-danger">${feats.fool.name}</span><span>${loc('feat_fool_spoof')}</span></div></b-tooltip>`);
         achieve.append(thefool);
     }
     else {
@@ -150,7 +150,7 @@ export function drawAchieve(args){
                         star = egg;
                     }
                 }
-                achieve.append($(`<b-tooltip :label="feat('${feat}')" position="is-bottom" size="is-small" animated><div class="achievement"><span class="has-text-danger">${feats[feat].name}</span><span>${feats[feat].desc}</span>${star}</div></b-tooltip>`));
+                achieve.append($(`<b-tooltip append-to-body :label="feat('${feat}')" position="is-top" size="is-small" animated><div class="achievement"><span class="has-text-danger">${feats[feat].name}</span><span>${feats[feat].desc}</span>${star}</div></b-tooltip>`));
             }
         });
     }

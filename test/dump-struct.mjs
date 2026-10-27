@@ -2,7 +2,11 @@
 // Dump "tanda tangan" struktur objek besar game ke JSON: urutan key, field, nilai primitif, dan hash source tiap fungsi.
 // Dipakai untuk membandingkan dua pohon sumber (mis. worktree commit lama vs kerja sekarang):
 //   node test/dump-struct.mjs out.json     (jalankan di masing-masing pohon, lalu `diff` / test/compare-struct.mjs)
-import './env-setup.mjs';
+import { setFixedNow } from './env-setup.mjs';
+// Game punya event musiman (Halloween, Natal, Paskah, dst) yang mengubah isi races/techs/actions menurut tanggal HARI INI
+// (mis. Human jadi Zombie, Casino jadi Cursed Carnival). Supaya hash struktur tidak ikut berubah tiap musim, dump selalu dibuat
+// pada tanggal di luar semua event. Event itu sendiri diuji terpisah dengan tanggal yang disengaja.
+setFixedNow(Date.UTC(2026, 5, 15, 12, 0, 0));
 import { createHash } from 'node:crypto';
 import { writeFileSync } from 'node:fs';
 await import('../src/main.js');

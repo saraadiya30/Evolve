@@ -24,6 +24,7 @@ const TESTS = [
     ['alchemy-mana-deficit.mjs'],
     ['ocoin-alchemy.mjs'],
     ['lab-aether-genes.mjs'],
+    ['aether-prestige-buy.mjs'],
     ['accel-rolls.mjs'],
     ['timescale-counters.mjs'],
     ['aether-speed-cap.mjs'],
