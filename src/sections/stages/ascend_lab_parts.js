@@ -1,4 +1,4 @@
-import { global, webWorker, save } from '../../core/vars.js';
+import { global, webWorker, save, sizeApproximation } from '../../core/vars.js';
 import { races, traits } from '../../core/registries.js';
 import { genus_def } from '../../races/genus_def.js';
 import { unlockAchieve, unlockFeat } from '../../achievements/achievement_logic.js';
@@ -6,6 +6,7 @@ import { universeAffix } from '../../functions/universe_utils.js';
 import { apotheosis, ascend } from '../../resets/reset_vacuum_collapse_ascend_descension_apotheosis.js';
 import { clearElement, vBind } from '../../functions/dom_helpers.js';
 import { calcGenomeScore } from '../../functions/run_stats_helpers.js';
+import { AETHER_GENES_RATE } from '../../config/constants.js';
 import { deepClone } from '../../core/object_utils.js';
 import { popover } from '../../functions/popover.js';
 import { getTraitDesc } from '../../functions/trait_description.js';
@@ -99,6 +100,15 @@ export function ascendLab_s1($ctx){
 
     let labStatus = `<div><h3 class="has-text-danger">${loc('genelab_title')}</h3> - <span class="has-text-warning">${loc('genelab_genes')} {{ g.genes }}</span> - <span class="has-text-warning">${loc('trait_untapped_name')}: {{ g.genes | untapped }}</span></div>`;
     lab.append(labStatus);
+
+    if (!$ctx.isWiki){
+        let aetherBuy = `<div class="aetherGenes"><span class="has-text-caution">${loc('genelab_aether')} {{ ae.count | aether }}</span>`;
+        [1,10,100].forEach(function(n){
+            aetherBuy += `<button class="button is-small" :disabled="ae.count < ${n}" @click="buyGenes(${n})">${loc('genelab_aether_buy',[n * AETHER_GENES_RATE, n])}</button>`;
+        });
+        aetherBuy += `<span class="has-text-warning" v-if="g.aetherGenes > 0">${loc('genelab_aether_bought',[`{{ g.aetherGenes }}`])}</span></div>`;
+        lab.append(aetherBuy);
+    }
 
     if ($ctx.isWiki){
         lab.append(`
@@ -203,6 +213,11 @@ export function ascendLab_s1($ctx){
         ranks: {},
         fanaticism: false,
     };
+
+    // Genes tambahan dari Aether: sekali pakai untuk desain race ini, mulai dari 0 tiap desain baru.
+    // Kalau sudah dibeli tapi race belum dibuat (misal halaman di-refresh), nilainya diambil dari aetherPending.
+    $ctx.genome['aetherGenes'] = !$ctx.isWiki && global.hasOwnProperty('custom') && global.custom.aetherPending && global.custom.aetherPending[$ctx.slot] > 0 ? global.custom.aetherPending[$ctx.slot] : 0;
+    $ctx.aether = { count: !$ctx.isWiki && global.prestige.Aether ? Math.floor(global.prestige.Aether.count) : 0 };
 
     if ($ctx.hybrid){
         if (global.hasOwnProperty('custom') && global.custom.hasOwnProperty($ctx.slot)){
@@ -312,7 +327,8 @@ export function ascendLab_s2($ctx){
             g: $ctx.genome,
             w: $ctx.wikiVars,
             err: $ctx.error,
-            tt: $ctx.activeTab
+            tt: $ctx.activeTab,
+            ae: $ctx.aether
         },
         methods: {
             val(type){
@@ -331,6 +347,21 @@ export function ascendLab_s2($ctx){
                     else if ($ctx.wikiVars.ascended[type] > 5){
                         $ctx.wikiVars.ascended[type] = 5;
                     }
+                }
+            },
+            buyGenes(n){
+                if ($ctx.isWiki || !global.prestige.Aether){ return; }
+                n = Math.floor(n);
+                if (!(n >= 1) || global.prestige.Aether.count < n){ return; }
+                global.prestige.Aether.count -= n;
+                $ctx.genome.aetherGenes += n * AETHER_GENES_RATE;
+                if (!global.hasOwnProperty('custom')){ global.custom = {}; }
+                if (!global.custom.aetherPending){ global.custom.aetherPending = {}; }
+                global.custom.aetherPending[$ctx.slot] = $ctx.genome.aetherGenes;
+                $ctx.aether.count = Math.floor(global.prestige.Aether.count);
+                $ctx.genome.genes = calcGenomeScore($ctx.genome,false,$ctx.tRanks);
+                if ($ctx.activeTab.t === 5){
+                    $ctx.summaryTab(5);
                 }
             },
             geneEdit(){
@@ -365,8 +396,12 @@ export function ascendLab_s2($ctx){
                         genus: $ctx.genome.genus,
                         traits: $ctx.genome.traitlist,
                         fanaticism: $ctx.genome.fanaticism,
-                        ranks: $ctx.tRanks
+                        ranks: $ctx.tRanks,
+                        aetherGenes: $ctx.genome.aetherGenes > 0 ? $ctx.genome.aetherGenes : 0
                     };
+                    if (global.custom.aetherPending){
+                        delete global.custom.aetherPending[$ctx.slot];
+                    }
                     if ($ctx.hybrid){
                         global.custom[$ctx.slot]['hybrid'] = $ctx.genome.hybrid;
                         apotheosis();
@@ -535,6 +570,9 @@ export function ascendLab_s2($ctx){
                         }
 
                         Object.keys($ctx.genome).forEach(function (type){
+                            if (type === 'aetherGenes'){
+                                return;
+                            }
                             if (importCustom[type]){
                                 $ctx.genome[type] = importCustom[type];
                             }
@@ -586,6 +624,7 @@ export function ascendLab_s2($ctx){
             customExport(){
                 let exportGenome = deepClone($ctx.genome);
                 exportGenome['ranks'] = $ctx.tRanks;
+                delete exportGenome['aetherGenes'];
                 const downloadToFile = (content, filename, contentType) => {
                     const a = document.createElement('a');
                     const file = new Blob([content], {type: contentType});
@@ -598,6 +637,9 @@ export function ascendLab_s2($ctx){
             }
         },
         filters: {
+            aether(value){
+                return sizeApproximation(value, 1);
+            },
             cost(trait){
                 return geneCost($ctx.genome,trait,$ctx.tRanks);
             },

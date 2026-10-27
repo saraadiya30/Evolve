@@ -9989,6 +9989,16 @@ div.bigbang.burn.c::before {
     transform: translate3d(4px, 0, 0);
   }
 }
+.celestialLab .aetherGenes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.25rem 0.5rem;
+  margin: 0.4rem 0;
+}
+.celestialLab .aetherGenes .button {
+  margin: 0;
+}
 .celestialLab .fields {
   margin-top: 0.5rem;
 }

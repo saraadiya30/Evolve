@@ -300,7 +300,8 @@ export function sentience_s1($ctx){
             genes: 0,
             genus: global.custom.race0.genus,
             traitlist: global.custom.race0.traits,
-            ranks: global.custom.race0?.ranks || {} 
+            ranks: global.custom.race0?.ranks || {},
+            aetherGenes: global.custom.race0?.aetherGenes || 0
         });
     }
 
@@ -319,7 +320,8 @@ export function sentience_s1($ctx){
             genus: global.custom.race1.genus,
             hybrid: global.custom.race1.hybrid,
             traitlist: global.custom.race1.traits,
-            ranks: global.custom.race1?.ranks || {} 
+            ranks: global.custom.race1?.ranks || {},
+            aetherGenes: global.custom.race1?.aetherGenes || 0
         });
     }
 

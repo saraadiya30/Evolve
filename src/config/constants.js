@@ -199,3 +199,6 @@ export const tagDebug = false;
 // NOTE: the original game wipes a stored value that is above its cap, so saves with a lot of accelerated time should not
 // be loaded in the unmodified game.
 export const ATIME_CAP = Infinity;
+
+// Gene Lab (desain race custom saat Ascension): 1 Aether dapat ditukar jadi sekian genes tambahan
+export const AETHER_GENES_RATE = 10;

@@ -13,6 +13,11 @@ export function calcGenomeScore(genome,wiki,tRanks){
     if (!tRanks){ tRanks = genome.ranks || {}; }
     let genes = 0;
 
+    // Genes tambahan hasil beli pakai Aether (1 Aether = 10 genes), berlaku hanya untuk race yang didesain ini
+    if (!wiki && genome.aetherGenes > 0){
+        genes += genome.aetherGenes;
+    }
+
     if (wiki){
         Object.keys(wiki.ascended).forEach(function (uni){
             genes += wiki.ascended[uni];
