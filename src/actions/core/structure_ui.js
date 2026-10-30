@@ -49,6 +49,9 @@ export function drawModal(c_action,type){
         case 'mining_droid':
             loadIndustry('droid',body);
             break;
+        case 'deut_plant':
+            loadIndustry('deut_plant',body);
+            break;
         case 'g_factory':
         case 'refueling_station':
         case 'twisted_lab':

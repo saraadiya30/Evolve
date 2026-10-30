@@ -11,6 +11,18 @@ export function applySaveDefaults6({ global }){
         global['eden'] = {};
     }
 
+    // Deuterium Power Plant (interstellar Nebula): old saves that already have Deuterium unlocked get its record. A short-lived earlier
+    // version kept the plant in global.race (Resources tab); what it held is carried over, then removed.
+    if (global.race['deutPlant']){
+        if (global.race.deutPlant.built && !global.interstellar['deut_plant']){
+            global.interstellar['deut_plant'] = { count: 1, rate: Number(global.race.deutPlant.rate) > 0 ? Number(global.race.deutPlant.rate) : 0 };
+        }
+        delete global.race['deutPlant'];
+    }
+    if ((global.tech['nebula'] >= 2 || (global.resource && global.resource['Deuterium'] && global.resource.Deuterium.display)) && !global.interstellar['deut_plant']){
+        global.interstellar['deut_plant'] = { count: 0, rate: 0 };
+    }
+
     if (global.interstellar['mass_ejector'] && !global.interstellar.mass_ejector['Bolognium']){
         global.interstellar.mass_ejector['Bolognium'] = 0;
     }

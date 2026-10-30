@@ -9,7 +9,7 @@ import { production } from '../../resources/prod.js';
 import { highPopAdjust } from '../../functions/adjusters_basic.js';
 import { loc } from '../../core/locale.js';
 import { powerBegin, powerAdd } from '../../systems/power_core.js';
-import { POWER_BONUS_PER_LOT } from '../../stocks/stocks_core.js';
+import { DEUT_PLANT_WATT_PER_UNIT, deuteriumPlantStep } from '../../resources/deuterium_plant_core.js';
 
 export function fastLoopPowerGeneration($ctx){
         powerBegin($ctx);
@@ -121,6 +121,18 @@ export function fastLoopPowerGeneration($ctx){
             }
         });
 
+        // Deuterium Power Plant (interstellar Nebula): bought once, burns the Deuterium per second set in its Industry panel. It is a
+        // source like any other, so it goes in here before fastLoopPowerUsage decides which buildings keep running.
+        if (global.interstellar['deut_plant'] && global.interstellar.deut_plant.count > 0 && global.resource.Deuterium){
+            let plant = deuteriumPlantStep(global.interstellar.deut_plant.rate, global.resource.Deuterium.amount, $ctx.time_multiplier, powerModifier(DEUT_PLANT_WATT_PER_UNIT));
+            if (plant.consumed > 0 && modRes('Deuterium', -plant.consumed)){
+                if (breakdown.p.consume['Deuterium']){
+                    breakdown.p.consume['Deuterium'][loc('deut_plant_title')] = -plant.rate;
+                }
+                powerAdd($ctx, loc('deut_plant_title'), plant.watts);
+            }
+        }
+
         // Uranium Ash (from coal powerplants)
         if (global.tech['uranium'] && global.tech['uranium'] >= 3 && p_on['coal_power']){
             const fuel = actions.city.coal_power.p_fuel();
@@ -221,13 +233,6 @@ export function fastLoopPowerGeneration($ctx){
                 let power = draw * 100000000; // 0.00001 Aether = 1000 watts
                 powerAdd($ctx, loc('resource_Aether_name'), power);
             }
-        }
-
-        // Stock portfolio power bonus: a flat +1 Watt per lot held, recomputed every tick from current holdings, so selling lots
-        // takes it away again. It is a source like any other and goes in here, before fastLoopPowerUsage decides which
-        // buildings keep running.
-        if (global.stocks && global.stocks.market && global.stocks.market.Power && global.stocks.market.Power.lots > 0){
-            powerAdd($ctx, loc('stock_bonus_label'), global.stocks.market.Power.lots * POWER_BONUS_PER_LOT);
         }
 
         if (global.race['powered']){

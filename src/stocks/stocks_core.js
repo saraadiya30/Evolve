@@ -13,21 +13,19 @@ export const AETHER_OCOIN_RATE = 1e12; // Ocoin you get for 1 Aether (the Aether
 export const LOT_BONUS = 0.001;     // each lot on production adds +0.1% production to that stock's resource (additive, no cap)
 export const STORAGE_BONUS = 0.01;  // each lot on storage adds +1% storage (max capacity) to that stock's resource (multiplicative, no cap)
 
-// Two "special" companies that are not tied to a stockpiled resource at all, but to a city-wide stat instead.
+// Special companies that are not tied to a stockpiled resource at all, but to a city-wide stat instead.
 // Unlike LOT_BONUS/STORAGE_BONUS (percentages, multiplicative), these are flat additive amounts: holding lots adds
 // that amount every tick the bonus is computed, and selling them takes it away again on the very next tick, since
 // the bonus is always computed fresh from the lots you currently hold, never accumulated as a one-off transaction.
 export const MORALE_BONUS_PER_LOT = 0.1;  // each lot adds +0.1 Morale (the current value, not the cap)
-export const POWER_BONUS_PER_LOT = 1;     // each lot adds +1 Power (Watt) to the city's power grid
 export const BIRTH_BONUS_PER_LOT = 0.05;  // each lot adds +0.05 to the citizen growth roll, same additive/reversible pattern
 export const ARMY_BONUS_PER_LOT = 0.1;    // each lot adds +0.1 to the maximum number of soldiers (whole soldiers only, see armyCapBonus)
 // Dividend company: unlike the three above it pays in Ocoin. Once per game day each lot adds this fraction of the Ocoin
 // you currently have available (so 1000 lots = +100% of your Ocoin per day). It compounds, and it stops when you sell.
 export const OCOIN_YIELD_PER_LOT = 0.001;  // +0.1% of available Ocoin per lot, per game day
-// Order here is the display order for the special (non-resource) companies: Morale, Power, Birthrate, Army, then Dividend.
+// Order here is the display order for the special (non-resource) companies: Morale, Birthrate, Army, then Dividend.
 export const SPECIAL_STOCKS = [
     { res: 'Morale', fair: 60 },
-    { res: 'Power', fair: 90 },
     { res: 'Birthrate', fair: 75 },
     { res: 'Army', fair: 110 },
     { res: 'Dividend', fair: 150 }

@@ -3,6 +3,7 @@ import { clearElement } from '../functions/dom_helpers.js';
 import { loc } from '../core/locale.js';
 import { INFERNO_SMELTER_RATE } from '../config/constants.js';
 import { loadFactory, loadDroid, loadGraphene, loadNFactory } from './factory_panels.js';
+import { loadDeuteriumPlant } from '../resources/deuterium_plant.js';
 import { loadPylon, loadQuarry, loadTMine, loadMiningShip, loadAlienSpaceStation, loadReplicator, loadMechStation } from './industry_panels.js';
 import { loadSmelter_s1, loadSmelter_s2, loadSmelter_s3 } from '../sections/loaders/load_smelter_parts.js';
 import { smelterFuelConfig } from './smelter_fuel.js';
@@ -22,6 +23,9 @@ export function loadIndustry(industry,parent,bind){
             break;
         case 'graphene':
             loadGraphene(parent,bind);
+            break;
+        case 'deut_plant':
+            loadDeuteriumPlant(parent,bind);
             break;
         case 'pylon':
             loadPylon(parent,bind);
@@ -75,6 +79,11 @@ export function defineIndustry(){
         let graphene = $(`<div id="iGraphene" class="industry"><h2 class="header has-text-advanced">${global.race['warlord'] ? loc('portal_twisted_lab_title') : loc('interstellar_g_factory_title')}</h2></div>`);
         $(`#industry`).append(graphene);
         loadIndustry('graphene',graphene,'#iGraphene');
+    }
+    if (global.interstellar['deut_plant'] && global.interstellar.deut_plant.count > 0){
+        let deut = $(`<div id="iDeutPlant" class="industry"><h2 class="header has-text-advanced">${loc('deut_plant_title')}</h2></div>`);
+        $(`#industry`).append(deut);
+        loadIndustry('deut_plant',deut,'#iDeutPlant');
     }
     if (global.race['casting'] && (global.city['pylon'] || global.space['pylon'] || global.tauceti['pylon'])){
         let casting = $(`<div id="iPylon" class="industry"><h2 class="header has-text-advanced">${loc('city_pylon')}</h2></div>`);

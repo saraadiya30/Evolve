@@ -1,6 +1,6 @@
 import { initStocks, CHART_W, CHART_H, orderLabel, liveStockDefs, listed, stockName, fmt, isSpecial, specialBonusPerLot, signed, snapPrice, stepOf, settleStock, moneyRoom, suggestPrice, joinNotes } from '../../stocks/stocks.js';
 import { loc } from '../../core/locale.js';
-import { OCOIN_RATE, OCOIN_BUY_FEE, ORDER_TYPES, askPrice, bidPrice, maxBuyLots, sellQuote, buyQuote, committedSellLots, tpPriceFromPct, slPriceFromPct, MAX_ORDERS, LOT_BONUS, isBuyOrder, bookLevels, STORAGE_BONUS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, armyCapBonus, OCOIN_YIELD_PER_LOT, ocoinYield, moneyToOcoin, ocoinCostInMoney, ocoinToMoney, GOLD_BAR_OCOIN, goldBarCount, maxGoldBarsFromOcoin, ocoinToGoldBars, goldBarsToOcoin, executeBuy, executeSell, validateOrder, validateBracket, placeOrder, cancelOrder, placeExitOrders } from '../../stocks/stocks_core.js';
+import { OCOIN_RATE, OCOIN_BUY_FEE, ORDER_TYPES, askPrice, bidPrice, maxBuyLots, sellQuote, buyQuote, committedSellLots, tpPriceFromPct, slPriceFromPct, MAX_ORDERS, LOT_BONUS, isBuyOrder, bookLevels, STORAGE_BONUS, MORALE_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, armyCapBonus, OCOIN_YIELD_PER_LOT, ocoinYield, moneyToOcoin, ocoinCostInMoney, ocoinToMoney, GOLD_BAR_OCOIN, goldBarCount, maxGoldBarsFromOcoin, ocoinToGoldBars, goldBarsToOcoin, executeBuy, executeSell, validateOrder, validateBracket, placeOrder, cancelOrder, placeExitOrders } from '../../stocks/stocks_core.js';
 import { storageLots, productionLots, setStorageLots, ocoinFlowPerSecond, AUTO_TICK_SECONDS } from '../../stocks/stocks_core.js';
 import { vBind } from '../../functions/dom_helpers.js';
 import { aetherExact } from '../../resources/aether_alchemy.js';
@@ -587,7 +587,7 @@ export function drawStocks_s2($ctx){
                 return [
                     loc('stock_ocoin_rate',[OCOIN_RATE, OCOIN_BUY_FEE * 100]),
                     loc('stock_lot_hint',[LOT_BONUS * 100, STORAGE_BONUS * 100]),
-                    loc('stock_special_hint',[MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT]),
+                    loc('stock_special_hint',[MORALE_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT]),
                     loc('stock_dividend_hint',[+(OCOIN_YIELD_PER_LOT * 100).toFixed(2)]),
                     loc('stock_book_hint')
                 ].join(' ');

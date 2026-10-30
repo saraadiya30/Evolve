@@ -3,7 +3,7 @@ import { loc } from '../core/locale.js';
 import { messageQueue } from '../functions/message_log.js';
 import { resource_values } from '../config/constants.js';
 import { aetherFormat } from '../resources/aether_alchemy.js';
-import { LOT_BONUS, productionLots, newStock, upgradeStock, stepMarket, settleAllOrders, settleOrders, snapPrice, stepOf, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, capOverflowStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, POWER_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, ocoinYield } from './stocks_core.js';
+import { LOT_BONUS, productionLots, newStock, upgradeStock, stepMarket, settleAllOrders, settleOrders, snapPrice, stepOf, askPrice, bidPrice, AUTO_TICK_SECONDS, autoTradeStep, capOverflowStep, warmUp, SPECIAL_STOCKS, MORALE_BONUS_PER_LOT, BIRTH_BONUS_PER_LOT, ARMY_BONUS_PER_LOT, ocoinYield } from './stocks_core.js';
 import { hooks } from '../core/registries.js';
 
 // Companies that exist only in the Magic universe, and the long-run price of one Mana lot (Mana has no resource_values entry).
@@ -64,7 +64,7 @@ export function liveStockDefs(){
     // right after Crystal (the other Magic universe company); listed() only shows it in the Magic universe.
     let crystalAt = materials.findIndex(def => def.res === 'Crystal');
     materials.splice(crystalAt === -1 ? materials.length : crystalAt + 1, 0, { res: 'Mana', fair: MANA_FAIR });
-    // Special (non-resource) companies lead the list - Morale, Power, Birthrate, Army, Dividend, in that order (see SPECIAL_STOCKS) -
+    // Special (non-resource) companies lead the list - Morale, Birthrate, Army, Dividend, in that order (see SPECIAL_STOCKS) -
     // followed by every material company in normal resource order.
     return SPECIAL_STOCKS.concat(materials);
 }
@@ -75,13 +75,8 @@ export function listed(def){
     if (def.res === 'Morale'){
         return !!(global.city && global.city.morale && global.city.morale.current);
     }
-    if (def.res === 'Power'){
-        // Electricity must actually be researched: `powered` alone is not enough (it is also forced on by some stage setups,
-        // which all set high_tech well above 1 at the same time).
-        return !!(global.city && global.city.powered && global.tech && global.tech.high_tech >= 2);
-    }
     if (def.res === 'Birthrate'){
-        // Tied to the same citizen-growth mechanic Morale/Power piggyback on: listed once the race has a
+        // Tied to the same citizen-growth mechanic Morale piggybacks on: listed once the race has a
         // population resource to grow at all (mirrors the growth check in longLoop's citizen growth step).
         return !!(global.resource[global.race.species] && global.resource[global.race.species].display);
     }
@@ -109,15 +104,12 @@ export function joinNotes(parts){
 }
 
 export function isSpecial(res){
-    return res === 'Morale' || res === 'Power' || res === 'Birthrate' || res === 'Army' || res === 'Dividend';
+    return res === 'Morale' || res === 'Birthrate' || res === 'Army' || res === 'Dividend';
 }
 
 export function specialBonusPerLot(res){
     if (res === 'Morale'){
         return MORALE_BONUS_PER_LOT;
-    }
-    if (res === 'Power'){
-        return POWER_BONUS_PER_LOT;
     }
     if (res === 'Army'){
         return ARMY_BONUS_PER_LOT;
@@ -200,6 +192,18 @@ export function initStocks(){
     }
     if (!s.market){
         s.market = {};
+    }
+    // The Power company was removed (Watts now come from the Deuterium power plant). Old saves lose its lots; Ocoin that
+    // was reserved in its open buy orders is handed back so nothing else is lost.
+    if (s.market.Power){
+        (s.market.Power.orders || []).forEach(function(o){
+            if (o && o.reserved > 0 && isFinite(o.reserved)){
+                s.ocoin += o.reserved;
+            }
+        });
+        delete s.market.Power;
+        if (s.sel === 'Power'){ s.sel = ''; }
+        if (s.form && s.form.res === 'Power'){ s.form.res = ''; }
     }
     liveStockDefs().forEach(function(def){
         if (!s.market[def.res]){

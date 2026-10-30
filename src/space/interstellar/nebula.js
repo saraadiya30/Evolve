@@ -68,6 +68,7 @@ export const interstellarProjects_int_nebula = {
                     global.resource.Deuterium.display = true;
                     if (global.tech['nebula'] === 1){
                         initStruct(interstellarProjects.int_nebula.harvester);
+                        initStruct(interstellarProjects.int_alpha.deut_plant);
                         global.tech['nebula'] = 2;
                     }
                     if (powerOnNewStruct($(this)[0])){

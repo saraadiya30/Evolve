@@ -12,6 +12,7 @@ import { spaceCostMultiplier } from '../../functions/cost_multipliers.js';
 import { powerCostMod, powerModifier } from '../../functions/power_modifiers.js';
 import { eventActive } from '../../functions/event_dates.js';
 import { defineIndustry } from '../../industry/industry_smelter.js';
+import { DEUT_PLANT_WATT_PER_UNIT } from '../../resources/deuterium_plant_core.js';
 import { jobScale } from '../../civics/jobs/job_scale.js';
 import { spatialReasoning } from '../../resources/resources.js';
 import { interstellarProjects } from '../../core/registries.js';
@@ -254,6 +255,50 @@ export const interstellarProjects_int_alpha = {
                 return {
                     d: { count: 0, on: 0 },
                     p: ['fusion','interstellar']
+                };
+            }
+        },
+        deut_plant: {
+            id: 'interstellar-deut_plant',
+            title: loc('deut_plant_title'),
+            desc: `<div>${loc('deut_plant_title')}</div>`,
+            reqs: { alpha: 1 },
+            // Shows once Deuterium is unlocked (that flag is what matters, however it got set). Bought once: after that the tile stays
+            // (so it can be found), costs nothing and cannot be bought again, and its gear opens the setting (Deuterium burned per
+            // second), the same panel that is in the Industry tab (like the Graphene Plant).
+            condition(){ return !!global.resource.Deuterium.display; },
+            queue_complete(){ return global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1 ? 0 : 1; },
+            // Same price as the first Fusion Reactor (above)
+            cost: {
+                Money(offset){ return global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1 ? 0 : spaceCostMultiplier('deut_plant', offset, 990000, 1.28, 'interstellar'); },
+                Iridium(offset){ return global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1 ? 0 : spaceCostMultiplier('deut_plant', offset, 44000, 1.28, 'interstellar'); },
+                Infernite(offset){ return global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1 ? 0 : spaceCostMultiplier('deut_plant', offset, 350, 1.28, 'interstellar'); },
+                Brick(offset){ return global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1 ? 0 : spaceCostMultiplier('deut_plant', offset, 18000, 1.28, 'interstellar'); }
+            },
+            effect(){
+                let owned = global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1;
+                return `<div>${loc('deut_plant_desc',[DEUT_PLANT_WATT_PER_UNIT])}</div>${owned ? `<div class="has-text-success">${loc('deut_plant_owned')}</div>` : ''}`;
+            },
+            // The gear only makes sense once the plant exists
+            special(){ return !!(global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1); },
+            refresh: true,
+            action(args){
+                if (global.interstellar['deut_plant'] && global.interstellar.deut_plant.count >= 1){
+                    return false;
+                }
+                if (payCosts($(this)[0])){
+                    initStruct($(this)[0]);
+                    incrementStruct('deut_plant','interstellar');
+                    global.settings.showIndustry = true;
+                    defineIndustry();
+                    return true;
+                }
+                return false;
+            },
+            struct(){
+                return {
+                    d: { count: 0, rate: 0 },
+                    p: ['deut_plant','interstellar']
                 };
             }
         },

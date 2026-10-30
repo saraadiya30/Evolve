@@ -3,7 +3,7 @@
 //  1. statis: tidak ada kamus power_generated; $ctx.max_power / $ctx.power_grid tidak diubah di luar powerAdd;
 //  2. power_total = jumlah semua baris, di berbagai kondisi;
 //  3. Aether dimatikan: barisnya hilang pada tick berikutnya (bukan nyangkut);
-//  4. bonus Watt stock tercatat dan benar-benar menyalakan bangunan (bukan sekadar angka tampilan);
+//  4. Watt dari Deuterium Power Plant tercatat dan benar-benar menyalakan bangunan (bukan sekadar angka tampilan);
 //  5. listrik yang dipakai (power_total - power) tidak pernah negatif.
 // Pakai: node test/power-ledger.mjs [fixture]
 import './env-setup.mjs';
@@ -52,25 +52,29 @@ const run = () => { const ctx = { time_multiplier: 1 }; fastLoopPowerGeneration(
 const sum = () => (S.powerParts || []).reduce((a, p) => a + p.value, 0);
 const near = (a, b) => Math.abs(a - b) <= 1e-6 * Math.max(1, Math.abs(a), Math.abs(b));
 const part = (label) => (S.powerParts || []).find((p) => p.label === label);
-const stockLabel = loc('stock_bonus_label'), aetherLabel = loc('resource_Aether_name');
-const setLots = (n) => { G.stocks.market.Power = G.stocks.market.Power || {}; G.stocks.market.Power.lots = n; };
+const stockLabel = loc('deut_plant_title'), aetherLabel = loc('resource_Aether_name');
+const { powerModifier } = await import('../src/functions/power_modifiers.js');
+const { DEUT_PLANT_WATT_PER_UNIT } = await import('../src/resources/deuterium_plant_core.js');
+// n = Watt yang diharapkan dari pembangkit: diubah jadi Deuterium/s (rasio 17.6 W per Deuterium/s), stok dibuat sangat besar
+const wattPerUnit = powerModifier(DEUT_PLANT_WATT_PER_UNIT);
+const setLots = (n) => { G.resource.Deuterium.display = true; G.resource.Deuterium.amount = 1e15; G.interstellar.deut_plant = { count: n > 0 ? 1 : 0, rate: n / wattPerUnit }; };
 
 setLots(0); G.settings.aetherPower = 0;
 run();
 check(`dasar: power_total = jumlah baris (${G.city.power_total} vs ${+sum().toFixed(3)})`, near(G.city.power_total, sum()));
 const baseTotal = G.city.power_total, basePower = G.city.power;
 
-// 4. bonus Watt stock
+// 4. Watt dari Deuterium Power Plant
 setLots(500); run();
-check('stock Watt: baris tercatat dengan nilai = jumlah lot', part(stockLabel) && near(part(stockLabel).value, 500));
-check('stock Watt: power_total naik tepat sebesar bonus', near(G.city.power_total, baseTotal + 500));
-check('stock Watt: listrik tersedia naik tepat sebesar bonus', near(G.city.power, basePower + 500));
-check('stock Watt: power_total = jumlah baris', near(G.city.power_total, sum()));
-check('stock Watt: pemakaian (power_total - power) tidak negatif', G.city.power_total - G.city.power >= -1e-6, `pemakaian ${G.city.power_total - G.city.power}`);
+check('plant Watt: baris tercatat dengan nilai = Watt yang diminta', part(stockLabel) && near(part(stockLabel).value, 500));
+check('plant Watt: power_total naik tepat sebesar bonus', near(G.city.power_total, baseTotal + 500));
+check('plant Watt: listrik tersedia naik tepat sebesar bonus', near(G.city.power, basePower + 500));
+check('plant Watt: power_total = jumlah baris', near(G.city.power_total, sum()));
+check('plant Watt: pemakaian (power_total - power) tidak negatif', G.city.power_total - G.city.power >= -1e-6, `pemakaian ${G.city.power_total - G.city.power}`);
 setLots(0); run();
-check('lot dijual: baris hilang dan total kembali', !part(stockLabel) && near(G.city.power_total, baseTotal));
+check('plant dimatikan (rate 0): baris hilang dan total kembali', !part(stockLabel) && near(G.city.power_total, baseTotal));
 
-// bonus stock benar-benar menyalakan bangunan: ambil satu bangunan berlistrik yang sedang menyala, buat permintaannya jauh
+// Watt plant benar-benar menyalakan bangunan: ambil satu bangunan berlistrik yang sedang menyala, buat permintaannya jauh
 // melebihi pembangkit, lalu bandingkan tanpa dan dengan bonus
 const found = (G.power || []).map((k) => { const [r, s] = k.split(':'); const region = r === 'city' ? 'city' : convertSpaceSector(r);
     const c = r === 'city' ? actions.city[s] : actions[region][r][s]; return { region, s, c }; })
@@ -81,7 +85,7 @@ if (found){
     struct.on = 100000;
     setLots(0); run(); const without = p_on[found.s];
     setLots(1e12); run(); const withBonus = p_on[found.s];
-    check(`bonus stock menyalakan bangunan: tanpa bonus ${without}/100000 menyala, dengan bonus ${withBonus}/100000`, without < 100000 && withBonus === 100000);
+    check(`Watt plant menyalakan bangunan: tanpa bonus ${without}/100000 menyala, dengan bonus ${withBonus}/100000`, without < 100000 && withBonus === 100000);
     struct.on = savedOn; setLots(0); run();
 }
 
@@ -97,7 +101,7 @@ check('Aether dimatikan: power_total kembali', near(G.city.power_total, baseTota
 // 2. beberapa kondisi lain
 for (const [name, mut] of [
     ['pemakaian listrik besar', () => { setLots(0); }],
-    ['stock + Aether bersamaan', () => { setLots(200); G.settings.aetherPower = 0.00002; G.prestige.Aether.count = 9; }],
+    ['plant + Aether bersamaan', () => { setLots(200); G.settings.aetherPower = 0.00002; G.prestige.Aether.count = 9; }],
 ]){
     mut(); run();
     check(`${name}: power_total = jumlah baris (${+G.city.power_total.toFixed(3)} vs ${+sum().toFixed(3)})`, near(G.city.power_total, sum()));
