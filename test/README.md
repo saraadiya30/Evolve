@@ -19,7 +19,7 @@ npm run lint       # ESLint untuk src/ dan test/
 | `stock-*`, `stocks-no-market` | alokasi lot, bonus produksi vs storage, kapasitas crates/containers; `stock-power-removed`: company Power sudah dihapus, save lama dimigrasi (lot dibuang, Ocoin buy order dikembalikan) |
 | `deuterium-plant` | Deuterium Power Plant: beli sekali, Deuterium/s dibakar diatur pemain tanpa batas atas, Watt = konsumsi x 17.6, stok habis -> output 0, masuk ke buku besar listrik |
 | `lab-aether-genes` | Gene Lab custom race: genes bonus dari Aether (1 Aether = 10 genes) menambah skor genome, tidak berlaku di wiki, dan semua trait major sekaligus tetap jalan tanpa error/NaN |
-| `aether-prestige-buy` | Tab Aether: beli Dark Energy (1 Aether = 10) dan Harmony Crystal (1 Aether = 1) gaya Plasmid/Phage — jumlah, batas Aether yang dimiliki, pembulatan sesuai desimal game, input aneh, dan baris UI-nya ada |
+| `aether-prestige-buy` | Tab Aether: beli Dark Energy (1 Aether = 10), Harmony Crystal (1 Aether = 1), dan Blood Stone (1 Aether = 2) gaya Plasmid/Phage — jumlah, batas Aether yang dimiliki, pembulatan sesuai desimal game, input aneh, dan baris UI-nya ada |
 | `auto-*` | auto-convert Money <-> Ocoin (income besar, clamp, lost) |
 | `numeric-snapshot` | fungsi eden + kapal di ribuan konfigurasi acak (seeded) vs `snap_numeric_baseline.json` |
 | `struct-check` | struktur data besar (techs, races, actions, events, ...) vs `snap_struct_baseline.json` |

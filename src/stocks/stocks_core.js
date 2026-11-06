@@ -8,6 +8,7 @@ export const AETHER_GENES_RATE = 1e9; // Genes you get for 1 Aether (the Aether 
 export const AETHER_SOUL_GEM_RATE = 1e12; // Soul Gems you get for 1 Aether (the Aether tab): 1 pico Aether = 1 Soul Gem
 export const AETHER_DARK_RATE = 10; // Dark Energy you get for 1 Aether (the Aether tab), bought in whole Aether like Plasmid/Phage
 export const AETHER_HARMONY_RATE = 1; // Harmony Crystal you get for 1 Aether (the Aether tab); the rarest of the prestige currencies
+export const AETHER_BLOOD_STONE_RATE = 2; // Blood Stones you get for 1 Aether (the Aether tab), bought in whole Aether; a whole-number currency (0 decimals)
 export const AETHER_OCOIN_RATE = 1e12; // Ocoin you get for 1 Aether (the Aether tab). Same value as 1 Aether = 1e15 Money at the 1000:1
                                         // exchange, without the 5% fee.
 export const LOT_BONUS = 0.001;     // each lot on production adds +0.1% production to that stock's resource (additive, no cap)

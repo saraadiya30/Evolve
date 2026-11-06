@@ -3,7 +3,7 @@ import { global, keyMultiplier } from '../core/vars.js';
 import { vBind, clearElement } from '../functions/dom_helpers.js';
 import { popover } from '../functions/popover.js';
 import { loc } from '../core/locale.js';
-import { AETHER_OCOIN_RATE, AETHER_SOUL_GEM_RATE, AETHER_GENES_RATE, AETHER_DARK_RATE, AETHER_HARMONY_RATE, aetherBuyPrestige, aetherBuyCount } from '../stocks/stocks_core.js';
+import { AETHER_OCOIN_RATE, AETHER_SOUL_GEM_RATE, AETHER_GENES_RATE, AETHER_DARK_RATE, AETHER_HARMONY_RATE, AETHER_BLOOD_STONE_RATE, aetherBuyPrestige, aetherBuyCount } from '../stocks/stocks_core.js';
 import { templeCount } from '../functions/temple_count.js';
 import { workerScale } from '../civics/jobs/worker_scale.js';
 import { highPopAdjust } from '../functions/adjusters_basic.js';
@@ -209,6 +209,11 @@ export function initAether(){
     harmonyRow.append($(`<span class="buy"><span class="has-text-success">${loc('resource_market_buy')}</span></span>`));
     harmonyRow.append($(`<b-tooltip append-to-body :label="buyTip(${AETHER_HARMONY_RATE},'resource_Harmony_name')" position="is-top" size="is-small" multilined animated><span role="button" class="order" :class="{ off: p.Aether.count < 1 }" @click="buyHarmony()">{{ buyAmt(${AETHER_HARMONY_RATE}) }}</span></b-tooltip>`));
 
+    let bloodStoneRow = $(`<div id="aetherBloodStone" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('resource_Blood_Stone_name')}</h3></div>`);
+    wrap.append(bloodStoneRow);
+    bloodStoneRow.append($(`<span class="buy"><span class="has-text-success">${loc('resource_market_buy')}</span></span>`));
+    bloodStoneRow.append($(`<b-tooltip append-to-body :label="buyTip(${AETHER_BLOOD_STONE_RATE},'resource_Blood_Stone_name')" position="is-top" size="is-small" multilined animated><span role="button" class="order" :class="{ off: p.Aether.count < 1 }" @click="buyBloodStone()">{{ buyAmt(${AETHER_BLOOD_STONE_RATE}) }}</span></b-tooltip>`));
+
     let moneyBuyRow = $(`<div id="aetherMoneyBuy" class="market-item" style="margin-bottom:.5rem;"><h3 class="res has-text-info">${loc('resource_Money_name')}</h3></div>`);
     wrap.append(moneyBuyRow);
     moneyBuyRow.append($(`<input type="number" min="0" step="any" v-model.number="s.aetherMoneyQtyCoef" @change="clampNonNeg('aetherMoneyQtyCoef')" style="width:3.5rem;margin-right:.25rem;background:#1a1a1a;color:inherit;border:1px solid #555;">`));
@@ -282,7 +287,7 @@ export function initAether(){
             }
         },
         methods: {
-            // How many Aether one click on a Plasmid/Phage/Dark Energy/Harmony Crystal button really spends right now: the multiplier
+            // How many Aether one click on a Plasmid/Phage/Dark Energy/Harmony Crystal/Blood Stone button really spends right now: the multiplier
             // (x10/x25/x100), limited to the whole Aether you have, at least 1 so a button you cannot afford still shows its base price.
             buyN(){
                 return aetherBuyCount(global.prestige.Aether.count, keyMultiplier());
@@ -323,6 +328,13 @@ export function initAether(){
                 if (res){
                     global.prestige.Aether.count = res.aether;
                     global.prestige.Harmony.count = res.count;
+                }
+            },
+            buyBloodStone(){
+                let res = aetherBuyPrestige(global.prestige.Aether.count, global.prestige.Blood_Stone.count, AETHER_BLOOD_STONE_RATE, keyMultiplier(), 0);
+                if (res){
+                    global.prestige.Aether.count = res.aether;
+                    global.prestige.Blood_Stone.count = res.count;
                 }
             },
             moneyQty(){

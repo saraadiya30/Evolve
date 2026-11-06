@@ -13,10 +13,11 @@ const check = (label, cond, extra = '') => {
 const close = (a, b, eps = 1e-9) => Math.abs(a - b) <= eps * Math.max(1, Math.abs(a), Math.abs(b));
 
 const core = await import('../src/stocks/stocks_core.js');
-const { aetherBuyPrestige, AETHER_DARK_RATE, AETHER_HARMONY_RATE } = core;
+const { aetherBuyPrestige, AETHER_DARK_RATE, AETHER_HARMONY_RATE, AETHER_BLOOD_STONE_RATE } = core;
 
 check('rate: 1 Aether = 10 Dark Energy', AETHER_DARK_RATE === 10);
 check('rate: 1 Aether = 1 Harmony Crystal', AETHER_HARMONY_RATE === 1);
+check('rate: 1 Aether = 2 Blood Stone', AETHER_BLOOD_STONE_RATE === 2);
 
 // (1) helper murni
 let r = aetherBuyPrestige(100, 5, AETHER_DARK_RATE, 1, 3);
@@ -38,6 +39,13 @@ check('pembulatan Dark Energy 3 desimal tidak menyisakan ekor floating (0,3 + 10
 r = aetherBuyPrestige(7.7e12, 123.456, AETHER_DARK_RATE, 1e12, 3);
 check('angka besar (Aether triliunan) tetap hingga dan benar', r && isFinite(r.count) && close(r.count, 123.456 + 1e13) && close(r.aether, 6.7e12));
 check('count awal undefined/NaN diperlakukan 0', aetherBuyPrestige(5, undefined, 10, 1, 3).count === 10);
+
+// Blood Stone: bilangan bulat (0 desimal), 2 per Aether
+r = aetherBuyPrestige(10, 5, AETHER_BLOOD_STONE_RATE, 1, 0);
+check('Blood Stone: beli 1 Aether -> +2, Aether -1', r && r.count === 7 && r.aether === 9 && r.spent === 1, JSON.stringify(r));
+r = aetherBuyPrestige(3.9, 0, AETHER_BLOOD_STONE_RATE, 100, 0);
+check('Blood Stone: kelipatan melebihi Aether -> dibatasi Aether utuh (3,9 Aether -> 3 dibeli = 6 Blood Stone)', r && r.count === 6 && close(r.aether, 0.9) && r.spent === 3);
+check('Blood Stone: Aether < 1 tidak bisa beli', aetherBuyPrestige(0.5, 0, AETHER_BLOOD_STONE_RATE, 1, 0) === null);
 
 // (2b) jumlah Aether yang benar-benar dipakai satu klik = yang ditampilkan di tombol/tooltip (pengali, dibatasi Aether utuh, min 1)
 {
@@ -76,6 +84,7 @@ check('UI: baris Dark Energy ada di tab Aether', src.includes('id="aetherDark"')
 check('UI: tombol Plasmid/Phage/Dark/Harmony menampilkan jumlah ikut pengali (bukan angka tetap)', ['buyPlasmid', 'buyPhage', 'buyDark', 'buyHarmony'].every(f => new RegExp(`@click="${f}\\(\\)">\\{\\{ buyAmt\\(`).test(src)) && src.includes(':label="buyTip('));
 check('UI: baris Harmony Crystal ada di tab Aether', src.includes('id="aetherHarmony"') && src.includes('@click="buyHarmony()"'));
 check('UI: method buyDark/buyHarmony memakai aetherBuyPrestige dengan desimal game (3 dan 2)', /buyDark\(\)\{[\s\S]*?AETHER_DARK_RATE, keyMultiplier\(\), 3\)/.test(src) && /buyHarmony\(\)\{[\s\S]*?AETHER_HARMONY_RATE, keyMultiplier\(\), 2\)/.test(src));
+check('UI: baris Blood Stone ada di tab Aether', src.includes('id="aetherBloodStone"') && src.includes('@click="buyBloodStone()"') && /buyBloodStone\(\)\{[\s\S]*?AETHER_BLOOD_STONE_RATE, keyMultiplier\(\), 0\)/.test(src));
 const tips = src.match(/<b-tooltip [^>]*>/g) || [];
 check('UI: semua tooltip Aether tetap append-to-body dan buka ke atas', tips.length > 0 && tips.every(t => t.includes('append-to-body') && t.includes('position="is-top"')), `(${tips.length} tooltip)`);
 

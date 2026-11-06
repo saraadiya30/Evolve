@@ -11178,6 +11178,7 @@
   "wiki_misc_aether_para9": "%0: spending N Aether per tick runs the game at (N+1)x speed.",
   "wiki_misc_aether_para11": "%0: 1 nano Aether buys 1 %0 (1 Aether = %1 %0), bought once only. You choose the amount of Aether, and only whole numbers of %0 are sold (rounded down).",
   "wiki_misc_aether_para10": "%0: 1 pico Aether buys 1 %0 (1 Aether = %1 %0), bought once only. You choose the amount of Aether, and only whole gems are sold (rounded down).",
+  "wiki_misc_aether_para12": "%0: 1 Aether = %1 %0, bought once only. You choose the amount of Aether, and the cost in Aether is shown on the button.",
   "wiki_hell_threat": "Threat Level",
   "wiki_hell_threat_para1": "Unchecked threat will keep growing until it reaches %0.",
   "wiki_hell_threat_para2": "The main goal in hell is to reduce this threat level to around %0 and keep it there.",
